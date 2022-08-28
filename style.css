@@ -10,7 +10,6 @@ html, body {
 }
 
 body {
-  display: table;
   width: 100%;
   height: 100%;
   background-color: #171717;
@@ -18,13 +17,14 @@ body {
   line-height: 1.6;
   position: relative;
   font-family: sans-serif;
-  overflow: hidden;
+  overflow-y: scroll;
 }
 
 .lines {
   position: absolute;
   top: 0;
   left: 0;
+  overflow: hidden;
   right: 0;
   height: 100%;
   margin: auto;
@@ -33,11 +33,10 @@ body {
 
 .line {
   position: absolute;
-  width: 2px;
+  width: 2.5px;
   height: 100%;
   top: 0;
   left: 50%;
-  overflow: hidden;
 }
 .line::after {
   content: "";
@@ -91,7 +90,7 @@ body {
 
 :root {
   --bg-color: #171717;
-  --typewriterSpeed: 4s;
+  --typewriterSpeed: 1.5s;
   --typewriterCharacters: 21;
 }
 
@@ -134,7 +133,7 @@ h1::after {
   font-weight: 400;
   opacity: 0;
   transform: translateY(3rem);
-  animation: fadeInUp 2s ease calc(var(--typewriterSpeed) + 1.5s) forwards;
+  animation: fadeInUp 1s ease calc(var(--typewriterSpeed) + 0.8s) forwards;
 }
 
 @keyframes typewriter {
@@ -156,12 +155,386 @@ h1::after {
   }
 }
 
+#mouse-scroll {
+  margin: auto;
+  width: 40px;
+  opacity: 0;
+  transform: translateY(3rem);
+  animation: fadeInUp 1s ease calc(var(--typewriterSpeed) + 0.8s) forwards;
+}
+#mouse-scroll span{
+  display: block;
+  width: 25px; 
+  height: 25px;
+  -ms-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+       transform: rotate(45deg);
+       transform: rotate(45deg);
+  border-right: 2px solid #fff; 
+  border-bottom: 2px solid #fff;
+  margin: 0 0 3px 5px;
+  
+}
+#mouse-scroll .down-arrow-1 {
+  margin-top: 6px;
+}
+#mouse-scroll .down-arrow-1, #mouse-scroll .down-arrow-2, #mouse-scroll .down-arrow-3 {
+  -webkit-animation: mouse-scroll 1s infinite; 
+    -moz-animation: mouse-scroll 1s infinite;
+}
+#mouse-croll .down-arrow-1 {
+   -webkit-animation-delay: .1s; 
+   -moz-animation-delay: .1s;
+   -webkit-animation-direction: alternate;
+}
+#mouse-scroll .down-arrow-2 {
+  -webkit-animation-delay: .2s; 
+  -moz-animation-delay: .2s;
+  -webkit-animation-direction: alternate;
+}
+#mouse-scroll .down-arrow-3 {
+   -webkit-animation-delay: .3s;
+   -moz-animation-dekay: .3s;
+   -webkit-animation-direction: alternate;
+}
+
+@-webkit-keyframes mouse-scroll {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+  100% {
+    opacity: 1;
+  } 
+}
+@keyframes mouse-scroll {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+
 .center {
   color: white;
   margin: auto;
   width: 55%;
   font-family: "Raleway";
   text-align: center;
-  padding-top: 150px;
+  padding-top: 100px;
   font-family: monospace;
+}
+
+.expanderContent{
+  height:150px
+}
+
+.wrapper {
+  margin: 5em auto;
+  max-width: 1000px;
+  background-color: #fff;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.06);
+}
+.header {
+  padding: 30px 30px 0;
+  text-align: center;
+}
+.header__title {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 2.5em;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.header__subtitle {
+  margin: 0;
+  font-size: 1.5em;
+  color: #949fb0;
+  font-family: 'Yesteryear', cursive;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.cards {
+  padding: 15px;
+  display: flex;
+  flex-flow: row wrap;
+}
+.card:nth-child(1){
+  opacity: 0;
+  transform: translateY(8rem);
+  animation: fadeInUp 0.5s ease calc(var(--typewriterSpeed) + 1s) forwards;
+}
+.card:nth-child(2){
+  opacity: 0;
+  transform: translateY(8rem);
+  animation: fadeInUp 0.5s ease calc(var(--typewriterSpeed) + 1.2s) forwards;
+}
+.card:nth-child(3){
+  opacity: 0;
+  transform: translateY(8rem);
+  animation: fadeInUp 0.5s ease calc(var(--typewriterSpeed) + 1.4s) forwards;
+}
+.card:nth-child(4){
+  opacity: 0;
+  transform: translateY(8rem);
+  animation: fadeInUp 0.5s ease calc(var(--typewriterSpeed) + 1.6s) forwards;
+}
+.card {
+  margin: 15px;
+  z-index: 9999;
+  width: calc((100% / 2) - 30px);
+  transition: all 0.2s ease-in-out;
+
+}
+@media screen and (max-width: 991px) {
+  .card {
+    width: calc((100% / 2) - 30px);
+  }
+}
+@media screen and (max-width: 767px) {
+  .card {
+    width: 100%;
+  }
+}
+.card:hover .card__inner {
+  background-color: #272727;
+  transform: scale(1.05);
+}
+.card__inner {
+  z-index: 9999;
+  width: 100%;
+  padding: 30px;
+  position: relative;
+  cursor: pointer;
+  background-color: #171717;
+  border-width: 2px;
+  border-style: solid;
+  border-color: white;
+  color: #eceef1;
+  font-size: 1.5em;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.2s ease-in-out;
+}
+.card__inner:after {
+  transition: all 0.3s ease-in-out;
+}
+.card__inner .fa {
+  padding-left: 5px;
+  margin-top: 0.25em;
+}
+.card__expander {
+  transition: all 0.2s ease-in-out;
+  background-color: #272727;
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #eceef1;
+}
+.card__expander .fa {
+  font-size: 0.75em;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+.card__expander .fa:hover {
+  opacity: 0.9;
+}
+.card.is-collapsed .card__inner:after {
+  content: "";
+  opacity: 0;
+}
+.card.is-collapsed .card__expander {
+  max-height: 0;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  opacity: 0;
+}
+.card.is-expanded .card__inner {
+  background-color: #2F4C39;
+  z-index: 999;
+}
+.card.is-expanded .card__inner:after {
+  content: "";
+  opacity: 1;
+  display: block;
+  height: 0;
+  width: 0;
+  position: absolute;
+  bottom: -30px;
+  left: calc(50% - 15px);
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 15px solid #333a45;
+}
+.card.is-expanded .card__inner .fa:before {
+  content: "\f07c";
+}
+.card.is-expanded .card__expander {
+  max-height: 2000px;
+  min-height: 200px;
+  overflow: visible;
+  margin-top: 30px;
+  opacity: 1;
+  z-index: inherit;
+}
+.card.is-expanded:hover .card__inner {
+  transform: scale(1);
+}
+.card.is-inactive .card__inner {
+  opacity: 0.5;
+}
+.card.is-inactive:hover .card__inner {
+  background-color: #272727;
+  transform: scale(1);
+}
+  .card:nth-of-type(2n+2) .card__expander {
+    margin-left: calc(-100% - 30px);
+  }
+  .card:nth-of-type(2n+3) {
+    clear: left;
+  }
+  .card__expander {
+    width: calc(200% + 30px);
+  }
+
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #171717;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgb(38, 38, 38);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(17, 17, 17);
+}
+
+
+
+@import url("https://kit.fontawesome.com/21457e6b79.js");
+
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+.body2 {
+  font-family: "Quicksand", sans-serif;
+  display: grid;
+  place-items: center;
+  height: 100vh;}
+.container {
+  opacity: inherit;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-block: 2rem;
+  gap: 2rem;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+
+@media screen and (max-width: 1200px) {
+  .cardContent {
+    width: 45%;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .cardContent {
+    width: 22%;
+  }
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 .1rem 1rem rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+
+
+.card__body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+
+.tag {
+  align-self: flex-start;
+  padding: .25em .75em;
+  border-radius: 1em;
+  font-size: .75rem;
+}
+
+.tag + .tag {
+  margin-left: .5em;
+}
+
+.tag-blue {
+  background: #56CCF2;
+background: linear-gradient(to bottom, #2F80ED, #56CCF2);
+  color: #fafafa;
+}
+
+.tag-brown {
+  background: #D1913C;
+background: linear-gradient(to bottom, #FFD194, #D1913C);
+  color: #fafafa;
+}
+
+.tag-red {
+  background: #cb2d3e;
+background: linear-gradient(to bottom, #ef473a, #cb2d3e);
+  color: #fafafa;
+}
+
+.card__body h4 {
+  font-size: 1.5rem;
+  text-transform: capitalize;
+}
+
+.card__title {
+  font-size: 25px;
+  color:rgb(17, 17, 17)
+}
+
+.card__content {
+  font-size: 15px;
+  color:rgb(17, 17, 17)
 }

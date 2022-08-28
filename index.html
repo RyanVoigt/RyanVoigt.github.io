@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<script src="https://kit.fontawesome.com/21457e6b79.js" crossorigin="anonymous"></script>
+<head>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="center" >
+  <h1>Hello, I'm Ryan Voigt</h1>
+  <p class="subtitle">Welcome to my Website!</p>
+<!-- -->
+  <a href="#">
+    <div id="mouse-scroll">
+      <div>
+          <span class="down-arrow-1"></span>
+          <span class="down-arrow-2"></span>
+          <span class="down-arrow-3"></span>
+       </div>
+    </div>
+    </a>
+</div>
+<div>
+  <div class="cards">
+
+    <div class=" card [ is-collapsed ] " >
+      <div class="card__inner [ js-expander ]" id = "card1">
+        <span>About Me</span>
+        <i class="fa fa-folder-o"></i>
+      </div>
+      <div class="card__expander" >
+        <i class="fa fa-close [ js-collapser ]"></i>
+
+
+       
+
+      </div>
+    </div>
+
+    <div class=" card [ is-collapsed ] " >
+      <div class="card__inner [ js-expander ]" id = "card2" >
+        <span>Projects</span>
+        <i class="fa fa-folder-o"></i>
+      </div>
+      <div class="card__expander">
+        <i class="fa fa-close [ js-collapser ]"></i>
+
+        <div class="container">
+          <div class="cardContent">
+            <div class="card__header">
+              <img src="./assets/Spotiry_Home_Page.gif" alt="card__image" class="card__image" width="600">
+            </div>
+            <div class="card__body">
+              <span class="tag tag-blue">Technology</span>
+              <h4 class="card__title">What's new in 2022 Tech</h4>
+              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+            </div>
+          </div>
+          <div class="cardContent">
+            <div class="card__header">
+              <img src="" alt="card__image" class="card__image" width="600">
+            </div>
+            <div class="card__body">
+              <span class="tag tag-brown">Food</span>
+              <h4 class="card__title">What's new in 2022 Tech</h4>
+              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+            </div>
+
+          </div>
+          <div class="cardContent">
+            <div class="card__header">
+              <img src="https://source.unsplash.com/600x400/?car,automobile" alt="card__image" class="card__image" width="600">
+            </div>
+            <div class="card__body">
+              <span class="tag tag-red">Automobile
+                <span class="tag tag-red">         Automobile</span>
+              </span>
+              
+              <h4 class="card__title">What's new in 2022 Tech</h4>
+              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+            </div>
+          </div>
+          <div class="cardContent">
+            <div class="card__header">
+              <img src="./assets/CrunchWheel.gif" alt="card__image" class="card__image" width="600">
+            </div>
+            <div class="card__body">
+              <span class="tag tag-red">Automobile</span>
+              <h4 class="card__title">What's new in 2022 Tech</h4>
+              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+    <div class=" card [ is-collapsed ] " >
+      <div class="card__inner [ js-expander ]" id = "card3">
+        <span>Resume</span>
+        <i class="fa fa-folder-o"></i>
+      </div>
+      <div class="card__expander">
+        <i class="fa fa-close [ js-collapser ]"></i>
+        Expander
+      </div>
+    </div>
+
+    <div class=" card [ is-collapsed ] " >
+      <div class="card__inner [ js-expander ]" id = "card4">
+        <span>Portfolio</span>
+        <i class="fa fa-folder-o"></i>
+      </div>
+      <div class="card__expander">
+        <i class="fa fa-close [ js-collapser ]"></i>
+        Expander
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="lines">
+  <div class="line"></div>
+  <div class="line"></div>
+  <div class="line"></div>
+  <div class="line"></div>
+  <div class="line"></div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script >
+  var $cell = $('.card');
+  //open and close card when clicked on card
+  
+  $cell.find('.is-inactive').click(function() {
+    console.log("5")
+  });
+  $cell.find('.js-expander').click(function() {
+  var $thisCell = $(this).closest('.card');
+
+  if ($thisCell.hasClass('is-collapsed')) {
+    $cell.not($thisCell).removeClass('is-expanded').addClass('is-collapsed').addClass('is-inactive');
+    $thisCell.removeClass('is-collapsed').addClass('is-expanded');
+    
+    if ($cell.not($thisCell).hasClass('is-inactive')) {
+      console.log("1")
+      //do nothing
+    } else {
+      $cell.not($thisCell).addClass('is-inactive');
+      console.log("2")
+    }
+
+  } else {
+    $thisCell.removeClass('is-expanded').addClass('is-collapsed').removeClass('is-inactive');;
+    $cell.not($thisCell).removeClass('is-inactive');
+    console.log("3")
+  }
+  });
+
+  //close card when click on cross
+  $cell.find('.js-collapser').click(function() {
+
+  var $thisCell = $(this).closest('.card');
+
+  $thisCell.removeClass('is-expanded').addClass('is-collapsed');
+  $cell.not($thisCell).removeClass('is-inactive');
+  });
+</script>
+</body>
