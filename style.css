@@ -14,7 +14,7 @@ body {
   height: 100%;
   background-color: #171717;
   color: #000;
-  line-height: 1.6;
+  line-height: 1.4;
   position: relative;
   font-family: sans-serif;
   overflow-y: scroll;
@@ -331,7 +331,8 @@ h1::after {
   margin-top: 0.25em;
 }
 .card__expander {
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease-in-out;
+  transition: opacity 0.3s ease-in-out;
   background-color: #272727;
   width: 100%;
   position: relative;
@@ -382,7 +383,6 @@ h1::after {
   content: "\f07c";
 }
 .card.is-expanded .card__expander {
-  max-height: 2000px;
   min-height: 200px;
   overflow: visible;
   margin-top: 30px;
@@ -448,19 +448,23 @@ h1::after {
   display: grid;
   place-items: center;
   height: 100vh;}
+  
 .container {
   opacity: inherit;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   margin-block: 2rem;
-  gap: 2rem;
+  gap: 3rem;
 }
 
 img {
   max-width: 100%;
   display: block;
   object-fit: cover;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }
 
 
@@ -472,7 +476,19 @@ img {
 
 @media screen and (min-width: 1200px) {
   .cardContent {
-    width: 22%;
+    width: 45%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .cardContent {
+
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .cardContent {
+
   }
 }
 
@@ -482,13 +498,16 @@ img {
   overflow: hidden;
   box-shadow: 0 .1rem 1rem rgba(0, 0, 0, 0.1);
   border-radius: 10px;
-  background: #ffffff;
+  border-style: solid;
+  border-width: 10px;
+  border-color: #353535;
+  background: #353535;
 }
 
 
 
 .card__body {
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: .5rem;
@@ -507,14 +526,13 @@ img {
 }
 
 .tag-blue {
-  background: #56CCF2;
-background: linear-gradient(to bottom, #2F80ED, #56CCF2);
+  background: #4d8053;
   color: #fafafa;
 }
 
 .tag-brown {
   background: #D1913C;
-background: linear-gradient(to bottom, #FFD194, #D1913C);
+  background: linear-gradient(to bottom, #FFD194, #D1913C);
   color: #fafafa;
 }
 
@@ -530,11 +548,11 @@ background: linear-gradient(to bottom, #ef473a, #cb2d3e);
 }
 
 .card__title {
-  font-size: 25px;
-  color:rgb(17, 17, 17)
+  font-size: 2rem;
+  display: inline-block;
+  padding-right: 8px;
 }
 
 .card__content {
   font-size: 15px;
-  color:rgb(17, 17, 17)
 }

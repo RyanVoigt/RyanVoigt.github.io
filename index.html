@@ -1,13 +1,19 @@
 
 <!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns= "http://www.w3.org/1999/xhtml">
+<meta charset="UTF-8">
+
+
+<meta name="google" content="notranslate">
+<meta http-equiv="Content-Language" content="en">
 <script src="https://kit.fontawesome.com/21457e6b79.js" crossorigin="anonymous"></script>
 <head>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="center" >
-  <h1>Hello, I'm Ryan Voigt</h1>
-  <p class="subtitle">Welcome to my Website!</p>
+  <h1 style ="margin: auto;">Hello, I'm Ryan Voigt</h1>
+  <p class="subtitle">Full-Stack Developer</p>
 <!-- -->
   <a href="#">
     <div id="mouse-scroll">
@@ -50,33 +56,48 @@
               <img src="./assets/Spotiry_Home_Page.gif" alt="card__image" class="card__image" width="600">
             </div>
             <div class="card__body">
-              <span class="tag tag-blue">Technology</span>
-              <h4 class="card__title">What's new in 2022 Tech</h4>
-              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+              <div>
+                <h4 class="card__title">SpotiRy</h4>
+                <div style="display: inline-block; vertical-align: text-bottom;">
+                <span class="tag tag-blue">Node.js</span>
+                <span class="tag tag-blue">Javascript</span>
+              </div>
+              </div>
+              <p class="card__content">Utilizes the Spotify API to generate a spotify wrapped based on lifetime listening statistics instead of yearly. Also has a built in queue generator that hand picks a selection of recommended songs based on your listening habits</p>
             </div>
           </div>
           <div class="cardContent">
             <div class="card__header">
-              <img src="" alt="card__image" class="card__image" width="600">
+              <img src="./assets/MovieNomination.gif" alt="card__image" class="card__image" width="600">
             </div>
             <div class="card__body">
-              <span class="tag tag-brown">Food</span>
-              <h4 class="card__title">What's new in 2022 Tech</h4>
-              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+              <div>
+                <h4 class="card__title">Movie Nomination</h4>
+                <div style="display: inline-block; vertical-align: text-bottom;">
+                  <span class="tag tag-blue">React</span>
+                  <span class="tag tag-blue">Javascript</span>
+                </div>
+              </div>
+              <p class="card__content">Utilizes the OMDB movie database API to allow users to search for movies and rank them for an award cermony. React drag and drop components allowing users to adjust movie positions after selection.</p>
             </div>
 
           </div>
           <div class="cardContent">
             <div class="card__header">
-              <img src="https://source.unsplash.com/600x400/?car,automobile" alt="card__image" class="card__image" width="600">
+              <img src="./assets/venti.gif" alt="card__image" class="card__image" width="600">
             </div>
             <div class="card__body">
-              <span class="tag tag-red">Automobile
-                <span class="tag tag-red">         Automobile</span>
-              </span>
-              
-              <h4 class="card__title">What's new in 2022 Tech</h4>
-              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+              <div>
+                <h4 class="card__title">Venti</h4>
+                <div style="display: inline-block; vertical-align: text-bottom;">
+                  <span class="tag tag-blue">Arduino</span>
+                  <span class="tag tag-blue">C++</span>
+                  <span class="tag tag-blue">Ajax</span>
+                </div>
+              </div>
+              <p class="card__content">The Venti is an autonomous temperature control system whiches uses a ESP32 to serve an Ajax web server over the local network. The webserver utilises websockets to update users pages in real-time without refreshing. 
+                 web interface is used in combination with a LoRa gateway to create an interface for users to send and receive vent data through the RFM95W LoRa transceiver. System also utilizes a SPIFFS library to create a solid state file storage system on the ESP32.
+              </p>
             </div>
           </div>
           <div class="cardContent">
@@ -84,9 +105,15 @@
               <img src="./assets/CrunchWheel.gif" alt="card__image" class="card__image" width="600">
             </div>
             <div class="card__body">
-              <span class="tag tag-red">Automobile</span>
-              <h4 class="card__title">What's new in 2022 Tech</h4>
-              <p class="card__content">Lorem ipsum dolor sit amet consectetur adipisicing elit. Sequi perferendis molestiae non nemo doloribus. Doloremque, nihil! At ea atque quidem!</p>
+              <div>
+                <h4 class="card__title">Amazon Cruncher</h4>
+                <div style="display: inline-block; vertical-align: text-bottom;">
+                  <span class="tag tag-blue">Node.js</span>
+                  <span class="tag tag-blue">Javascript</span>
+                </div>
+              </div>
+              
+              <p class="card__content">Amazon Cruncher takes csv's and generates a detailed order history report to help users visualize and understand their spending patterns and gain deeper understanding of where their money is going.</p>
             </div>
           </div>
         </div>
@@ -145,6 +172,7 @@
     
     if ($cell.not($thisCell).hasClass('is-inactive')) {
       console.log("1")
+      $cell.not($thisCell).removeClass('is-inactive');
       //do nothing
     } else {
       $cell.not($thisCell).addClass('is-inactive');
@@ -162,9 +190,10 @@
   $cell.find('.js-collapser').click(function() {
 
   var $thisCell = $(this).closest('.card');
-
+  console.log("7")
   $thisCell.removeClass('is-expanded').addClass('is-collapsed');
   $cell.not($thisCell).removeClass('is-inactive');
+  
   });
 </script>
 </body>
