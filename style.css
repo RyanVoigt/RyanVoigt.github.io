@@ -129,7 +129,7 @@ h1::after {
 
 .subtitle {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 2rem;
+  font-size: clamp(1rem, 1vw + 1rem, 4rem);
   font-weight: 400;
   opacity: 0;
   transform: translateY(3rem);
@@ -224,8 +224,6 @@ h1::after {
 
 .center {
   color: white;
-  margin: auto;
-  width: 55%;
   font-family: "Raleway";
   text-align: center;
   padding-top: 100px;
@@ -293,16 +291,7 @@ h1::after {
   transition: all 0.2s ease-in-out;
 
 }
-@media screen and (max-width: 991px) {
-  .card {
-    width: calc((100% / 2) - 30px);
-  }
-}
-@media screen and (max-width: 767px) {
-  .card {
-    width: 100%;
-  }
-}
+
 .card:hover .card__inner {
   background-color: #272727;
   transform: scale(1.05);
@@ -331,8 +320,7 @@ h1::after {
   margin-top: 0.25em;
 }
 .card__expander {
-  transition: all 0.3s ease-in-out;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.2s ease-in-out;
   background-color: #272727;
   width: 100%;
   position: relative;
@@ -342,7 +330,7 @@ h1::after {
   color: #eceef1;
 }
 .card__expander .fa {
-  font-size: 0.75em;
+  font-size: 1.2em;
   position: absolute;
   top: 10px;
   right: 10px;
@@ -401,14 +389,12 @@ h1::after {
 }
   .card:nth-of-type(2n+2) .card__expander {
     margin-left: calc(-100% - 30px);
+    float: right;
   }
   .card:nth-of-type(2n+3) {
     clear: left;
   }
-  .card__expander {
-    width: calc(200% + 30px);
-  }
-
+  .card__expander {}
 
 /* width */
 ::-webkit-scrollbar {
@@ -456,6 +442,7 @@ h1::after {
   justify-content: center;
   margin-block: 2rem;
   gap: 3rem;
+  padding: 10px;
 }
 
 img {
@@ -472,23 +459,47 @@ img {
   .cardContent {
     width: 45%;
   }
+  .card {
+    width: calc((100% / 2) - 30px);
+  }
+  .card__expander {
+    width: calc(200% + 30px);
+  }
 }
 
 @media screen and (min-width: 1200px) {
   .cardContent {
     width: 45%;
   }
-}
-
-@media screen and (max-width: 768px) {
-  .cardContent {
-
+  .card {
+    width: calc((100% / 2) - 30px);
+  }
+  .card__expander {
+    width: calc(200% + 30px);
   }
 }
 
 @media screen and (max-width: 768px) {
   .cardContent {
+    width: 100%;
+  }
+  .card {
+    width: 100%;
+  }
+  .card__expander {
+    width:100%
+  }
+}
 
+@media screen and (max-width: 768px) {
+  .cardContent {
+    width: 100%;
+  }
+  .card {
+    width: 100%;
+  }
+  .card__expander {
+    width:100%
   }
 }
 
