@@ -30,7 +30,7 @@
 
     <div class=" card [ is-collapsed ] " >
       <div class="card__inner [ js-expander ]" id = "card1">
-        <span>About Me</span>
+        <span class = "noselect">About Me</span>
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander" >
@@ -44,7 +44,7 @@
 
     <div class=" card [ is-collapsed ] " >
       <div class="card__inner [ js-expander ]" id = "card2" >
-        <span>Projects</span>
+        <span class = "noselect">Projects</span>
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander">
@@ -124,18 +124,23 @@
 
     <div class=" card [ is-collapsed ] " >
       <div class="card__inner [ js-expander ]" id = "card3">
-        <span>Resume</span>
+        <span class = "noselect">Resume</span>
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander">
-        <i class="fa fa-close [ js-collapser ]"></i>
-        Expander
+        <div class="container" style="gap: 1.7rem; padding: 0px;">
+        <i class="fa fa-close [ js-collapser ]" style = "z-index: 999999; color: #f2f2f2; width: 20px"></i>
+        <div>
+          <a class = "buttonResume" href="assets/images/Resume.pdf" download></i>Download PDF Version</a>
+        </div>
+          <img src="assets/resume.png" style="border-radius: 8px; width: 100%" alt="image">
+          </div>
       </div>
     </div>
 
     <div class=" card [ is-collapsed ] " >
       <div class="card__inner [ js-expander ]" id = "card4">
-        <span>Portfolio</span>
+        <span class = "noselect">Portfolio</span>
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander">
