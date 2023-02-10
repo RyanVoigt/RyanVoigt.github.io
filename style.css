@@ -7,6 +7,7 @@
 
 html, body {
   height: 100%;
+  font-family: 'Roboto', sans-serif !important;
 }
 
 body {
@@ -16,11 +17,39 @@ body {
   color: #000;
   line-height: 1.4;
   position: relative;
-  font-family: sans-serif;
+  font-family: monospace !important;
   overflow-y: scroll;
 }
 
+
+.togglecontainer {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
+  font-weight: 400;
+  opacity: 0;
+  padding-left: 30px;
+  transform: translateY(3rem);
+  animation: fadeInUp 1s ease calc(var(--typewriterSpeed) + 0.8s) forwards;
+  padding-top: 20px;
+  position: relative;
+}
+
+.checkmarkbox {
+  width: 70px;
+  position: relative;
+  display: inline-block;
+}
+
+.togglebox {
+  width: 200px;
+  position: relative;
+  display: inline-block;
+  top: -10px;
+  font-family: monospace;
+}
+
 .lines {
+  z-index: -1;
   position: absolute;
   top: 0;
   left: 0;
@@ -34,12 +63,14 @@ body {
 .line {
   position: absolute;
   width: 2.5px;
+  z-index: -1;
   height: 100%;
   top: 0;
   left: 50%;
 }
 .line::after {
   content: "";
+  z-index: -1;
   display: block;
   position: absolute;
   height: 15vh;
@@ -224,7 +255,6 @@ h1::after {
 
 .center {
   color: white;
-  font-family: "Raleway";
   text-align: center;
   padding-top: 100px;
   font-family: monospace;
@@ -255,12 +285,12 @@ h1::after {
   margin: 0;
   font-size: 1.5em;
   color: #949fb0;
-  font-family: 'Yesteryear', cursive;
+  font-family: 'Yesteryear', cursive !important;
   font-weight: 500;
   line-height: 1.1;
 }
 .cards {
-  padding: 15px;
+  padding: 0px 15px 15px 15px;
   display: flex;
   flex-flow: row wrap;
 }
@@ -324,6 +354,7 @@ h1::after {
   background-color: #272727;
   width: 100%;
   position: relative;
+  border: solid 0px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -333,7 +364,7 @@ h1::after {
   font-size: 1.5em;
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 16px;
   cursor: pointer;
   z-index: 99999999;
 }
@@ -432,7 +463,7 @@ h1::after {
   margin: 0;
 }
 .body2 {
-  font-family: "Quicksand", sans-serif;
+  font-family: "Quicksand", sans-serif ;
   display: grid;
   place-items: center;
   height: 100vh;}
@@ -450,6 +481,7 @@ h1::after {
 img {
   max-width: 100%;
   display: block;
+  max-height: 317px;
   object-fit: cover;
   margin-left: auto;
   margin-right: auto;
@@ -510,7 +542,7 @@ img {
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 .1rem 1rem rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
+  border: solid 0px;
   border-style: solid;
   border-width: 10px;
   border-color: #353535;
@@ -520,9 +552,14 @@ img {
 
 
 .card__body {
-  padding: 0.5rem;
   display: flex;
   flex-direction: column;
+  max-width:600px;
+  margin: auto;
+  background-color: #484848;
+  border: solid 0px;
+
+  padding: 15px;
   gap: .5rem;
 }
 
@@ -571,6 +608,7 @@ background: linear-gradient(to bottom, #ef473a, #cb2d3e);
 }
 
 .noselect {
+  font-size: 26px;
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
      -khtml-user-select: none; /* Konqueror HTML */
@@ -592,4 +630,68 @@ background: linear-gradient(to bottom, #ef473a, #cb2d3e);
   border-color: white;
   color: #eceef1;
   padding: 10px;
+}
+
+/* The switch - the box around the slider */
+.switch {
+  z-index: 10000000;
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 60px;
+  height: 34px;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2F4C39;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2F4C39;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }

@@ -3,11 +3,13 @@
 <html lang="en" xml:lang="en" xmlns= "http://www.w3.org/1999/xhtml">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 <meta name="google" content="notranslate">
 <meta http-equiv="Content-Language" content="en">
 <script src="https://kit.fontawesome.com/21457e6b79.js" crossorigin="anonymous"></script>
-<head>
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,9 +27,24 @@
     </div>
     </a>
 </div>
-<div>
-  <div class="cards">
 
+
+
+  <head>
+<div>
+<div class="togglecontainer">
+<div id ='togglebutton' class="checkmarkbox">
+<label  class="switch">
+  <input type="checkbox">
+  <span id ='slider' class="slider"></span>
+</label>
+</div>
+<div class="togglebox">
+  Toggle Sharp Edges
+</div>
+
+</div>
+  <div class="cards">
     <div class=" card [ is-collapsed ] " >
       <div class="card__inner [ js-expander ]" id = "card1">
         <span class = "noselect">About Me</span>
@@ -35,10 +52,14 @@
       </div>
       <div class="card__expander" >
         <i class="fa fa-close [ js-collapser ]"></i>
+        <div class="container">
+          <div id="edge" class="cardContent">
+            <div class="card__header">
+        <img src="./assets/ryan.jpg" alt="card__image" class="card__image" width="600">
 
-
-       
-
+        </div>
+      </div>
+    </div>
       </div>
     </div>
 
@@ -51,11 +72,11 @@
         <i class="fa fa-close [ js-collapser ]"></i>
 
         <div class="container">
-          <div class="cardContent">
+          <div id="edge" class="cardContent">
             <div class="card__header">
               <img src="./assets/Spotiry_Home_Page.gif" alt="card__image" class="card__image" width="600">
             </div>
-            <div class="card__body">
+            <div id="edgebot" class="card__body">
               <div>
                 <h4 class="card__title">SpotiRy</h4>
                 <div style="display: inline-block; vertical-align: text-bottom;">
@@ -66,11 +87,11 @@
               <p class="card__content">Utilizes the Spotify API to generate a spotify wrapped based on lifetime listening statistics instead of yearly. Also has a built in queue generator that hand picks a selection of recommended songs based on your listening habits</p>
             </div>
           </div>
-          <div class="cardContent">
+          <div id="edge" class="cardContent">
             <div class="card__header">
               <img src="./assets/MovieNomination.gif" alt="card__image" class="card__image" width="600">
             </div>
-            <div class="card__body">
+            <div id="edgebot" class="card__body">
               <div>
                 <h4 class="card__title">Movie Nomination</h4>
                 <div style="display: inline-block; vertical-align: text-bottom;">
@@ -82,11 +103,11 @@
             </div>
 
           </div>
-          <div class="cardContent">
+          <div id="edge" class="cardContent">
             <div class="card__header">
               <img src="./assets/venti.gif" alt="card__image" class="card__image" width="600">
             </div>
-            <div class="card__body">
+            <div id="edgebot" class="card__body">
               <div>
                 <h4 class="card__title">Venti</h4>
                 <div style="display: inline-block; vertical-align: text-bottom;">
@@ -100,11 +121,11 @@
               </p>
             </div>
           </div>
-          <div class="cardContent">
+          <div id="edge" class="cardContent">
             <div class="card__header">
               <img src="./assets/CrunchWheel.gif" alt="card__image" class="card__image" width="600">
             </div>
-            <div class="card__body">
+            <div id="edgebot" class="card__body">
               <div>
                 <h4 class="card__title">Amazon Cruncher</h4>
                 <div style="display: inline-block; vertical-align: text-bottom;">
@@ -151,7 +172,8 @@
 
   </div>
 </div>
-
+<div id="switch" style="display: none"></div>
+<div id="switchBounce" style="display: none"></div>
 <div class="lines">
   <div class="line"></div>
   <div class="line"></div>
@@ -201,4 +223,59 @@
   
   });
 </script>
+<script>
+   var newHandle = function(event) { 
+    if(document.getElementById('switchBounce').style.display == 'none') {
+        document.getElementById('switchBounce').style.display = 'block'
+    }
+    else if(document.getElementById('switch').style.display == 'none'){
+      round()
+      document.getElementById('switchBounce').style.display = 'none'
+    } else if (document.getElementById('switch').style.display != 'none') {
+        unround()
+        document.getElementById('switchBounce').style.display = 'none'
+      }
+    }
+    document.getElementById('togglebutton').addEventListener("click", newHandle, false)
+  function round() {
+    let testElements = document.getElementsByClassName('cardContent');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '15px'
+	  };
+    testElements = document.getElementsByClassName('card__body');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '0px 0px 15px 15px'
+	  };
+    testElements = document.getElementsByClassName('card__expander');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '15px'
+	  };
+    testElements = document.getElementsByClassName('card__inner');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '15px'
+	  };
+    document.getElementById('switch').style.display = 'block'
+    document.getElementById('slider').className = "slider round"
+  }
+  function unround() {
+    let testElements = document.getElementsByClassName('cardContent');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '0px'
+	  };
+    testElements = document.getElementsByClassName('card__body');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '0px 0px 0px 0px'
+	  };
+    testElements = document.getElementsByClassName('card__expander');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '0px'
+	  };
+    testElements = document.getElementsByClassName('card__inner');
+    for (let i = 0; i < testElements.length; i++) {
+      testElements[i].style.borderRadius = '0px'
+	  };
+    document.getElementById('switch').style.display = 'none'
+    document.getElementById('slider').className = "slider"
+  }
+    </script>
 </body>
