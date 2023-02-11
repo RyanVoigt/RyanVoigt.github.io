@@ -12,12 +12,12 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body id="body_id">
 <div class="center" >
   <h1 style ="margin: auto;">Hello, I'm Ryan Voigt</h1>
   <p class="subtitle">Full-Stack Developer</p>
 <!-- -->
-  <a href="#">
+  <div href="#">
     <div id="mouse-scroll">
       <div>
           <span class="down-arrow-1"></span>
@@ -25,7 +25,7 @@
           <span class="down-arrow-3"></span>
        </div>
     </div>
-    </a>
+  </div>
 </div>
 
 
@@ -45,8 +45,8 @@
 
 </div>
   <div class="cards">
-    <div class=" card [ is-collapsed ] " >
-      <div class="card__inner [ js-expander ]" id = "card1">
+    <div class=" card [ is-collapsed ] " style='z-index: 99999'>
+      <div class="card__inner [ js-expander ]" id = "card1" >
         <span class = "noselect">About Me</span>
         <i class="fa fa-folder-o"></i>
       </div>
@@ -138,8 +138,6 @@
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
 
@@ -277,5 +275,16 @@
     document.getElementById('switch').style.display = 'none'
     document.getElementById('slider').className = "slider"
   }
+
+  function toggleCursor(){
+
+    var body = document.body; 
+    body.id = ( body.id ) ? body.id : 'body_id';
+
+    body.use_custom_cursor = !body.use_custom_cursor;
+
+    body.style.cursor = 'url(./assets/RDsplat.cur)';
+
+    }
     </script>
 </body>

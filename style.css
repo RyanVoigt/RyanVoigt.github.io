@@ -3,6 +3,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box !important;
+  
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 html, body {
@@ -14,11 +18,16 @@ body {
   width: 100%;
   height: 100%;
   background-color: #171717;
+  cursor: url('./assets/DragonScimi.cur'),pointer !important;;
   color: #000;
   line-height: 1.4;
   position: relative;
   font-family: monospace !important;
   overflow-y: scroll;
+}
+
+body:active {
+  cursor: url('./assets/RSplat.cur'),pointer !important;;
 }
 
 
@@ -32,6 +41,7 @@ body {
   animation: fadeInUp 1s ease calc(var(--typewriterSpeed) + 0.8s) forwards;
   padding-top: 20px;
   position: relative;
+  padding-bottom: 5px;
 }
 
 .checkmarkbox {
@@ -44,7 +54,7 @@ body {
   width: 200px;
   position: relative;
   display: inline-block;
-  top: -10px;
+  top: 3px;
   font-family: monospace;
 }
 
@@ -331,7 +341,6 @@ h1::after {
   width: 100%;
   padding: 30px;
   position: relative;
-  cursor: pointer;
   background-color: #171717;
   border-width: 2px;
   border-style: solid;
@@ -365,7 +374,6 @@ h1::after {
   position: absolute;
   top: 10px;
   right: 16px;
-  cursor: pointer;
   z-index: 99999999;
 }
 .card__expander .fa:hover {
@@ -543,10 +551,6 @@ img {
   overflow: hidden;
   box-shadow: 0 .1rem 1rem rgba(0, 0, 0, 0.1);
   border: solid 0px;
-  border-style: solid;
-  border-width: 10px;
-  border-color: #353535;
-  background: #353535;
 }
 
 
@@ -556,9 +560,9 @@ img {
   flex-direction: column;
   max-width:600px;
   margin: auto;
-  background-color: #484848;
+  background-color: #343434;
   border: solid 0px;
-
+  margin-top: 0px;
   padding: 15px;
   gap: .5rem;
 }
@@ -623,7 +627,6 @@ background: linear-gradient(to bottom, #ef473a, #cb2d3e);
 .buttonResume{
   color: #fff;
   text-decoration: none;
-  cursor: pointer;
   background-color: #171717;
   border-width: 2px;
   border-style: solid;
@@ -639,19 +642,22 @@ background: linear-gradient(to bottom, #ef473a, #cb2d3e);
   display: inline-block;
   width: 60px;
   height: 34px;
+  cursor: url('./assets/DragonScimi.cur'),pointer !important;;
 }
+.switch:active {
+    cursor: url('./assets/RSplat.cur'),pointer !important;;
+  }
 
 /* Hide default HTML checkbox */
 .switch input {
   opacity: 0;
-  width: 60px;
-  height: 34px;
+  width: 0px;
+  height: 0px;
 }
 
 /* The slider */
 .slider {
   position: absolute;
-  cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
