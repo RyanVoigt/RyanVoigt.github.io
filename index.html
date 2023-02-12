@@ -27,23 +27,33 @@
     </div>
   </div>
 </div>
-
-
-
   <head>
 <div>
-<div class="togglecontainer">
-<div id ='togglebutton' class="checkmarkbox">
-<label  class="switch">
-  <input type="checkbox">
-  <span id ='slider' class="slider"></span>
-</label>
-</div>
-<div class="togglebox">
-  Toggle Sharp Edges
+
+<div class="togglecontainer" style="padding-top: 20px">
+  <div class="checkmarkbox">
+  <label  class="switch">
+    <input type="checkbox" value="sound" onclick="playMusic()">
+    <span id ='slider2' class="slider"></span>
+  </label>
+  </div>
+  <div class="togglebox">
+    Play Music
+  </div>
 </div>
 
+<div class="togglecontainer" style="padding-top: 13px">
+  <div id ='togglebutton' class="checkmarkbox">
+    <label  class="switch">
+      <input type="checkbox">
+      <span id ='slider' class="slider"></span>
+    </label>
+  </div>
+  <div class="togglebox">
+    Toggle Sharp Edges
+  </div>
 </div>
+
   <div class="cards">
     <div class=" card [ is-collapsed ] " style='z-index: 99999'>
       <div class="card__inner [ js-expander ]" id = "card1" >
@@ -51,13 +61,12 @@
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander" >
-        <i class="fa fa-close [ js-collapser ]"></i>
-        <div class="container">
+        <i class="fa fa-close [ js-collapser ] close_icon"></i>
+        <div class="container_about_me">
           <div id="edge" class="cardContent">
             <div class="card__header">
-        <img src="./assets/ryan.jpg" alt="card__image" class="card__image" width="600">
-
-        </div>
+              <img src="./assets/ryan.jpg" alt="card__image" class="personal_image" width="600">
+          </div>
       </div>
     </div>
       </div>
@@ -69,7 +78,7 @@
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander">
-        <i class="fa fa-close [ js-collapser ]"></i>
+        <i class="fa fa-close [ js-collapser ] close_icon"></i>
 
         <div class="container">
           <div id="edge" class="cardContent">
@@ -148,7 +157,7 @@
       </div>
       <div class="card__expander">
         <div class="container" style="gap: 1.7rem; padding: 0px;">
-        <i class="fa fa-close [ js-collapser ]" style = "z-index: 999999; color: #f2f2f2; width: 20px"></i>
+        <i class="fa fa-close [ js-collapser ] close_icon" style = "z-index: 999999; color: #f2f2f2; width: 20px"></i>
         <div>
           <a class = "buttonResume" href="assets/images/Resume.pdf" download></i>Download PDF Version</a>
         </div>
@@ -163,7 +172,7 @@
         <i class="fa fa-folder-o"></i>
       </div>
       <div class="card__expander">
-        <i class="fa fa-close [ js-collapser ]"></i>
+        <i class="fa fa-close [ js-collapser ] close_icon"></i>
         Expander
       </div>
     </div>
@@ -171,6 +180,7 @@
   </div>
 </div>
 <div id="switch" style="display: none"></div>
+<div id="MusicSwitch" style="display: none"></div>
 <div id="switchBounce" style="display: none"></div>
 <div class="lines">
   <div class="line"></div>
@@ -179,7 +189,7 @@
   <div class="line"></div>
   <div class="line"></div>
 </div>
-
+<audio src="./assets/jellyfish_jam.mp3" id="radio" class="hidden" preload="none"></audio>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script >
   var $cell = $('.card');
@@ -254,6 +264,7 @@
 	  };
     document.getElementById('switch').style.display = 'block'
     document.getElementById('slider').className = "slider round"
+    document.getElementById('slider2').className = "slider round"
   }
   function unround() {
     let testElements = document.getElementsByClassName('cardContent');
@@ -274,6 +285,7 @@
 	  };
     document.getElementById('switch').style.display = 'none'
     document.getElementById('slider').className = "slider"
+    document.getElementById('slider2').className = "slider"
   }
 
   function toggleCursor(){
@@ -286,5 +298,21 @@
     body.style.cursor = 'url(./assets/RDsplat.cur)';
 
     }
+
+    function playMusic(){
+      if(document.getElementById('MusicSwitch').style.display == 'none'){
+        var player = document.getElementById('radio');
+        player.play();
+        player.volume = 0.1;
+        document.getElementById('MusicSwitch').style.display = 'block'
+      } else {
+        var player = document.getElementById('radio');
+        player.pause();
+        document.getElementById('MusicSwitch').style.display = 'none'
+      }
+      
+
+  }
+
     </script>
 </body>

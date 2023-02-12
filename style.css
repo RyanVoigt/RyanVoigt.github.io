@@ -3,7 +3,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box !important;
-  
+  -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -27,9 +27,21 @@ body {
 }
 
 body:active {
-  cursor: url('./assets/RSplat.cur'),pointer !important;;
+  cursor: url('./assets/zerosplat.cur'),pointer !important;;
 }
 
+.close_icon:active {
+  cursor: url('./assets/hitsplat.cur'),pointer !important;
+}
+
+.personal_image {
+  width: 200px;
+  height: 200px;
+}
+
+.container_about_me {
+  width: 100%
+}
 
 .togglecontainer {
   color: rgba(255, 255, 255, 0.7);
@@ -351,6 +363,10 @@ h1::after {
   text-align: center;
   transition: all 0.2s ease-in-out;
 }
+.card__inner:active{
+  cursor: url('./assets/hitsplat.cur'),pointer !important;
+}
+
 .card__inner:after {
   transition: all 0.3s ease-in-out;
 }
@@ -645,7 +661,7 @@ background: linear-gradient(to bottom, #ef473a, #cb2d3e);
   cursor: url('./assets/DragonScimi.cur'),pointer !important;;
 }
 .switch:active {
-    cursor: url('./assets/RSplat.cur'),pointer !important;;
+    cursor: url('./assets/hitsplat.cur'),pointer !important;
   }
 
 /* Hide default HTML checkbox */
