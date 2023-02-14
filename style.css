@@ -764,3 +764,144 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+.body_starwars {
+  position: relative;
+  overflow: hidden
+} 
+
+.first-text {
+  position: absolute;
+  margin:auto;
+  max-width: 900px;
+  font-family: Lato, Sans-serif;
+  font-size: 3.5em;
+  font-weight: 100;
+  line-height: 1.5;
+  color: #41b8ce;
+  opacity: 0;
+  animation: first-text 4s linear;
+}
+
+@keyframes first-text {
+  from {
+    opacity: 1;
+  }
+  
+  to {
+    opacity: 1;
+  }
+}
+
+.star-wars {
+  position: absolute;
+  margin:auto;
+  width: 100%;
+  opacity: 0;
+  animation: star-wars 13s linear 7s;
+}
+
+@keyframes star-wars {
+  0%{
+    opacity: 1;
+  }
+  20% {
+    transform: scale(.8);
+  }
+  40% {
+    transform: scale(.6);
+  }
+  60% {
+    transform: scale(.4);
+  }
+  80% {
+    transform: scale(.2);
+  }
+  100%{
+    transform: scale(0);
+    opacity: 1;
+  }
+}
+
+.box-content {
+  top: -150px;
+  position: relative;
+  max-height: 1200px;
+  margin:auto;
+  width: 70%;
+  color: #ffd54e;
+  font-family: Allerta, Sans-serif;
+  transform: perspective(800px) rotateX(60deg);
+  overflow:hidden
+}
+
+.content {
+  opacity: 0;
+  animation: box 80s linear 18s;  
+  overflow:hidden
+} 
+
+@keyframes box{
+  0% {
+    opacity: 1;
+    transform: translateY(1150px);
+  }
+  100% {
+    opacity:1;
+    transform: translateY(-2000px); 
+  }
+}
+
+
+.box-content h2 {
+  text-align: center;
+  font-size: 3em;
+/*   margin-bottom: 80px; */
+  font-weight: bold;
+}
+
+.box-content h3 {
+  text-align: center;
+  font-size: 3.5em;
+}
+
+.box-content p {
+  text-align: justify;
+  font-size: 3em;
+  line-height: 1.2;
+  margin-bottom: 80px;
+  overflow:hidden
+}
+
+
+/* MEDIA QUERIES */
+
+@media screen and (max-width: 600px) {
+
+  .first-text {
+    font-size: 1.3em;
+    width: 340px;
+  }
+  
+  .box-content {
+  max-width: 250px;
+  transform: perspective(800px) rotateX(60deg);
+}
+  
+  .box-content h2 {
+  font-size: 1em;
+}
+
+.box-content h3 {
+  font-size: 1.6em;
+}
+
+.box-content p {
+  font-size: 1em;
+  line-height: 1.2;
+  margin-bottom: 40px;
+}
+  .content {
+  animation: box 80s linear 5s;  
+} 
+}
