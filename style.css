@@ -10,7 +10,20 @@
 }
 .IconClass{
   width: 30px;
-  height: 30px
+  height: 30px;
+  display: inline-block;
+}
+
+.IconClassContainer {
+  background-color: #3c3c3c;
+  border: 0px solid;
+  padding: 8px 15px 8px 15px;
+  cursor: url('./assets/DragonScimi.cur'),pointer !important;;
+  display: inline-block;
+  margin-top: 15px;
+}
+.IconClassContainer:active {
+  cursor: url('./assets/hitsplat.cur'),pointer !important;
 }
 
 html, body {
