@@ -54,25 +54,65 @@ body:active {
 .personal_image {
   width: 200px;
   height: 200px;
-  padding: 20px;
   margin: 0px;  
   float: left;
-
 }
+.version_container{
+  flex-grow: 100;
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 0 250px;
+}
+.starwars_version_button{
+  margin:auto;
+  margin-left: 20px;
+  margin-right: 20px;
+  background-color: #343434;
+  padding: 10px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  flex: 1 0 200px;
+  text-align: center;
+}
+.starwars_version_button:active {
+  cursor: url('./assets/hitsplat.cur'),pointer !important;
+}
+.normal_version_button{
+  padding: 10px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  background-color: #343434;
+  margin:auto;
+  margin-left: 20px;
+  margin-right: 20px;
+  flex: 1 0 200px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.normal_version_button:active {
+  cursor: url('./assets/hitsplat.cur'),pointer !important;
+}
+
 @media screen and (max-width: 520px) {
   .personal_image { 
     width: 100%; 
     height: 350px;
+    display: none;
     object-fit:contain;
     padding:12px;
     padding-bottom: 0;
+    margin-bottom: 20px;
     }
-
+    .normal_version_button{
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
 }
 
 .personal_intro{
   display: inline-block;
   padding: 20px;
+  padding-top: 0px;
   min-width: 250px;
   max-width: 100%;
   flex: 1;
@@ -81,7 +121,6 @@ body:active {
 
 .personalContainer {
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   width: 100%;
 }
@@ -234,6 +273,13 @@ h1::after {
   opacity: 0;
   transform: translateY(3rem);
   animation: fadeInUp 1s ease calc(var(--typewriterSpeed) + 0.8s) forwards;
+}
+
+.subtitle2 {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(1rem, 1vw + 1rem, 4rem);
+  font-weight: 600;
+  margin-bottom: 10px;
 }
 
 @keyframes typewriter {
@@ -594,6 +640,9 @@ img {
   .card__expander {
     width:100%
   }
+  .version_container{
+    margin-top: 50px;
+  }
 }
 
 @media screen and (max-width: 768px) {
@@ -766,13 +815,17 @@ input:checked + .slider:before {
 }
 
 .body_starwars {
+  width: 100%;
   position: relative;
-  overflow: hidden
+  overflow: hidden;
+  max-height: 600px;
 } 
 
 .first-text {
-  position: absolute;
+  text-align: center;
   margin:auto;
+  padding: 10px;
+  margin-top: 50px;
   max-width: 900px;
   font-family: Lato, Sans-serif;
   font-size: 3.5em;
@@ -780,7 +833,7 @@ input:checked + .slider:before {
   line-height: 1.5;
   color: #41b8ce;
   opacity: 0;
-  animation: first-text 4s linear;
+  animation: first-text 2s linear;
 }
 
 @keyframes first-text {
@@ -796,9 +849,11 @@ input:checked + .slider:before {
 .star-wars {
   position: absolute;
   margin:auto;
+  max-height: fit-content;
   width: 100%;
+  top: -30px;
   opacity: 0;
-  animation: star-wars 13s linear 7s;
+  animation: star-wars 4s linear 3s;
 }
 
 @keyframes star-wars {
@@ -823,34 +878,6 @@ input:checked + .slider:before {
   }
 }
 
-.box-content {
-  top: -150px;
-  position: relative;
-  max-height: 1200px;
-  margin:auto;
-  width: 70%;
-  color: #ffd54e;
-  font-family: Allerta, Sans-serif;
-  transform: perspective(800px) rotateX(60deg);
-  overflow:hidden
-}
-
-.content {
-  opacity: 0;
-  animation: box 80s linear 18s;  
-  overflow:hidden
-} 
-
-@keyframes box{
-  0% {
-    opacity: 1;
-    transform: translateY(1150px);
-  }
-  100% {
-    opacity:1;
-    transform: translateY(-2000px); 
-  }
-}
 
 
 .box-content h2 {
@@ -873,35 +900,68 @@ input:checked + .slider:before {
   overflow:hidden
 }
 
+.box-content {
+  top: -500px;
+  position: relative;
+  max-height: 1200px;
+  margin:auto;
+  width: 60%;
+  color: #ffd54e;
+  font-family: Allerta, Sans-serif;
+  transform: perspective(800px) rotateX(60deg);
+}
+
+.content {
+  opacity: 0;
+  animation: box 60s linear 3.5s;  
+  overflow:hidden
+}
 
 /* MEDIA QUERIES */
-
 @media screen and (max-width: 600px) {
 
   .first-text {
     font-size: 1.3em;
-    width: 340px;
+    width: 100%;
   }
-  
+  .body_starwars {
+    max-height: 400px;
+    
+  } 
   .box-content {
-  max-width: 250px;
-  transform: perspective(800px) rotateX(60deg);
-}
-  
-  .box-content h2 {
-  font-size: 1em;
-}
-
-.box-content h3 {
-  font-size: 1.6em;
-}
-
-.box-content p {
-  font-size: 1em;
-  line-height: 1.2;
-  margin-bottom: 40px;
-}
+    max-width: 220px;
+    width: 60%;
+    top:-150px;
+    font-size: 12px;
+    transform: perspective(800px) rotateX(60deg);
+  }
   .content {
-  animation: box 80s linear 5s;  
-} 
+    animation: box 100s linear -11s;  
+  } 
+  .box-content h2 {
+    font-size: 1em;
+  }
+
+  .box-content h3 {
+    font-size: 1.6em;
+  }
+
+  .box-content p {
+    font-size: 1em;
+    line-height: 1.2;
+    margin-bottom: 40px;
+  }
+
 }
+
+@keyframes box{
+  0% {
+    opacity: 1;
+    transform: translateY(1150px);
+  }
+  100% {
+    opacity:1;
+    transform: translateY(-2000px); 
+  }
+}
+

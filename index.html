@@ -35,7 +35,7 @@
 <div class="togglecontainer" style="padding-top: 20px">
   <div class="checkmarkbox">
   <label  class="switch">
-    <input type="checkbox" value="sound" onclick="playMusic()">
+    <input type="checkbox" value="sound" onclick=playMusic()>
     <span id ='slider2' class="slider"></span>
   </label>
   </div>
@@ -67,20 +67,43 @@
         <div class="container_about_me">
             <div class="personalContainer">
               <img src="./assets/ryan.jpg" alt="card__image" class="personal_image" width="600">
-              <div class="personal_intro">
-                <p class="subtitle">Ryan Voigt</p>
+              <div class="version_container">
+                <h2 id="starwars_version_button"class="starwars_version_button" onclick=starwars_version_button()>StarWars Version</h2>
+                <h2 id="normal_version_button"class="normal_version_button" onclick=normal_version_button()>Normal Version</h2>
+              </div>
+              <div class="personal_intro" id="normal_version" style="display: none">
+                <p class="subtitle2">Ryan Voigt</p>
                 I am a Mechatronics Engineering graduate from the University of Waterloo currently working at <a style="color: white" href="https://dozr.com/">DOZR</a> as a Full-Stack Developer.
-                <ul>
+                <ul style="padding: 20px; padding-bottom: 10px">
                   <li> 3 years of software development experience</li>
-                  <li> Frontends Frameworks: React, jQuery, Next.js, Express.js</li>
-                  <li> Backend Frameworks: Node.js + Express.js, .Net Core,</li>
-                  <li> Database: MongoDB, PostgresSQL, MySQL</li>
+                  <li> Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript</li>
+                  <li> Education: 3.6/4.0 GPA | University of Waterloo</li>
+                </ul>
                 <a class="IconClassContainer" href="https://www.linkedin.com/in/ryan-voigt/"><img class="IconClass" src="./assets/linkedin.svg"></a>
                 <a class="IconClassContainer" href="https://github.com/RyanVoigt"><img class="IconClass" src="./assets/github.svg"/></a>
                 <a class="IconClassContainer" href="mailto:rmvoigtdev@gmail.com"><img class="IconClass" src="./assets/mail.svg"/></a>
-                </ul>
               </div>
-              <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"></path>
+              
+              <div class="body_starwars" id="starwars_version" style="display: none" >
+                <p class="first-text">A short time ago in a town not far away....</p>
+                <img class="star-wars" src="https://www.tribunadeituverava.com.br/wp-content/uploads/2019/12/star-wars-logo-2.png" alt="Star Wars">
+                <div class="box-content">
+                  <div class="content">
+                    <h2>Episode IX</h2>
+                    <h3>Ryan Voigt</h3>
+        
+                    <p>
+                      I am a Mechatronics Engineering graduate from the University of Waterloo currently working at DOZR as a Full-Stack Developer with 3 years of software development experience</p>
+        
+                    <p>Software development holds a special place in my heart, there are not many other hobbies that I've found that can exhaust my brain like programming, and that is exactly what I desire in a career</p>
+        
+                    <p>
+                      Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript
+                    </p>
+
+                  </div>
+                </div>
+              </div>
             </div>
         </div>
       </div>
@@ -174,7 +197,7 @@
         <div>
           <a class = "buttonResume" href="assets/images/Resume.pdf" download></i>Download PDF Version</a>
         </div>
-          <img src="assets/resume.png" style="border-radius: 8px; width: 100%" alt="image">
+          <img src="assets/resume.png" style="border-radius: 8px; width: 100%; max-height: 500px" alt="image">
           </div>
       </div>
     </div>
@@ -191,26 +214,6 @@
     </div>
   </div>
 </div>
-      <div class="body_starwars">
-        <p class="first-text">A long time ago in a galaxy far, far away....</p>
-        <img class="star-wars" src="https://www.tribunadeituverava.com.br/wp-content/uploads/2019/12/star-wars-logo-2.png" alt="Star Wars">
-        <div class="box-content">
-          <div class="content">
-            <h2>Episode IX</h2>
-            <h3>THE RISE OF SKYWALKER</h3>
-
-            <p>
-              The dead speak! The galaxy has heard a mysterious broadcast, a threat of REVENGE in the sinister voice of the late EMPEROR PALPATINE.
-            </p>
-
-            <p>GENERAL LEIA ORGANA dispatches secret agents to gather intelligence, while REY, the last hope of the Jedi, trains for battle against the diabolical FIRST ORDER.</p>
-
-            <p>
-              Meanwhile, Supreme Leader KYLO REN rages in search of the phantom Emperor, determined to destroy any threat to his power....
-            </p>
-          </div>
-        </div>
-      </div>
 <div id="switch" style="display: none"></div>
 <div id="MusicSwitch" style="display: none"></div>
 <div id="switchBounce" style="display: none"></div>
@@ -264,6 +267,7 @@
   });
 </script>
 <script>
+
    var newHandle = function(event) { 
     if(document.getElementById('switchBounce').style.display == 'none') {
         document.getElementById('switchBounce').style.display = 'block'
@@ -350,4 +354,21 @@
         player.pause();
         document.getElementById('MusicSwitch').style.display = 'none'
       }
-  }
+    }
+    function starwars_version_button(){
+      if(document.getElementById('starwars_version').style.display == 'block'){
+        document.getElementById('starwars_version').style.display = 'none'
+      } else {
+        document.getElementById('starwars_version').style.display = 'block'
+        document.getElementById('normal_version').style.display = 'none'
+      }
+    }
+    function normal_version_button(){
+      if(document.getElementById('normal_version').style.display == 'block'){
+        document.getElementById('normal_version').style.display = 'none'
+      } else {
+      document.getElementById('starwars_version').style.display = 'none'
+      document.getElementById('normal_version').style.display = 'block'
+      }
+    }
+</script>
