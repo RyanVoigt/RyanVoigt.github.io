@@ -53,8 +53,7 @@ body:active {
 
 .personal_image {
   width: 200px;
-  height: 200px;
-  margin: 0px;  
+  height: 200px; 
   float: left;
 }
 .version_container{
@@ -67,12 +66,21 @@ body:active {
   margin:auto;
   margin-left: 20px;
   margin-right: 20px;
-  background-color: #343434;
+  background-color: #1e1e1e;
   padding: 10px;
   padding-top: 20px;
   padding-bottom: 20px;
   flex: 1 0 200px;
   text-align: center;
+  background-color: #171717;
+  border-width: 2px;
+  border-style: solid;
+  border-color: white;
+  color: #eceef1;
+  font-size: 1.5em;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.2s
 }
 .starwars_version_button:active {
   cursor: url('./assets/hitsplat.cur'),pointer !important;
@@ -81,16 +89,28 @@ body:active {
   padding: 10px;
   padding-top: 20px;
   padding-bottom: 20px;
-  background-color: #343434;
+  background-color: #1e1e1e;
   margin:auto;
   margin-left: 20px;
   margin-right: 20px;
   flex: 1 0 200px;
-  box-sizing: border-box;
+  background-color: #171717;
+  border-width: 2px;
+  border-style: solid;
+  border-color: white;
+  color: #eceef1;
+  font-size: 1.5em;
+  text-transform: uppercase;
   text-align: center;
+  transition: all 0.2s
 }
 .normal_version_button:active {
   cursor: url('./assets/hitsplat.cur'),pointer !important;
+}
+@media screen and (max-width: 560px) {
+  .normal_version_button{
+    margin-top:20px;
+  }
 }
 
 @media screen and (max-width: 520px) {
@@ -105,7 +125,6 @@ body:active {
     }
     .normal_version_button{
       margin-top: 20px;
-      margin-bottom: 20px;
     }
 }
 
@@ -124,6 +143,14 @@ body:active {
   flex-wrap: wrap;
   width: 100%;
 }
+
+.personalContainer2 {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 20px;
+}
+
 .container_about_me {
   width: 100%;
   font-size: 14px;
@@ -641,7 +668,7 @@ img {
     width:100%
   }
   .version_container{
-    margin-top: 50px;
+    margin-top: 20px;
   }
 }
 
@@ -815,10 +842,11 @@ input:checked + .slider:before {
 }
 
 .body_starwars {
+  background-image: url("https://drive.google.com/uc?export=view&id=1bDLa3QCFyNx-Cs9bfJ4lSl4enaqELinD");
   width: 100%;
   position: relative;
   overflow: hidden;
-  max-height: 600px;
+  max-height: 1200px;
 } 
 
 .first-text {
@@ -833,7 +861,7 @@ input:checked + .slider:before {
   line-height: 1.5;
   color: #41b8ce;
   opacity: 0;
-  animation: first-text 2s linear;
+  animation: first-text 5s linear;
 }
 
 @keyframes first-text {
@@ -849,11 +877,11 @@ input:checked + .slider:before {
 .star-wars {
   position: absolute;
   margin:auto;
-  max-height: fit-content;
+  max-height: 1000px;
   width: 100%;
   top: -30px;
   opacity: 0;
-  animation: star-wars 4s linear 3s;
+  animation: star-wars 13s linear 8.5s;
 }
 
 @keyframes star-wars {
@@ -926,7 +954,6 @@ input:checked + .slider:before {
   }
   .body_starwars {
     max-height: 400px;
-    
   } 
   .box-content {
     max-width: 220px;

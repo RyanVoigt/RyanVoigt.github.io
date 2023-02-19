@@ -2,7 +2,10 @@
 <!DOCTYPE html>
 <html lang="en" xml:lang="en" xmlns= "http://www.w3.org/1999/xhtml">
 <meta charset="UTF-8">
-
+<audio id ="AUDIO" preload="auto">
+  <source src="https://s.cdpn.io/1202/Star_Wars_original_opening_crawl_1977.ogg" type="audio/ogg" />
+  <source src="https://s.cdpn.io/1202/Star_Wars_original_opening_crawl_1977.mp3" type="audio/mpeg" />
+</audio>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,10 +69,12 @@
         <i class="fa fa-close [ js-collapser ] close_icon"></i>
         <div class="container_about_me">
             <div class="personalContainer">
-              <img src="./assets/ryan.jpg" alt="card__image" class="personal_image" width="600">
-              <div class="version_container">
-                <h2 id="starwars_version_button"class="starwars_version_button" onclick=starwars_version_button()>StarWars Version</h2>
-                <h2 id="normal_version_button"class="normal_version_button" onclick=normal_version_button()>Normal Version</h2>
+              <div class="personalContainer2">
+                <img src="./assets/ryan.jpg" alt="card__image" class="personal_image" width="600">
+                <div class="version_container">
+                  <h2 id="starwars_version_button"class="starwars_version_button" onclick=starwars_version_button()>StarWars Version</h2>
+                  <h2 id="normal_version_button"class="normal_version_button" onclick=normal_version_button()>Normal Version</h2>
+                </div>
               </div>
               <div class="personal_intro" id="normal_version" style="display: none">
                 <p class="subtitle2">Ryan Voigt</p>
@@ -355,10 +360,17 @@
         document.getElementById('MusicSwitch').style.display = 'none'
       }
     }
-    function starwars_version_button(){
+    function starwars_version_button(args){
       if(document.getElementById('starwars_version').style.display == 'block'){
         document.getElementById('starwars_version').style.display = 'none'
+        document.getElementById('starwars_version_button').style.backgroundColor = '#171717'
+        document.getElementById('normal_version_button').style.backgroundColor = '#171717'
+        document.getElementById('AUDIO').pause();
+        document.getElementById('AUDIO').currentTime = 0;
       } else {
+        document.getElementById('AUDIO').play()
+        document.getElementById('starwars_version_button').style.backgroundColor = '#2F4C39'
+        document.getElementById('normal_version_button').style.backgroundColor = '#171717'
         document.getElementById('starwars_version').style.display = 'block'
         document.getElementById('normal_version').style.display = 'none'
       }
@@ -366,7 +378,15 @@
     function normal_version_button(){
       if(document.getElementById('normal_version').style.display == 'block'){
         document.getElementById('normal_version').style.display = 'none'
+        document.getElementById('AUDIO').pause();
+        document.getElementById('normal_version_button').style.backgroundColor = '#171717'
+        document.getElementById('starwars_version_button').style.backgroundColor = '#171717'
+        document.getElementById('AUDIO').currentTime = 0;
       } else {
+        document.getElementById('AUDIO').pause();
+        document.getElementById('normal_version_button').style.backgroundColor = '#2F4C39'
+        document.getElementById('starwars_version_button').style.backgroundColor = '#171717'
+        document.getElementById('AUDIO').currentTime = 0;
       document.getElementById('starwars_version').style.display = 'none'
       document.getElementById('normal_version').style.display = 'block'
       }
