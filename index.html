@@ -15,206 +15,217 @@
 <script src="https://kit.fontawesome.com/21457e6b79.js" crossorigin="anonymous"></script>
 
   <link rel="stylesheet" href="style.css">
-
-</head>
-<body id="body_id">
-<div class="center" >
-  <h1 style ="margin: auto;">Hello, I'm Ryan Voigt</h1>
-  <p class="subtitle">Full-Stack Developer</p>
-<!-- -->
-  <div href="#">
-    <div id="mouse-scroll">
-      <div>
-          <span class="down-arrow-1"></span>
-          <span class="down-arrow-2"></span>
-          <span class="down-arrow-3"></span>
-       </div>
+<div class="totalContainer">
+  </head>
+  <body id="body_id">
+  <div class="center" >
+    <h1 style ="margin: auto;">Hello, I'm Ryan Voigt</h1>
+    <p class="subtitle">Full-Stack Developer</p>
+  <!-- -->
+    <div href="#">
+      <div id="mouse-scroll">
+        <div>
+            <span class="down-arrow-1"></span>
+            <span class="down-arrow-2"></span>
+            <span class="down-arrow-3"></span>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-  <head>
-<div>
+    <head>
+  <div>
 
-<div class="togglecontainer" style="padding-top: 20px">
-  <div class="checkmarkbox">
-  <label  class="switch">
-    <input type="checkbox" value="sound" onclick=playMusic()>
-    <span id ='slider2' class="slider"></span>
-  </label>
-  </div>
-  <div class="togglebox">
-    Play Music
-  </div>
-</div>
-
-<div class="togglecontainer" style="padding-top: 13px">
-  <div id ='togglebutton' class="checkmarkbox">
+  <div class="togglecontainer" style="padding-top: 20px">
+    <div class="checkmarkbox">
     <label  class="switch">
-      <input type="checkbox">
-      <span id ='slider' class="slider"></span>
+      <input type="checkbox" value="sound" onclick=playMusic()>
+      <span id ='slider2' class="slider"></span>
     </label>
+    </div>
+    <div class="togglebox">
+      Play Music
+    </div>
   </div>
-  <div class="togglebox">
-    Toggle Sharp Edges
-  </div>
-</div>
 
-  <div class="cards">
-    <div class=" card [ is-collapsed ] " style='z-index: 99999'>
-      <div class="card__inner [ js-expander ]" id = "card1" >
-        <span class = "noselect">About Me</span>
-        <i class="fa fa-folder-o"></i>
-      </div>
-      <div class="card__expander" >
-        <i class="fa fa-close [ js-collapser ] close_icon"></i>
-        <div class="container_about_me">
-            <div class="personalContainer">
-              <div class="personalContainer2">
-                <img src="./assets/ryan.jpg" alt="card__image" class="personal_image" width="600">
-                <div class="version_container">
-                  <h2 id="starwars_version_button"class="starwars_version_button" onclick=starwars_version_button()>StarWars Version</h2>
-                  <h2 id="normal_version_button"class="normal_version_button" onclick=normal_version_button()>Normal Version</h2>
+  <div class="togglecontainer" style="padding-top: 13px">
+    <div id ='togglebutton' class="checkmarkbox">
+      <label  class="switch">
+        <input type="checkbox">
+        <span id ='slider' class="slider"></span>
+      </label>
+    </div>
+    <div class="togglebox">
+      Toggle Sharp Edges
+    </div>
+  </div>
+
+    <div class="cards">
+      <div class=" card [ is-collapsed ] " style='z-index: 99999'>
+        <div class="card__inner [ js-expander ]" id = "card1" >
+          <span class = "noselect">About Me</span>
+          <i class="fa fa-folder-o"></i>
+        </div>
+        <div class="card__expander" >
+          <i class="fa fa-close [ js-collapser ] close_icon"></i>
+          <div class="container_about_me">
+              <div class="personalContainer">
+                <div class="personalContainer2">
+                  <img src="./assets/ryan.jpg" alt="card__image" class="personal_image" width="600">
+                  <div class="version_container">
+                    <h2 id="starwars_version_button"class="starwars_version_button" onclick=starwars_version_button()>StarWars Version</h2>
+                    <h2 id="normal_version_button"class="normal_version_button" onclick=normal_version_button()>Normal Version</h2>
+                  </div>
                 </div>
-              </div>
-              <div class="personal_intro" id="normal_version" style="display: none">
-                <p class="subtitle2">Ryan Voigt</p>
-                I am a Mechatronics Engineering graduate from the University of Waterloo currently working at <a style="color: white" href="https://dozr.com/">DOZR</a> as a Full-Stack Developer.
-                <ul style="padding: 20px; padding-bottom: 10px">
-                  <li> 3 years of software development experience</li>
-                  <li> Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript</li>
-                  <li> Education: 3.6/4.0 GPA | University of Waterloo</li>
-                </ul>
-                <a class="IconClassContainer" href="https://www.linkedin.com/in/ryan-voigt/"><img class="IconClass" src="./assets/linkedin.svg"></a>
-                <a class="IconClassContainer" href="https://github.com/RyanVoigt"><img class="IconClass" src="./assets/github.svg"/></a>
-                <a class="IconClassContainer" href="mailto:rmvoigtdev@gmail.com"><img class="IconClass" src="./assets/mail.svg"/></a>
-              </div>
-              
-              <div class="body_starwars" id="starwars_version" style="display: none" >
-                <p class="first-text">A short time ago in a town not far away....</p>
-                <img class="star-wars" src="https://www.tribunadeituverava.com.br/wp-content/uploads/2019/12/star-wars-logo-2.png" alt="Star Wars">
-                <div class="box-content">
-                  <div class="content">
-                    <h2>Episode IX</h2>
-                    <h3>Ryan Voigt</h3>
-        
-                    <p>
-                      I am a Mechatronics Engineering graduate from the University of Waterloo currently working at DOZR as a Full-Stack Developer with 3 years of software development experience</p>
-        
-                    <p>Software development holds a special place in my heart, there are not many other hobbies that I've found that can exhaust my brain like programming, and that is exactly what I desire in a career</p>
-        
-                    <p>
-                      Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript
-                    </p>
+                <div class="personal_intro" id="normal_version" style="display: none">
+                  <p class="subtitle2">Ryan Voigt</p>
+                  I am a Mechatronics Engineering graduate from the University of Waterloo currently working at <a style="color: white" href="https://dozr.com/">DOZR</a> as a Full-Stack Developer.
+                  <ul style="padding: 20px; padding-bottom: 10px">
+                    <li> 3 years of software development experience</li>
+                    <li> Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript</li>
+                    <li> Education: 3.6/4.0 GPA | University of Waterloo</li>
+                  </ul>
+                  <a class="IconClassContainer" href="https://www.linkedin.com/in/ryan-voigt/"><img class="IconClass" src="./assets/linkedin.svg"></a>
+                  <a class="IconClassContainer" href="https://github.com/RyanVoigt"><img class="IconClass" src="./assets/github.svg"/></a>
+                  <a class="IconClassContainer" href="mailto:rmvoigtdev@gmail.com"><img class="IconClass" src="./assets/mail.svg"/></a>
+                </div>
+                
+                <div class="body_starwars" id="starwars_version" style="display: none" >
+                  <p class="first-text">A short time ago in a town not far away....</p>
+                  <img class="star-wars" src="https://www.tribunadeituverava.com.br/wp-content/uploads/2019/12/star-wars-logo-2.png" alt="Star Wars">
+                  <div class="box-content">
+                    <div class="content">
+                      <h2>Episode IX</h2>
+                      <h3>Ryan Voigt</h3>
+          
+                      <p>
+                        I am a Mechatronics Engineering graduate from the University of Waterloo currently working at DOZR as a Full-Stack Developer with 3 years of software development experience</p>
+          
+                      <p>Software development holds a special place in my heart, there are not many other hobbies that I've found that can exhaust my brain like programming, and that is exactly what I desire in a career</p>
+          
+                      <p>
+                        Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript
+                      </p>
 
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class=" card [ is-collapsed ] " >
-      <div class="card__inner [ js-expander ]" id = "card2" >
-        <span class = "noselect">Projects</span>
-        <i class="fa fa-folder-o"></i>
-      </div>
-      <div class="card__expander">
-        <i class="fa fa-close [ js-collapser ] close_icon"></i>
+      <div class=" card [ is-collapsed ] " >
+        <div class="card__inner [ js-expander ]" id = "card2" >
+          <span class = "noselect">Projects</span>
+          <i class="fa fa-folder-o"></i>
+        </div>
+        <div class="card__expander">
+          <i class="fa fa-close [ js-collapser ] close_icon"></i>
 
-        <div class="container">
-          <div id="edge" class="cardContent">
-            <div class="card__header">
-              <img src="./assets/Spotiry_Home_Page.gif" alt="card__image" class="card__image" width="600">
-            </div>
-            <div id="edgebot" class="card__body">
-              <div>
-                <h4 class="card__title">SpotiRy</h4>
-                <div style="display: inline-block; vertical-align: text-bottom;">
-                <span class="tag tag-blue">Node.js</span>
-                <span class="tag tag-blue">Javascript</span>
+          <div class="container">
+            <div id="edge" class="cardContent">
+              <div class="card__header">
+                <img src="./assets/Spotiry_Home_Page.gif" alt="card__image" class="card__image" width="600">
               </div>
-              </div>
-              <p class="card__content">Utilizes the Spotify API to generate a spotify wrapped based on lifetime listening statistics instead of yearly. Also has a built in queue generator that hand picks a selection of recommended songs based on your listening habits</p>
-            </div>
-          </div>
-          <div id="edge" class="cardContent">
-            <div class="card__header">
-              <img src="./assets/MovieNomination.gif" alt="card__image" class="card__image" width="600">
-            </div>
-            <div id="edgebot" class="card__body">
-              <div>
-                <h4 class="card__title">Movie Nomination</h4>
-                <div style="display: inline-block; vertical-align: text-bottom;">
-                  <span class="tag tag-blue">React</span>
-                  <span class="tag tag-blue">Javascript</span>
-                </div>
-              </div>
-              <p class="card__content">Utilizes the OMDB movie database API to allow users to search for movies and rank them for an award cermony. React drag and drop components allowing users to adjust movie positions after selection.</p>
-            </div>
-
-          </div>
-          <div id="edge" class="cardContent">
-            <div class="card__header">
-              <img src="./assets/venti.gif" alt="card__image" class="card__image" width="600">
-            </div>
-            <div id="edgebot" class="card__body">
-              <div>
-                <h4 class="card__title">Venti</h4>
-                <div style="display: inline-block; vertical-align: text-bottom;">
-                  <span class="tag tag-blue">Arduino</span>
-                  <span class="tag tag-blue">C++</span>
-                  <span class="tag tag-blue">Ajax</span>
-                </div>
-              </div>
-              <p class="card__content">The Venti is an autonomous temperature control system whiches uses a ESP32 to serve an Ajax web server over the local network. The webserver utilises websockets to update users pages in real-time without refreshing. 
-                 web interface is used in combination with a LoRa gateway to create an interface for users to send and receive vent data through the RFM95W LoRa transceiver. System also utilizes a SPIFFS library to create a solid state file storage system on the ESP32.
-              </p>
-            </div>
-          </div>
-          <div id="edge" class="cardContent">
-            <div class="card__header">
-              <img src="./assets/CrunchWheel.gif" alt="card__image" class="card__image" width="600">
-            </div>
-            <div id="edgebot" class="card__body">
-              <div>
-                <h4 class="card__title">Amazon Cruncher</h4>
-                <div style="display: inline-block; vertical-align: text-bottom;">
+              <div id="edgebot" class="card__body">
+                <div>
+                  <h4 class="card__title">SpotiRy</h4>
+                  <div style="display: inline-block; vertical-align: text-bottom;">
                   <span class="tag tag-blue">Node.js</span>
                   <span class="tag tag-blue">Javascript</span>
                 </div>
+                </div>
+                <p class="card__content">Utilizes the Spotify API to generate a spotify wrapped based on lifetime listening statistics instead of yearly. Also has a built in queue generator that hand picks a selection of recommended songs based on your listening habits</p>
               </div>
-              
-              <p class="card__content">Amazon Cruncher takes csv's and generates a detailed order history report to help users visualize and understand their spending patterns and gain deeper understanding of where their money is going.</p>
+            </div>
+            <div id="edge" class="cardContent">
+              <div class="card__header">
+                <img src="./assets/MovieNomination.gif" alt="card__image" class="card__image" width="600">
+              </div>
+              <div id="edgebot" class="card__body">
+                <div>
+                  <h4 class="card__title">Movie Nomination</h4>
+                  <div style="display: inline-block; vertical-align: text-bottom;">
+                    <span class="tag tag-blue">React</span>
+                    <span class="tag tag-blue">Javascript</span>
+                  </div>
+                </div>
+                <p class="card__content">Utilizes the OMDB movie database API to allow users to search for movies and rank them for an award cermony. React drag and drop components allowing users to adjust movie positions after selection.</p>
+              </div>
+
+            </div>
+            <div id="edge" class="cardContent">
+              <div class="card__header">
+                <img src="./assets/venti.gif" alt="card__image" class="card__image" width="600">
+              </div>
+              <div id="edgebot" class="card__body">
+                <div>
+                  <h4 class="card__title">Venti</h4>
+                  <div style="display: inline-block; vertical-align: text-bottom;">
+                    <span class="tag tag-blue">Arduino</span>
+                    <span class="tag tag-blue">C++</span>
+                    <span class="tag tag-blue">Ajax</span>
+                  </div>
+                </div>
+                <p class="card__content">The Venti is an autonomous temperature control system whiches uses a ESP32 to serve an Ajax web server over the local network. The webserver utilises websockets to update users pages in real-time without refreshing. 
+                  web interface is used in combination with a LoRa gateway to create an interface for users to send and receive vent data through the RFM95W LoRa transceiver. System also utilizes a SPIFFS library to create a solid state file storage system on the ESP32.
+                </p>
+              </div>
+            </div>
+            <div id="edge" class="cardContent">
+              <div class="card__header">
+                <img src="./assets/CrunchWheel.gif" alt="card__image" class="card__image" width="600">
+              </div>
+              <div id="edgebot" class="card__body">
+                <div>
+                  <h4 class="card__title">Amazon Cruncher</h4>
+                  <div style="display: inline-block; vertical-align: text-bottom;">
+                    <span class="tag tag-blue">Node.js</span>
+                    <span class="tag tag-blue">Javascript</span>
+                  </div>
+                </div>
+                
+                <p class="card__content">Amazon Cruncher takes csv's and generates a detailed order history report to help users visualize and understand their spending patterns and gain deeper understanding of where their money is going.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class=" card [ is-collapsed ] " >
-      <div class="card__inner [ js-expander ]" id = "card3">
-        <span class = "noselect">Resume</span>
-        <i class="fa fa-folder-o"></i>
-      </div>
-      <div class="card__expander">
-        <div class="container" style="gap: 1.7rem; padding: 0px;">
-        <i class="fa fa-close [ js-collapser ] close_icon" style = "z-index: 999999; color: #f2f2f2; width: 20px"></i>
-        <div>
-          <a class = "buttonResume" href="assets/images/Resume.pdf" download></i>Download PDF Version</a>
+      <div class=" card [ is-collapsed ] " >
+        <div class="card__inner [ js-expander ]" id = "card3">
+          <span class = "noselect">Resume</span>
+          <i class="fa fa-folder-o"></i>
         </div>
-          <img src="assets/resume.png" style="border-radius: 8px; width: 100%; max-height: 500px" alt="image">
+        <div class="card__expander">
+          <div class="container" style="gap: 0rem; padding: 0px;">
+            <i class="fa fa-close [ js-collapser ] close_icon" style = "z-index: 999999; color: #f2f2f2; width: 20px"></i>
+            <div style="width: 100%; text-align: center; padding-bottom: 30px;">
+              <a class="buttonResume" style="margin: auto" href="assets/images/Resume.pdf" download></i>Download PDF Version</a>
+            </div>
+            <div id = "resumeContainer" class = "trippytextanimationContainer" >
+              <h3 class = "trippytextanimation" style = "margin: auto;">You Will Give Me An Interview</h3>
+              <img src="assets/hypnotize.gif" class="resume" style = "position: absolute;    
+              margin: auto;
+              left: 0px;
+              right: 0;
+              top:80px;
+              text-align: center;
+              z-index: 1;" alt="image">
+            </div>
+            <img src="assets/resume.png" class="resume" alt="image">
           </div>
+        </div>
       </div>
-    </div>
 
-    <div class=" card [ is-collapsed ] " >
-      <div class="card__inner [ js-expander ]" id = "card4">
-        <span class = "noselect">Portfolio</span>
-        <i class="fa fa-folder-o"></i>
-      </div>
-      <div class="card__expander">
-        <i class="fa fa-close [ js-collapser ] close_icon"></i>
-        Expander
+      <div class=" card [ is-collapsed ] " >
+        <div class="card__inner [ js-expander ]" id = "card4">
+          <span class = "noselect">Portfolio</span>
+          <i class="fa fa-folder-o"></i>
+        </div>
+        <div class="card__expander">
+          <i class="fa fa-close [ js-collapser ] close_icon"></i>
+          Expander
+        </div>
       </div>
     </div>
   </div>
@@ -222,6 +233,9 @@
 <div id="switch" style="display: none"></div>
 <div id="MusicSwitch" style="display: none"></div>
 <div id="switchBounce" style="display: none"></div>
+
+<audio src="./assets/jellyfish_jam.mp3" id="radio" class="hidden" preload="none"></audio>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <div class="lines">
   <div class="line"></div>
   <div class="line"></div>
@@ -229,8 +243,6 @@
   <div class="line"></div>
   <div class="line"></div>
 </div>
-<audio src="./assets/jellyfish_jam.mp3" id="radio" class="hidden" preload="none"></audio>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script >
   var $cell = $('.card');
   //open and close card when clicked on card
@@ -272,7 +284,18 @@
   });
 </script>
 <script>
-
+  const restartAnimations = (element) => {
+  for (const animation of document.getAnimations()) {
+    if (element.contains((animation.effect).target)) {
+      animation.cancel();
+      animation.play();
+    }
+  }
+};
+  var newHandle3 = function(event) { 
+    restartAnimations(document.getElementById('resumeContainer'))
+  }
+  document.getElementById('card3').addEventListener("click", newHandle3, false)
    var newHandle = function(event) { 
     if(document.getElementById('switchBounce').style.display == 'none') {
         document.getElementById('switchBounce').style.display = 'block'
