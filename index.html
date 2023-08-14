@@ -91,21 +91,15 @@
                 
                 <div class="body_starwars" id="starwars_version" style="display: none" >
                   <p class="first-text">A short time ago in a town not far away....</p>
-                  <img class="star-wars" src="https://www.tribunadeituverava.com.br/wp-content/uploads/2019/12/star-wars-logo-2.png" alt="Star Wars">
+                  <img class="star-wars" src="./assets/NoBackgroundRyanWars.png" alt="Star Wars">
                   <div class="box-content">
                     <div class="content">
                       <h2>Episode IX</h2>
                       <h3>Ryan Voigt</h3>
-          
-                      <p>
-                        I am a Mechatronics Engineering graduate from the University of Waterloo currently working at DOZR as a Full-Stack Developer with 3 years of software development experience</p>
-          
-                      <p>Software development holds a special place in my heart, there are not many other hobbies that I've found that can exhaust my brain like programming, and that is exactly what I desire in a career</p>
-          
-                      <p>
-                        Languages: Javascript, Python, Node.js, Mongo, Redux, Objective-C, C#, Java, C++, React, SQL, TypeScript
-                      </p>
-
+                      <p>Damn... You stuck around through the entire intro? I appreciate the dedication, I guess this is the part where I start describing myself in 3rd person...</p>
+                      <p>Well, he's a software engineer from the University of Waterloo with roughly 4 years of industry software development experience. He  and has a very large portfolio of projects currently a Fullstack Web Developer but is a quick learner and always interested in taking on new challenges</p>
+                      <p>You are pretty invested in this star wars introduction eh? It's pretty sweet, but in hindsight I feel like it makes things a lot more difficult to read, with the timing and everything... Not the greatest, But I'm not gonna get rid of it./p>
+                      <p>Feel free to explore this page, and learn about me in a more digestable and less stressful format :) </p>
                     </div>
                   </div>
                 </div>
@@ -321,12 +315,14 @@
     $thisCell.removeClass('is-collapsed').addClass('is-expanded');
     
     if ($cell.not($thisCell).hasClass('is-inactive')) {
-      console.log("1")
+      document.getElementById('AUDIO').pause();
+      document.getElementById('AUDIO').currentTime = 0;
       $cell.not($thisCell).removeClass('is-inactive');
       //do nothing
     } else {
       $cell.not($thisCell).addClass('is-inactive');
-      console.log("2")
+      document.getElementById('AUDIO').pause();
+      document.getElementById('AUDIO').currentTime = 0;
     }
 
   } else {
@@ -340,7 +336,8 @@
   $cell.find('.js-collapser').click(function() {
 
   var $thisCell = $(this).closest('.card');
-  console.log("7")
+  document.getElementById('AUDIO').pause();
+  document.getElementById('AUDIO').currentTime = 0;
   $thisCell.removeClass('is-expanded').addClass('is-collapsed');
   $cell.not($thisCell).removeClass('is-inactive');
   

@@ -970,7 +970,7 @@ input:checked + .slider:before {
 
 .content {
   opacity: 0;
-  animation: box 60s linear 3.5s;  
+  animation: box 60s linear 18s;  
   overflow:hidden
 }
 
@@ -991,8 +991,11 @@ input:checked + .slider:before {
     font-size: 12px;
     transform: perspective(800px) rotateX(60deg);
   }
+  .star-wars {
+    top: 40px;
+  }
   .content {
-    animation: box 100s linear -11s;  
+    animation: box 180s linear -11s;  
   } 
   .box-content h2 {
     font-size: 1em;
