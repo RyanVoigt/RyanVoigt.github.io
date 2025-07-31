@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saturn Ring Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #000011, #000033, #001122);
+            color: white;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #444;
+            background: radial-gradient(circle, #001133 0%, #000011 100%);
+        }
+        
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #444;
+        }
+        
+        #defensePanel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #444;
+        }
+        
+        .defenseButton {
+            padding: 10px 15px;
+            background: linear-gradient(45deg, #333, #555);
+            border: 2px solid #666;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .defenseButton:hover {
+            background: linear-gradient(45deg, #555, #777);
+            border-color: #888;
+        }
+        
+        .defenseButton.selected {
+            background: linear-gradient(45deg, #004488, #0066bb);
+            border-color: #0088ff;
+        }
+        
+        .defenseButton.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #waveInfo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #444;
+            text-align: center;
+        }
+        
+        .health-bar {
+            width: 30px;
+            height: 4px;
+            background: #333;
+            margin-top: 2px;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ffaa44, #44ff44);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="800"></canvas>
+        
+        <div id="ui">
+            <div>Money: $<span id="money">100</span></div>
+            <div>Lives: <span id="lives">20</span></div>
+            <div>Score: <span id="score">0</span></div>
+        </div>
+        
+        <div id="progressBar" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 2px solid #444; min-width: 300px;">
+            <div>Kills: <span id="totalKills">0</span> (×<span id="killMultiplier">1.0</span> reward)</div>
+            <div>Defenders: <span id="totalDefenders">0</span> (+<span id="defenderBonus">0</span>% damage)</div>
+        </div>
+        
+        <div id="defensePanel">
+            <div class="defenseButton" data-type="laser" data-cost="25">
+                Laser Tower<br>$25
+            </div>
+            <div class="defenseButton" data-type="missile" data-cost="50">
+                Missile Tower<br>$50
+            </div>
+            <div class="defenseButton" data-type="plasma" data-cost="75">
+                Plasma Tower<br>$75
+            </div>
+            <div class="defenseButton" data-type="shield" data-cost="100">
+                Shield Block<br>$100
+            </div>
+        </div>
+        
+        <div id="deletePanel" style="position: absolute; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #444;">
+            <div id="deleteButton" style="padding: 10px 15px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; text-align: center; color: white;">
+                Delete Defender<br>50% Refund
+            </div>
+        </div>
+        
+        <div id="waveInfo">
+            <div>Wave: <span id="wave">1</span></div>
+            <div>Enemies: <span id="enemiesLeft">0</span></div>
+            <div id="nextWaveTimer"></div>
+            <div id="bossWarning" style="margin-top: 10px; padding: 10px; background: #660000; border: 2px solid #880000; border-radius: 5px; text-align: center; display: none; color: #ff0000; font-weight: bold;">
+                ⚠️ RING BOSS INCOMING! ⚠️
+            </div>
+            <div id="startButton" style="margin-top: 10px; padding: 10px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; text-align: center;">
+                START GAME
+            </div>
+            <div id="pauseButton" style="margin-top: 10px; padding: 10px; background: #666600; border: 2px solid #888800; border-radius: 5px; cursor: pointer; text-align: center; display: none;">
+                PAUSE
+            </div>
+        </div>
+        
+        <div id="ringUnlockPanel" style="position: absolute; bottom: 20px; right: 20px; background: rgba(0, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #444;">
+            <div>Rings: <span id="unlockedRings">1</span>/4</div>
+            <div id="unlockRingButton" style="margin-top: 10px; padding: 10px; background: #660066; border: 2px solid #880088; border-radius: 5px; cursor: pointer; text-align: center;">
+                Unlock Ring<br>$500
+            </div>
+        </div>
+        
+        <div id="pauseMenu" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #666; border-radius: 15px; text-align: center; display: none; z-index: 200;">
+            <h2 style="color: white; margin-top: 0;">GAME PAUSED</h2>
+            <div id="resumeButton" style="margin: 10px; padding: 15px 25px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
+                RESUME
+            </div>
+            <div id="restartButton" style="margin: 10px; padding: 15px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
+                RESTART
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameState = {
+            money: 100,
+            lives: 20,
+            score: 0,
+            wave: 1,
+            selectedDefenseType: null,
+            unlockedRings: 1,
+            deleteMode: false,
+            defenders: [],
+            enemies: [],
+            projectiles: [],
+            particles: [],
+            lastUpdate: 0,
+            waveActive: false,
+            enemiesSpawned: 0,
+            enemiesKilled: 0,
+            totalEnemiesKilled: 0,
+            totalDefendersPlaced: 0,
+            waveStartTime: 0,
+            nextWaveDelay: 3000,
+            gameStarted: false,
+            gameRunning: false,
+            gamePaused: false,
+            killMultiplier: 1,
+            defenderBonus: 1
+        };
+        
+        // Saturn properties
+        const saturn = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 80,
+            rings: [
+                { inner: 100, outer: 120, color: 'rgba(255, 200, 200, 0.4)' },  // Ring 1 - reddish
+                { inner: 140, outer: 160, color: 'rgba(200, 255, 200, 0.4)' },  // Ring 2 - greenish
+                { inner: 180, outer: 200, color: 'rgba(200, 200, 255, 0.4)' },  // Ring 3 - bluish
+                { inner: 220, outer: 240, color: 'rgba(255, 255, 200, 0.4)' }   // Ring 4 - yellowish
+            ]
+        };
+        
+        // Defense types
+        const defenseTypes = {
+            laser: {
+                cost: 25,
+                health: 100,
+                damage: 15,
+                range: 120,
+                fireRate: 800,
+                color: '#ff4444',
+                projectileSpeed: 8,
+                size: 8
+            },
+            missile: {
+                cost: 50,
+                health: 120,
+                damage: 30,
+                range: 150,
+                fireRate: 1200,
+                color: '#44ff44',
+                projectileSpeed: 5,
+                size: 10,
+                explosive: true
+            },
+            plasma: {
+                cost: 75,
+                health: 150,
+                damage: 25,
+                range: 100,
+                fireRate: 600,
+                color: '#4444ff',
+                projectileSpeed: 6,
+                size: 12,
+                piercing: true
+            },
+            shield: {
+                cost: 100,
+                health: 300,
+                damage: 0,
+                range: 60,
+                fireRate: 0,
+                color: '#ffff44',
+                projectileSpeed: 0,
+                size: 15,
+                blocking: true
+            }
+        };
+        
+        // Enemy types
+        const enemyTypes = {
+            basic: {
+                health: 50,
+                speed: 1,
+                reward: 10,
+                color: '#ff6666',
+                size: 8
+            },
+            fast: {
+                health: 30,
+                speed: 2,
+                reward: 15,
+                color: '#66ff66',
+                size: 6
+            },
+            heavy: {
+                health: 150,
+                speed: 0.5,
+                reward: 30,
+                color: '#6666ff',
+                size: 12
+            },
+            boss: {
+                health: 500,
+                speed: 0.3,
+                reward: 100,
+                color: '#ff66ff',
+                size: 20
+            },
+            ringBoss: {
+                health: 1500, // Reduced from 3000 to be more manageable
+                speed: 0.2,
+                reward: 500,
+                color: '#ff0000',
+                size: 25,
+                isRingBoss: true
+            }
+        };
+        
+        class Defender {
+            constructor(angle, type, ring) {
+                this.angle = angle;
+                this.type = type;
+                this.ring = ring;
+                this.props = defenseTypes[type];
+                this.health = this.props.health;
+                this.maxHealth = this.props.health;
+                this.lastFire = 0;
+                this.orbitRadius = saturn.rings[ring].inner + (saturn.rings[ring].outer - saturn.rings[ring].inner) / 2;
+                this.angularSpeed = 0.5; // degrees per frame
+            }
+            
+            update(deltaTime) {
+                // Orbit around Saturn
+                this.angle += this.angularSpeed * deltaTime / 16;
+                if (this.angle >= 360) this.angle -= 360;
+                
+                // Calculate position
+                const rad = this.angle * Math.PI / 180;
+                this.x = saturn.x + Math.cos(rad) * this.orbitRadius;
+                this.y = saturn.y + Math.sin(rad) * this.orbitRadius;
+                
+                // Shield towers block instead of attacking
+                if (this.type === 'shield') {
+                    this.blockEnemies();
+                } else {
+                    // Find target and attack
+                    const target = this.findTarget();
+                    if (target && Date.now() - this.lastFire > this.props.fireRate) {
+                        this.fire(target);
+                        this.lastFire = Date.now();
+                    }
+                }
+            }
+            
+            blockEnemies() {
+                // Shield towers physically block enemies
+                for (const enemy of gameState.enemies) {
+                    const dist = Math.sqrt((enemy.x - this.x) ** 2 + (enemy.y - this.y) ** 2);
+                    if (dist < this.props.size + enemy.props.size + 5) {
+                        // Push enemy away from shield
+                        const dx = enemy.x - this.x;
+                        const dy = enemy.y - this.y;
+                        const pushDist = this.props.size + enemy.props.size + 5;
+                        const currentDist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (currentDist > 0) {
+                            enemy.x = this.x + (dx / currentDist) * pushDist;
+                            enemy.y = this.y + (dy / currentDist) * pushDist;
+                        }
+                        
+                        // Slow down the enemy significantly
+                        enemy.slow = Math.min(enemy.slow, 0.1);
+                    }
+                }
+            }
+            
+            findTarget() {
+                let closest = null;
+                let closestDist = this.props.range;
+                
+                for (const enemy of gameState.enemies) {
+                    const dist = Math.sqrt((enemy.x - this.x) ** 2 + (enemy.y - this.y) ** 2);
+                    if (dist < closestDist) {
+                        closest = enemy;
+                        closestDist = dist;
+                    }
+                }
+                
+                return closest;
+            }
+            
+            fire(target) {
+                // Apply defender bonus to damage
+                const bonusDamage = this.props.damage * (1 + gameState.defenderBonus / 100);
+                
+                const projectile = {
+                    x: this.x,
+                    y: this.y,
+                    targetX: target.x,
+                    targetY: target.y,
+                    target: target,
+                    damage: bonusDamage,
+                    speed: this.props.projectileSpeed,
+                    color: this.props.color,
+                    type: this.type,
+                    life: 1000
+                };
+                
+                // Calculate velocity
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                projectile.vx = (dx / dist) * projectile.speed;
+                projectile.vy = (dy / dist) * projectile.speed;
+                
+                gameState.projectiles.push(projectile);
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Draw defender with special effects for shield
+                if (this.type === 'shield') {
+                    // Draw shield with pulsing effect
+                    const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+                    ctx.fillStyle = this.props.color;
+                    ctx.globalAlpha = pulse;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    // Draw shield core
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Normal defender
+                    ctx.fillStyle = this.props.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw health bar
+                if (this.health < this.maxHealth) {
+                    const barWidth = this.props.size * 2;
+                    const barHeight = 3;
+                    const healthPercent = this.health / this.maxHealth;
+                    
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(-barWidth/2, -this.props.size - 8, barWidth, barHeight);
+                    
+                    ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffff44' : '#ff4444';
+                    ctx.fillRect(-barWidth/2, -this.props.size - 8, barWidth * healthPercent, barHeight);
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        class Enemy {
+            constructor(type) {
+                this.type = type;
+                this.props = enemyTypes[type];
+                this.health = this.props.health;
+                this.maxHealth = this.props.health;
+                this.speed = this.props.speed;
+                this.reward = this.props.reward;
+                this.slow = 1;
+                
+                if (this.props.isRingBoss) {
+                    // Ring boss starts at outer edge and orbits
+                    this.orbitRadius = 500; // Much farther start
+                    this.orbitAngle = Math.random() * 360;
+                    this.orbitSpeed = 0.1; // Much slower orbit
+                    this.spiralInward = 0.1; // Much slower inward movement
+                    this.x = saturn.x + Math.cos(this.orbitAngle * Math.PI / 180) * this.orbitRadius;
+                    this.y = saturn.y + Math.sin(this.orbitAngle * Math.PI / 180) * this.orbitRadius;
+                } else {
+                    // Spawn at random edge
+                    const edge = Math.floor(Math.random() * 4);
+                    const margin = 50;
+                    
+                    switch(edge) {
+                        case 0: // top
+                            this.x = Math.random() * canvas.width;
+                            this.y = -margin;
+                            break;
+                        case 1: // right
+                            this.x = canvas.width + margin;
+                            this.y = Math.random() * canvas.height;
+                            break;
+                        case 2: // bottom
+                            this.x = Math.random() * canvas.width;
+                            this.y = canvas.height + margin;
+                            break;
+                        case 3: // left
+                            this.x = -margin;
+                            this.y = Math.random() * canvas.height;
+                            break;
+                    }
+                }
+            }
+            
+            update(deltaTime) {
+                if (this.props.isRingBoss) {
+                    // Ring boss orbits and spirals inward
+                    this.orbitAngle += this.orbitSpeed * deltaTime / 16;
+                    this.orbitRadius -= this.spiralInward * deltaTime / 16;
+                    
+                    // Calculate new position
+                    const rad = this.orbitAngle * Math.PI / 180;
+                    this.x = saturn.x + Math.cos(rad) * this.orbitRadius;
+                    this.y = saturn.y + Math.sin(rad) * this.orbitRadius;
+                    
+                    // Check for ring destruction
+                    this.checkRingDestruction();
+                    
+                    // Check if reached Saturn center
+                    if (this.orbitRadius <= saturn.radius) {
+                        gameState.lives = 0; // Game over
+                        return false;
+                    }
+                } else {
+                    // Normal enemy behavior
+                    const dx = saturn.x - this.x;
+                    const dy = saturn.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < saturn.radius) {
+                        // Reached Saturn!
+                        gameState.lives--;
+                        return false;
+                    }
+                    
+                    const moveSpeed = this.speed * this.slow * deltaTime / 16;
+                    this.x += (dx / dist) * moveSpeed;
+                    this.y += (dy / dist) * moveSpeed;
+                    
+                    // Reset slow effect
+                    this.slow = Math.min(1, this.slow + 0.02);
+                }
+                
+                return true;
+            }
+            
+            checkRingDestruction() {
+                // Check if ring boss touches any rings
+                for (let i = 0; i < gameState.unlockedRings; i++) {
+                    const ring = saturn.rings[i];
+                    const dist = Math.sqrt((this.x - saturn.x) ** 2 + (this.y - saturn.y) ** 2);
+                    
+                    if (dist >= ring.inner - this.props.size && dist <= ring.outer + this.props.size) {
+                        // Ring boss is touching this ring - destroy it
+                        this.destroyRing(i);
+                        break;
+                    }
+                }
+            }
+            
+            destroyRing(ringIndex) {
+                // Remove all defenders on this ring
+                for (let i = gameState.defenders.length - 1; i >= 0; i--) {
+                    if (gameState.defenders[i].ring === ringIndex) {
+                        gameState.defenders.splice(i, 1);
+                        gameState.totalDefendersPlaced--;
+                    }
+                }
+                
+                // Lock the ring (reduce unlocked rings)
+                if (gameState.unlockedRings > 1) {
+                    gameState.unlockedRings--;
+                    document.getElementById('unlockedRings').textContent = gameState.unlockedRings;
+                    
+                    // Re-enable unlock button if needed
+                    if (gameState.unlockedRings < 4) {
+                        document.getElementById('unlockRingButton').style.background = '#660066';
+                        document.getElementById('unlockRingButton').style.borderColor = '#880088';
+                        document.getElementById('unlockRingButton').style.cursor = 'pointer';
+                        document.getElementById('unlockRingButton').innerHTML = 'Unlock Ring<br>$500';
+                    }
+                }
+                
+                console.log('Ring', ringIndex, 'destroyed by ring boss!');
+            }
+            
+            takeDamage(damage) {
+                this.health -= damage;
+                return this.health <= 0;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                if (this.props.isRingBoss) {
+                    // Draw ring boss with special effects
+                    const pulse = Math.sin(Date.now() * 0.01) * 0.3 + 0.7;
+                    ctx.fillStyle = this.props.color;
+                    ctx.globalAlpha = pulse;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    // Draw boss aura
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Draw orbit trail
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.orbitRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else {
+                    // Draw normal enemy
+                    ctx.fillStyle = this.props.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw health bar
+                if (this.health < this.maxHealth) {
+                    const barWidth = this.props.size * 2;
+                    const barHeight = 3;
+                    const healthPercent = this.health / this.maxHealth;
+                    
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(-barWidth/2, -this.props.size - 8, barWidth, barHeight);
+                    
+                    ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffff44' : '#ff4444';
+                    ctx.fillRect(-barWidth/2, -this.props.size - 8, barWidth * healthPercent, barHeight);
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        function getRingFromDistance(distance) {
+            for (let i = 0; i < gameState.unlockedRings; i++) {
+                const ring = saturn.rings[i];
+                if (distance >= ring.inner && distance <= ring.outer) {
+                    return i;
+                }
+            }
+            return -1; // Not on any unlocked ring
+        }
+        
+        function getDefenderAtPosition(x, y) {
+            for (let i = gameState.defenders.length - 1; i >= 0; i--) {
+                const defender = gameState.defenders[i];
+                const dist = Math.sqrt((x - defender.x) ** 2 + (y - defender.y) ** 2);
+                if (dist < defender.props.size + 5) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        
+        function drawSaturn() {
+            // Draw Saturn
+            const gradient = ctx.createRadialGradient(saturn.x, saturn.y, 0, saturn.x, saturn.y, saturn.radius);
+            gradient.addColorStop(0, '#ffddaa');
+            gradient.addColorStop(0.7, '#ddaa77');
+            gradient.addColorStop(1, '#aa7744');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(saturn.x, saturn.y, saturn.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw only unlocked rings
+            ctx.lineWidth = 2;
+            for (let ringIndex = 0; ringIndex < gameState.unlockedRings; ringIndex++) {
+                const ring = saturn.rings[ringIndex];
+                ctx.strokeStyle = ring.color;
+                
+                for (let r = ring.inner; r <= ring.outer; r += 5) {
+                    ctx.beginPath();
+                    ctx.arc(saturn.x, saturn.y, r, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function updateProjectiles(deltaTime) {
+            for (let i = gameState.projectiles.length - 1; i >= 0; i--) {
+                const proj = gameState.projectiles[i];
+                
+                proj.x += proj.vx * deltaTime / 16;
+                proj.y += proj.vy * deltaTime / 16;
+                proj.life -= deltaTime;
+                
+                // Check collision with enemies
+                let hit = false;
+                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                    const enemy = gameState.enemies[j];
+                    const dist = Math.sqrt((enemy.x - proj.x) ** 2 + (enemy.y - proj.y) ** 2);
+                    
+                    if (dist < enemy.props.size + 5) {
+                        // Hit!
+                        if (proj.type === 'shield') {
+                            enemy.slow = 0.3; // Slow effect
+                        }
+                        
+                        if (enemy.takeDamage(proj.damage)) {
+                            // Enemy killed - apply kill multiplier to rewards
+                            gameState.totalEnemiesKilled++;
+                            updateMultipliers(); // Update multipliers first
+                            
+                            const reward = Math.floor(enemy.reward * gameState.killMultiplier);
+                            gameState.money += reward;
+                            gameState.score += reward * 10;
+                            gameState.enemiesKilled++;
+                            gameState.enemies.splice(j, 1);
+                            
+                            // Create explosion particles
+                            createExplosion(enemy.x, enemy.y, enemy.props.color);
+                            
+                            console.log('Enemy killed! Total kills:', gameState.totalEnemiesKilled, 'Multiplier:', gameState.killMultiplier);
+                        }
+                        
+                        if (proj.type === 'missile') {
+                            // Explosive damage to nearby enemies
+                            for (let k = gameState.enemies.length - 1; k >= 0; k--) {
+                                const nearbyEnemy = gameState.enemies[k];
+                                if (nearbyEnemy !== enemy) { // Don't double-hit the main target
+                                    const explosionDist = Math.sqrt((nearbyEnemy.x - proj.x) ** 2 + (nearbyEnemy.y - proj.y) ** 2);
+                                    if (explosionDist < 50) {
+                                        if (nearbyEnemy.takeDamage(proj.damage * 0.5)) {
+                                            // Nearby enemy also killed by explosion
+                                            gameState.totalEnemiesKilled++;
+                                            updateMultipliers();
+                                            
+                                            const reward = Math.floor(nearbyEnemy.reward * gameState.killMultiplier);
+                                            gameState.money += reward;
+                                            gameState.score += reward * 10;
+                                            gameState.enemiesKilled++;
+                                            gameState.enemies.splice(k, 1);
+                                            
+                                            createExplosion(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.props.color);
+                                            console.log('Explosion kill! Total kills:', gameState.totalEnemiesKilled);
+                                        }
+                                    }
+                                }
+                            }
+                            createExplosion(proj.x, proj.y, '#ffaa44');
+                        }
+                        
+                        if (proj.type !== 'plasma') { // Plasma pierces
+                            hit = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (hit || proj.life <= 0) {
+                    gameState.projectiles.splice(i, 1);
+                }
+            }
+        }
+        
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    color: color,
+                    life: 30,
+                    maxLife: 30
+                });
+            }
+        }
+        
+        function updateParticles(deltaTime) {
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const particle = gameState.particles[i];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life--;
+                
+                if (particle.life <= 0) {
+                    gameState.particles.splice(i, 1);
+                }
+            }
+        }
+        
+        function drawProjectiles() {
+            for (const proj of gameState.projectiles) {
+                ctx.fillStyle = proj.color;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (proj.type === 'laser') {
+                    ctx.strokeStyle = proj.color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(proj.x - proj.vx, proj.y - proj.vy);
+                    ctx.lineTo(proj.x, proj.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function drawParticles() {
+            for (const particle of gameState.particles) {
+                const alpha = particle.life / particle.maxLife;
+                ctx.fillStyle = particle.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function spawnWave() {
+            if (gameState.waveActive || !gameState.gameRunning) return;
+            
+            console.log('Spawning wave', gameState.wave);
+            gameState.waveActive = true;
+            gameState.enemiesSpawned = 0;
+            gameState.enemiesKilled = 0;
+            gameState.waveStartTime = Date.now();
+            
+            // Exponentially increasing enemy count: 5 * (1.3 ^ wave)
+            const waveSize = Math.min(Math.floor(5 * Math.pow(1.3, gameState.wave)), 100);
+            // Exponentially faster spawning: starts at 800ms, exponentially decreases
+            const spawnInterval = Math.max(50, Math.floor(800 / Math.pow(1.15, gameState.wave)));
+            
+            console.log('Wave size:', waveSize, 'Spawn interval:', spawnInterval);
+            
+            function spawnEnemy() {
+                if (gameState.enemiesSpawned >= waveSize || !gameState.gameRunning) return;
+                
+                let enemyType = 'basic';
+                const rand = Math.random();
+                
+                if (gameState.wave >= 3 && rand < 0.3) enemyType = 'fast';
+                if (gameState.wave >= 5 && rand < 0.2) enemyType = 'heavy';
+                if (gameState.wave >= 10 && rand < 0.1) enemyType = 'boss';
+                
+                const enemy = new Enemy(enemyType);
+                gameState.enemies.push(enemy);
+                gameState.enemiesSpawned++;
+                
+                console.log('Spawned enemy', gameState.enemiesSpawned, 'of', waveSize, 'at position', enemy.x, enemy.y);
+                
+                if (gameState.enemiesSpawned < waveSize) {
+                    setTimeout(spawnEnemy, spawnInterval);
+                }
+            }
+            
+            spawnEnemy();
+            
+            // Spawn ring boss every 5 waves
+            if (gameState.wave % 5 === 0) {
+                document.getElementById('bossWarning').style.display = 'block';
+                setTimeout(() => {
+                    if (gameState.gameRunning) {
+                        const ringBoss = new Enemy('ringBoss');
+                        gameState.enemies.push(ringBoss);
+                        console.log('Ring boss spawned!');
+                    }
+                }, 2000); // Spawn ring boss 2 seconds after wave starts
+            } else {
+                document.getElementById('bossWarning').style.display = 'none';
+            }
+        }
+        
+        function checkWaveComplete() {
+            if (gameState.waveActive && gameState.enemies.length === 0 && gameState.enemiesSpawned > 0) {
+                gameState.waveActive = false;
+                gameState.wave++;
+                gameState.money += 50; // Wave completion bonus
+                
+                // Reduce delay between waves as game progresses
+                const waveDelay = Math.max(1000, 3000 - gameState.wave * 100);
+                console.log('Wave completed! Starting wave', gameState.wave, 'in', waveDelay, 'ms');
+                setTimeout(() => spawnWave(), waveDelay);
+            }
+        }
+        
+        function updateMultipliers() {
+            // Kill multiplier thresholds
+            if (gameState.totalEnemiesKilled >= 200) {
+                gameState.killMultiplier = 2.0;
+            } else if (gameState.totalEnemiesKilled >= 100) {
+                gameState.killMultiplier = 1.7;
+            } else if (gameState.totalEnemiesKilled >= 50) {
+                gameState.killMultiplier = 1.5;
+            } else if (gameState.totalEnemiesKilled >= 25) {
+                gameState.killMultiplier = 1.3;
+            } else if (gameState.totalEnemiesKilled >= 10) {
+                gameState.killMultiplier = 1.2;
+            } else {
+                gameState.killMultiplier = 1.0;
+            }
+            
+            // Defender damage bonus (5% per defender)
+            gameState.defenderBonus = gameState.totalDefendersPlaced * 5;
+        }
+        
+        function gameLoop(timestamp) {
+            if (gameState.gamePaused) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            
+            const deltaTime = timestamp - gameState.lastUpdate;
+            gameState.lastUpdate = timestamp;
+            
+            // Clear canvas
+            ctx.fillStyle = 'rgba(0, 0, 17, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Saturn and rings
+            drawSaturn();
+            
+            // Update and draw defenders
+            for (const defender of gameState.defenders) {
+                defender.update(deltaTime);
+                defender.draw();
+            }
+            
+            // Update and draw enemies
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                if (!gameState.enemies[i].update(deltaTime)) {
+                    gameState.enemies.splice(i, 1);
+                }
+            }
+            
+            for (const enemy of gameState.enemies) {
+                enemy.draw();
+            }
+            
+            // Update projectiles and particles
+            updateProjectiles(deltaTime);
+            updateParticles(deltaTime);
+            
+            // Draw projectiles and particles
+            drawProjectiles();
+            drawParticles();
+            
+            // Check wave completion
+            checkWaveComplete();
+            
+            // Update UI every frame
+            if (gameState.gameRunning) {
+                document.getElementById('money').textContent = gameState.money;
+                document.getElementById('lives').textContent = gameState.lives;
+                document.getElementById('score').textContent = gameState.score;
+                document.getElementById('wave').textContent = gameState.wave;
+                document.getElementById('enemiesLeft').textContent = gameState.enemies.length;
+                document.getElementById('totalKills').textContent = gameState.totalEnemiesKilled;
+                document.getElementById('killMultiplier').textContent = gameState.killMultiplier.toFixed(1);
+                document.getElementById('totalDefenders').textContent = gameState.totalDefendersPlaced;
+                document.getElementById('defenderBonus').textContent = gameState.defenderBonus;
+                document.getElementById('unlockedRings').textContent = gameState.unlockedRings;
+            }
+            
+            // Game over check
+            if (gameState.lives <= 0) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+                ctx.font = '24px Courier New';
+                ctx.fillText(`Final Score: ${gameState.score}`, canvas.width/2, canvas.height/2 + 60);
+                return;
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Event listeners
+        canvas.addEventListener('click', (e) => {
+            if (!gameState.gameRunning || gameState.gamePaused) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Check if clicking on a defender (for deletion)
+            if (gameState.deleteMode) {
+                const defenderIndex = getDefenderAtPosition(x, y);
+                if (defenderIndex !== -1) {
+                    const defender = gameState.defenders[defenderIndex];
+                    const refund = Math.floor(defenseTypes[defender.type].cost * 0.5);
+                    gameState.money += refund;
+                    gameState.totalDefendersPlaced--;
+                    gameState.defenders.splice(defenderIndex, 1);
+                    updateMultipliers();
+                    console.log('Defender deleted! Refunded $' + refund);
+                    return;
+                }
+            }
+            
+            // Normal placement mode
+            if (!gameState.selectedDefenseType) return;
+            
+            console.log('Canvas clicked at', x, y, 'Selected type:', gameState.selectedDefenseType);
+            
+            // Check if click is on any of Saturn's rings
+            const dist = Math.sqrt((x - saturn.x) ** 2 + (y - saturn.y) ** 2);
+            const clickedRing = getRingFromDistance(dist);
+            
+            console.log('Distance from Saturn center:', dist, 'Clicked ring:', clickedRing);
+            
+            if (clickedRing !== -1) {
+                const cost = defenseTypes[gameState.selectedDefenseType].cost;
+                console.log('Clicked on ring', clickedRing, 'cost:', cost, 'money:', gameState.money);
+                
+                if (gameState.money >= cost) {
+                    // Calculate angle
+                    const angle = Math.atan2(y - saturn.y, x - saturn.x) * 180 / Math.PI;
+                    
+                    // Check if spot is free on the clicked ring
+                    let canPlace = true;
+                    for (const defender of gameState.defenders) {
+                        // Only check conflicts with defenders on the same ring
+                        if (defender.ring === clickedRing) {
+                            let angleDiff = Math.abs(defender.angle - angle);
+                            if (angleDiff > 180) angleDiff = 360 - angleDiff; // Handle wrap-around
+                            
+                            if (angleDiff < 10) { // Reduced from 15 to 10 degrees
+                                canPlace = false;
+                                console.log('Too close to existing defender at angle:', defender.angle, 'diff:', angleDiff, 'on ring:', defender.ring);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    console.log('Can place defender:', canPlace, 'at angle:', angle, 'on ring:', clickedRing);
+                    
+                    if (canPlace) {
+                        gameState.totalDefendersPlaced++;
+                        updateMultipliers(); // Update defender bonus first
+                        
+                        const defender = new Defender(angle, gameState.selectedDefenseType, clickedRing);
+                        gameState.defenders.push(defender);
+                        gameState.money -= cost;
+                        
+                        console.log('Defender placed! Total defenders placed:', gameState.totalDefendersPlaced, 'Damage bonus:', gameState.defenderBonus + '%');
+                    } else {
+                        console.log('Cannot place defender - spot occupied');
+                    }
+                } else {
+                    console.log('Not enough money - need', cost, 'have', gameState.money);
+                }
+            } else {
+                console.log('Clicked outside ring area');
+            }
+        });
+        
+        // Defense selection
+        document.querySelectorAll('.defenseButton').forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.dataset.type;
+                const cost = parseInt(button.dataset.cost);
+                
+                console.log('Defense button clicked:', type, 'cost:', cost, 'money:', gameState.money);
+                
+                if (gameState.money >= cost) {
+                    gameState.selectedDefenseType = type;
+                    gameState.deleteMode = false; // Exit delete mode
+                    
+                    // Update UI
+                    document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
+                    button.classList.add('selected');
+                    document.getElementById('deleteButton').style.background = '#660000';
+                    document.getElementById('deleteButton').style.borderColor = '#880000';
+                    document.getElementById('deleteButton').innerHTML = 'Delete Defender<br>50% Refund';
+                    
+                    console.log('Selected defense type:', type);
+                } else {
+                    button.classList.add('disabled');
+                    setTimeout(() => button.classList.remove('disabled'), 500);
+                }
+            });
+        });
+        
+        // Ring unlock button
+        document.getElementById('unlockRingButton').addEventListener('click', () => {
+            if (gameState.unlockedRings < 4 && gameState.money >= 500) {
+                gameState.unlockedRings++;
+                gameState.money -= 500;
+                document.getElementById('unlockedRings').textContent = gameState.unlockedRings;
+                console.log('Unlocked ring', gameState.unlockedRings);
+                
+                // Disable button if max rings reached
+                if (gameState.unlockedRings >= 4) {
+                    document.getElementById('unlockRingButton').style.background = '#333';
+                    document.getElementById('unlockRingButton').style.borderColor = '#555';
+                    document.getElementById('unlockRingButton').style.cursor = 'not-allowed';
+                    document.getElementById('unlockRingButton').textContent = 'All Rings Unlocked';
+                }
+            } else if (gameState.unlockedRings >= 4) {
+                console.log('All rings already unlocked');
+            } else {
+                console.log('Not enough money to unlock ring');
+                document.getElementById('unlockRingButton').style.background = '#660000';
+                document.getElementById('unlockRingButton').style.borderColor = '#880000';
+                setTimeout(() => {
+                    document.getElementById('unlockRingButton').style.background = '#660066';
+                    document.getElementById('unlockRingButton').style.borderColor = '#880088';
+                }, 500);
+            }
+        });
+        
+        // Delete button
+        document.getElementById('deleteButton').addEventListener('click', () => {
+            gameState.deleteMode = !gameState.deleteMode;
+            gameState.selectedDefenseType = null; // Clear defense selection
+            
+            // Update UI
+            document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
+            
+            if (gameState.deleteMode) {
+                document.getElementById('deleteButton').style.background = '#ff0000';
+                document.getElementById('deleteButton').style.borderColor = '#ff4444';
+                document.getElementById('deleteButton').textContent = 'Delete Mode Active\nClick Defenders to Delete';
+            } else {
+                document.getElementById('deleteButton').style.background = '#660000';
+                document.getElementById('deleteButton').style.borderColor = '#880000';
+                document.getElementById('deleteButton').innerHTML = 'Delete Defender<br>50% Refund';
+            }
+            
+            console.log('Delete mode:', gameState.deleteMode ? 'ON' : 'OFF');
+        });
+        
+        // Start button
+        document.getElementById('startButton').addEventListener('click', () => {
+            if (!gameState.gameStarted) {
+                gameState.gameStarted = true;
+                gameState.gameRunning = true;
+                document.getElementById('startButton').style.display = 'none';
+                document.getElementById('pauseButton').style.display = 'block';
+                console.log('Game started!');
+                setTimeout(() => spawnWave(), 2000);
+            }
+        });
+        
+        // Pause button
+        document.getElementById('pauseButton').addEventListener('click', () => {
+            gameState.gamePaused = true;
+            document.getElementById('pauseMenu').style.display = 'block';
+        });
+        
+        // Resume button
+        document.getElementById('resumeButton').addEventListener('click', () => {
+            gameState.gamePaused = false;
+            document.getElementById('pauseMenu').style.display = 'none';
+        });
+        
+        // Restart button
+        document.getElementById('restartButton').addEventListener('click', () => {
+            // Reset all game state
+            gameState = {
+                money: 100,
+                lives: 20,
+                score: 0,
+                wave: 1,
+                selectedDefenseType: null,
+                unlockedRings: 1,
+                deleteMode: false,
+                defenders: [],
+                enemies: [],
+                projectiles: [],
+                particles: [],
+                lastUpdate: 0,
+                waveActive: false,
+                enemiesSpawned: 0,
+                enemiesKilled: 0,
+                totalEnemiesKilled: 0,
+                totalDefendersPlaced: 0,
+                waveStartTime: 0,
+                nextWaveDelay: 3000,
+                gameStarted: false,
+                gameRunning: false,
+                gamePaused: false,
+                killMultiplier: 1,
+                defenderBonus: 1
+            };
+            
+            // Reset UI
+            document.getElementById('pauseMenu').style.display = 'none';
+            document.getElementById('startButton').style.display = 'block';
+            document.getElementById('pauseButton').style.display = 'none';
+            document.getElementById('bossWarning').style.display = 'none';
+            document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
+            document.getElementById('unlockedRings').textContent = '1';
+            document.getElementById('unlockRingButton').style.background = '#660066';
+            document.getElementById('unlockRingButton').style.borderColor = '#880088';
+            document.getElementById('unlockRingButton').style.cursor = 'pointer';
+            document.getElementById('unlockRingButton').innerHTML = 'Unlock Ring<br>$500';
+            document.getElementById('deleteButton').style.background = '#660000';
+            document.getElementById('deleteButton').style.borderColor = '#880000';
+            document.getElementById('deleteButton').innerHTML = 'Delete Defender<br>50% Refund';
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Escape') {
+                e.preventDefault();
+                if (gameState.gameRunning && !gameState.gamePaused) {
+                    gameState.gamePaused = true;
+                    document.getElementById('pauseMenu').style.display = 'block';
+                } else if (gameState.gamePaused) {
+                    gameState.gamePaused = false;
+                    document.getElementById('pauseMenu').style.display = 'none';
+                }
+            }
+        });
+        
+        // Update button states
+        setInterval(() => {
+            document.querySelectorAll('.defenseButton').forEach(button => {
+                const cost = parseInt(button.dataset.cost);
+                if (gameState.money >= cost) {
+                    button.classList.remove('disabled');
+                } else {
+                    button.classList.add('disabled');
+                }
+            });
+        }, 100);
+        
+        // Money generation (like Battle Cats)
+        setInterval(() => {
+            if (gameState.gameRunning) {
+                gameState.money += 2;
+            }
+        }, 1000);
+        
+        // Start the game loop
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
