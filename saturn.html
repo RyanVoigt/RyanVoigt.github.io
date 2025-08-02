@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Saturn Ring Defense</title>
     <style>
         body {
@@ -30,8 +30,8 @@
         
         #ui {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 10px;
+            left: 10px;
             z-index: 100;
             background: rgba(0, 0, 0, 0.8);
             padding: 15px;
@@ -45,11 +45,25 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
+            flex-direction: row;
             gap: 10px;
             background: rgba(0, 0, 0, 0.8);
             padding: 15px;
             border-radius: 10px;
             border: 2px solid #444;
+        }
+        
+        .defenseGroup {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-items: center;
+        }
+        
+        .defenseRow {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
         }
         
         .defenseButton {
@@ -59,6 +73,7 @@
             color: white;
             cursor: pointer;
             border-radius: 5px;
+            text-align: center;
             font-size: 12px;
             transition: all 0.3s;
         }
@@ -78,10 +93,37 @@
             cursor: not-allowed;
         }
         
+        .upgradeButton {
+            padding: 5px 10px;
+            background: linear-gradient(45deg, #224466, #446688);
+            border: 1px solid #6688aa;
+            color: white;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 10px;
+            transition: all 0.3s;
+            text-align: center;
+            margin-top: 2px;
+            height: 40px;
+            line-height: 10px;
+            width: 100%; /* Match defender button width */
+            box-sizing: border-box;
+        }
+        
+        .upgradeButton:hover {
+            background: linear-gradient(45deg, #446688, #6688aa);
+            border-color: #88aacc;
+        }
+        
+        .upgradeButton.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
         #waveInfo {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 10px;
+            right: 10px;
             background: rgba(0, 0, 0, 0.8);
             padding: 15px;
             border-radius: 10px;
@@ -101,6 +143,119 @@
             background: linear-gradient(90deg, #ff4444, #ffaa44, #44ff44);
             transition: width 0.3s;
         }
+        
+        #controlPanel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #444;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 150px;
+        }
+        
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+            #ui {
+                top: 10px;
+                left: 10px;
+                padding: 10px;
+                font-size: 12px;
+                border-radius: 8px;
+            }
+            
+            #ui div {
+                margin-bottom: 3px;
+            }
+            
+            #controlPanel {
+                top: 10px;
+                right: 10px;
+                padding: 10px;
+                min-width: 120px;
+                border-radius: 8px;
+                gap: 8px;
+                flex-direction: row; /* Horizontal layout on mobile */
+                flex-wrap: wrap; /* Allow wrapping if needed */
+                max-width: 300px; /* Limit width */
+            }
+            
+            #controlPanel > div {
+                font-size: 11px;
+                padding: 8px;
+                flex: 1; /* Equal width buttons */
+                min-width: 80px; /* Minimum button width */
+            }
+            
+            #bossWarning {
+                font-size: 10px !important;
+                padding: 8px !important;
+                margin-top: 8px !important;
+            }
+            
+            /* Mobile game area scaling */
+            #gameCanvas {
+                transform: scale(0.85);
+                transform-origin: center center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #ui {
+                top: 5px;
+                left: 5px;
+                padding: 8px;
+                font-size: 10px;
+                border-radius: 6px;
+            }
+            
+            #ui div {
+                margin-bottom: 2px;
+            }
+            
+            #controlPanel {
+                top: 5px;
+                right: 5px;
+                padding: 8px;
+                min-width: 100px;
+                border-radius: 6px;
+                gap: 6px;
+                flex-direction: row; /* Horizontal layout on mobile */
+                flex-wrap: wrap; /* Allow wrapping if needed */
+                max-width: 250px; /* Limit width */
+            }
+            
+            #controlPanel > div {
+                font-size: 10px;
+                padding: 6px;
+                flex: 1; /* Equal width buttons */
+                min-width: 60px; /* Minimum button width */
+            }
+            
+            #bossWarning {
+                font-size: 9px !important;
+                padding: 6px !important;
+                margin-top: 6px !important;
+            }
+            
+            /* Mobile game area scaling - more zoom out for smaller screens */
+            #gameCanvas {
+                transform: scale(0.75);
+                transform-origin: center center;
+            }
+        }
+        
+        /* Extra small mobile devices */
+        @media (max-width: 360px) {
+            #gameCanvas {
+                transform: scale(0.65);
+                transform-origin: center center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -111,53 +266,67 @@
             <div>Money: $<span id="money">100</span></div>
             <div>Lives: <span id="lives">20</span></div>
             <div>Score: <span id="score">0</span></div>
-        </div>
-        
-        <div id="progressBar" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 2px solid #444; min-width: 300px;">
-            <div>Kills: <span id="totalKills">0</span> (×<span id="killMultiplier">1.0</span> reward)</div>
-            <div>Defenders: <span id="totalDefenders">0</span> (+<span id="defenderBonus">0</span>% damage)</div>
-        </div>
-        
-        <div id="defensePanel">
-            <div class="defenseButton" data-type="laser" data-cost="25">
-                Laser Tower<br>$25
-            </div>
-            <div class="defenseButton" data-type="missile" data-cost="50">
-                Missile Tower<br>$50
-            </div>
-            <div class="defenseButton" data-type="plasma" data-cost="75">
-                Plasma Tower<br>$75
-            </div>
-            <div class="defenseButton" data-type="shield" data-cost="100">
-                Shield Block<br>$100
-            </div>
-        </div>
-        
-        <div id="deletePanel" style="position: absolute; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #444;">
-            <div id="deleteButton" style="padding: 10px 15px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; text-align: center; color: white;">
-                Delete Defender<br>50% Refund
-            </div>
-        </div>
-        
-        <div id="waveInfo">
             <div>Wave: <span id="wave">1</span></div>
             <div>Enemies: <span id="enemiesLeft">0</span></div>
+            <div>Kills: <span id="totalKills">0</span> (×<span id="killMultiplier">1.0</span>)</div>
+            <div>Defenders: <span id="totalDefenders">0</span> (+<span id="defenderBonus">0</span>%)</div>
             <div id="nextWaveTimer"></div>
             <div id="bossWarning" style="margin-top: 10px; padding: 10px; background: #660000; border: 2px solid #880000; border-radius: 5px; text-align: center; display: none; color: #ff0000; font-weight: bold;">
                 ⚠️ RING BOSS INCOMING! ⚠️
             </div>
-            <div id="startButton" style="margin-top: 10px; padding: 10px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; text-align: center;">
-                START GAME
-            </div>
-            <div id="pauseButton" style="margin-top: 10px; padding: 10px; background: #666600; border: 2px solid #888800; border-radius: 5px; cursor: pointer; text-align: center; display: none;">
-                PAUSE
-            </div>
         </div>
         
-        <div id="ringUnlockPanel" style="position: absolute; bottom: 20px; right: 20px; background: rgba(0, 0, 0, 0.8); padding: 15px; border-radius: 10px; border: 2px solid #444;">
-            <div>Rings: <span id="unlockedRings">1</span>/4</div>
-            <div id="unlockRingButton" style="margin-top: 10px; padding: 10px; background: #660066; border: 2px solid #880088; border-radius: 5px; cursor: pointer; text-align: center;">
+        <div id="controlPanel">
+            <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">Controls</div>
+            <div id="startButton" style="padding: 10px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; text-align: center; color: white;">
+                START GAME
+            </div>
+            <div id="pauseButton" style="padding: 10px; background: #666600; border: 2px solid #888800; border-radius: 5px; cursor: pointer; text-align: center; color: white; display: none;">
+                PAUSE
+            </div>
+            <div id="deleteButton" style="padding: 10px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; text-align: center; color: white;">
+                Delete Defender<br>50% Refund
+            </div>
+            <div id="unlockRingButton" style="padding: 10px; background: #660066; border: 2px solid #880088; border-radius: 5px; cursor: pointer; text-align: center; color: white;">
                 Unlock Ring<br>$500
+            </div>
+            <div style="text-align: center; font-size: 12px; margin-top: 5px;">Rings: <span id="unlockedRings">1</span>/4</div>
+        </div>
+        
+        <div id="defensePanel">
+            <div class="defenseRow">
+                <div class="defenseGroup">
+                    <div class="defenseButton" data-type="laser" data-cost="25">
+                        Laser Tower<br>$25
+                    </div>
+                    <div class="upgradeButton" data-type="laser" data-cost="100">
+                        Upgrade $100
+                    </div>
+                </div>
+                <div class="defenseGroup">
+                    <div class="defenseButton" data-type="missile" data-cost="50">
+                        Missile Tower<br>$50
+                    </div>
+                    <div class="upgradeButton" data-type="missile" data-cost="100">
+                        Upgrade $100
+                    </div>
+                </div>
+                <div class="defenseGroup">
+                    <div class="defenseButton" data-type="plasma" data-cost="75">
+                        Plasma Tower<br>$75
+                    </div>
+                    <div class="upgradeButton" data-type="plasma" data-cost="100">
+                        Upgrade $100
+                    </div>
+                </div>
+                <div class="defenseGroup">
+                    <div class="defenseButton" data-type="shield" data-cost="100">
+                        Shield Tower<br>$100
+                    </div>
+                    <div class="upgradeButton" data-type="shield" data-cost="100">
+                        Upgrade $100
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -189,6 +358,7 @@
             enemies: [],
             projectiles: [],
             particles: [],
+            stars: [], // Add stars array
             lastUpdate: 0,
             waveActive: false,
             enemiesSpawned: 0,
@@ -200,8 +370,19 @@
             gameStarted: false,
             gameRunning: false,
             gamePaused: false,
+            gameOver: false, // Add game over state
             killMultiplier: 1,
-            defenderBonus: 1
+            defenderBonus: 1,
+            ringBossWaves: 0, // Track how many times ring boss has appeared
+            defenderUpgrades: { laser: 0, missile: 0, plasma: 0, shield: 0 }, // Track upgrade levels
+            gunActive: false, // Track if gun is active
+            gunCooldown: 0, // Track gun cooldown
+            mouseX: canvas.width / 2, // Track mouse position
+            mouseY: canvas.height / 2, // Track mouse position
+            gunAngle: 0, // Track gun rotation angle
+            targetGunAngle: 0, // Target angle for smooth rotation
+            barrelExtension: 0, // Track barrel slide animation (0-1)
+            pauseStartTime: 0 // Track when pause started
         };
         
         // Saturn properties
@@ -215,6 +396,23 @@
                 { inner: 180, outer: 200, color: 'rgba(200, 200, 255, 0.4)' },  // Ring 3 - bluish
                 { inner: 220, outer: 240, color: 'rgba(255, 255, 200, 0.4)' }   // Ring 4 - yellowish
             ]
+        };
+        
+        // Gun configuration - easy to modify
+        const gunConfig = {
+            damage: 100,           // Damage per shot
+            cost: 25,              // Cost per shot
+            cooldown: 500,         // Cooldown between shots (ms)
+            range: 800,            // Range of the laser
+            width: 10,              // Width of the laser beam
+            color: '#ff0066',      // Color of the laser
+            aimRingRadius: 15,     // Radius of the aiming ring
+            aimRingColor: '#ff0066', // Color of the aiming ring
+            gunSize: 15,           // Size of the gun on Saturn
+            barrelLength: 50,      // Length of the cannon barrel
+            barrelWidth: 18,        // Width of the cannon barrel
+            baseSize: 22,          // Size of the cannon base
+            rotationSpeed: 0.1     // How fast the cannon rotates (0-1)
         };
         
         // Defense types
@@ -287,6 +485,14 @@
                 color: '#6666ff',
                 size: 12
             },
+            jetpack: {
+                health: 180, // Increased from 120 to 180
+                speed: 0.5, // Reduced from 0.8 to 0.5
+                reward: 25,
+                color: '#ffaa44',
+                size: 10,
+                isJetpack: true
+            },
             boss: {
                 health: 500,
                 speed: 0.3,
@@ -295,7 +501,7 @@
                 size: 20
             },
             ringBoss: {
-                health: 1500, // Reduced from 3000 to be more manageable
+                health: 5000,
                 speed: 0.2,
                 reward: 500,
                 color: '#ff0000',
@@ -378,8 +584,9 @@
             }
             
             fire(target) {
-                // Apply defender bonus to damage
-                const bonusDamage = this.props.damage * (1 + gameState.defenderBonus / 100);
+                // Apply defender bonus and upgrade bonus to damage
+                const upgradeBonus = Math.pow(1.02, gameState.defenderUpgrades[this.type]);
+                const bonusDamage = this.props.damage * (1 + gameState.defenderBonus / 100) * upgradeBonus;
                 
                 const projectile = {
                     x: this.x,
@@ -453,8 +660,12 @@
             constructor(type) {
                 this.type = type;
                 this.props = enemyTypes[type];
-                this.health = this.props.health;
-                this.maxHealth = this.props.health;
+                
+                // Apply health scaling: enemies get 10% more health each wave
+                const healthScaling = Math.pow(1.1, gameState.wave - 1);
+                this.health = Math.floor(this.props.health * healthScaling);
+                this.maxHealth = this.health;
+                
                 this.speed = this.props.speed;
                 this.reward = this.props.reward;
                 this.slow = 1;
@@ -465,8 +676,28 @@
                     this.orbitAngle = Math.random() * 360;
                     this.orbitSpeed = 0.1; // Much slower orbit
                     this.spiralInward = 0.1; // Much slower inward movement
+                    
+                    // Scale ring boss based on how many times it has appeared
+                    const bossScaling = 1 + (gameState.ringBossWaves * 0.5); // 50% increase each time
+                    this.health = Math.floor(this.props.health * bossScaling);
+                    this.maxHealth = this.health;
+                    this.orbitSpeed *= (1 + gameState.ringBossWaves * 0.2); // 20% speed increase each time
+                    this.spiralInward *= (1 + gameState.ringBossWaves * 0.3); // 30% faster inward movement
+                    
                     this.x = saturn.x + Math.cos(this.orbitAngle * Math.PI / 180) * this.orbitRadius;
                     this.y = saturn.y + Math.sin(this.orbitAngle * Math.PI / 180) * this.orbitRadius;
+                } else if (this.props.isJetpack) {
+                    // Jetpack enemy starts from above and swoops in U-shape
+                    this.x = Math.random() * canvas.width;
+                    this.y = -50;
+                    this.swoopPhase = 0; // 0 = diving down, 1 = swooping across, 2 = diving up
+                    this.swoopStartX = this.x;
+                    this.swoopStartY = this.y;
+                    this.swoopTargetX = saturn.x + (Math.random() - 0.5) * 200; // Random target near Saturn
+                    this.swoopTargetY = saturn.y + (Math.random() - 0.5) * 200;
+                    this.swoopLowestY = Math.max(this.swoopTargetY + 100, saturn.y + 150); // Lowest point of swoop
+                    this.swoopProgress = 0;
+                    this.lastDefenderKill = 0; // Track when last defender was killed
                 } else {
                     // Spawn at random edge
                     const edge = Math.floor(Math.random() * 4);
@@ -512,6 +743,34 @@
                         gameState.lives = 0; // Game over
                         return false;
                     }
+                } else if (this.props.isJetpack) {
+                    // Jetpack enemy swooping behavior
+                    this.swoopProgress += this.speed * deltaTime / 16 * 0.02;
+                    
+                    if (this.swoopProgress <= 1) {
+                        // Phase 1: Dive down to lowest point
+                        const t = this.swoopProgress;
+                        this.x = this.swoopStartX + (this.swoopTargetX - this.swoopStartX) * t;
+                        this.y = this.swoopStartY + (this.swoopLowestY - this.swoopStartY) * (1 - Math.cos(t * Math.PI)) / 2;
+                    } else if (this.swoopProgress <= 2) {
+                        // Phase 2: Swoop across and up
+                        const t = this.swoopProgress - 1;
+                        this.x = this.swoopTargetX + (this.swoopStartX - this.swoopTargetX) * t;
+                        this.y = this.swoopLowestY + (this.swoopStartY - this.swoopLowestY) * (1 - Math.cos(t * Math.PI)) / 2;
+                    } else {
+                        // Phase 3: Exit screen
+                        this.y -= this.speed * deltaTime / 16 * 2;
+                        if (this.y < -100) {
+                            return false; // Remove enemy
+                        }
+                    }
+                    
+                    // Check for defender kills during swoop
+                    if (Date.now() - this.lastDefenderKill > 500) { // Kill defenders every 500ms
+                        this.killDefendersInPath();
+                        this.lastDefenderKill = Date.now();
+                    }
+                    
                 } else {
                     // Normal enemy behavior
                     const dx = saturn.x - this.x;
@@ -533,6 +792,26 @@
                 }
                 
                 return true;
+            }
+            
+            killDefendersInPath() {
+                // Kill defenders that are close to the jetpack enemy's path
+                for (let i = gameState.defenders.length - 1; i >= 0; i--) {
+                    const defender = gameState.defenders[i];
+                    const dist = Math.sqrt((defender.x - this.x) ** 2 + (defender.y - this.y) ** 2);
+                    
+                    if (dist < this.props.size + defender.props.size + 10) {
+                        // Kill the defender
+                        gameState.defenders.splice(i, 1);
+                        gameState.totalDefendersPlaced--;
+                        updateMultipliers();
+                        
+                        // Create explosion effect
+                        createExplosion(defender.x, defender.y, defender.props.color);
+                        
+                        console.log('Defender killed by jetpack enemy!');
+                    }
+                }
             }
             
             checkRingDestruction() {
@@ -600,12 +879,39 @@
                     ctx.beginPath();
                     ctx.arc(0, 0, this.props.size + 5, 0, Math.PI * 2);
                     ctx.stroke();
+                } else if (this.props.isJetpack) {
+                    // Draw jetpack enemy with jetpack effects
+                    ctx.fillStyle = this.props.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
                     
-                    // Draw orbit trail
-                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                    // Draw jetpack
+                    ctx.fillStyle = '#444444';
+                    ctx.fillRect(-this.props.size * 0.8, -this.props.size * 0.3, this.props.size * 1.6, this.props.size * 0.6);
+                    
+                    // Draw jetpack flames
+                    const flameSize = Math.sin(Date.now() * 0.02) * 3 + 8;
+                    ctx.fillStyle = '#ff6600';
+                    ctx.beginPath();
+                    ctx.moveTo(-this.props.size * 0.6, this.props.size * 0.3);
+                    ctx.lineTo(-this.props.size * 0.8, this.props.size * 0.3 + flameSize);
+                    ctx.lineTo(-this.props.size * 0.4, this.props.size * 0.3);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.moveTo(this.props.size * 0.6, this.props.size * 0.3);
+                    ctx.lineTo(this.props.size * 0.8, this.props.size * 0.3 + flameSize);
+                    ctx.lineTo(this.props.size * 0.4, this.props.size * 0.3);
+                    ctx.fill();
+                    
+                    // Draw swoop trail
+                    ctx.strokeStyle = 'rgba(255, 170, 68, 0.3)';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.arc(0, 0, this.orbitRadius, 0, Math.PI * 2);
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -20);
                     ctx.stroke();
                 } else {
                     // Draw normal enemy
@@ -635,7 +941,8 @@
         function getRingFromDistance(distance) {
             for (let i = 0; i < gameState.unlockedRings; i++) {
                 const ring = saturn.rings[i];
-                if (distance >= ring.inner && distance <= ring.outer) {
+                // Add some tolerance to ring detection
+                if (distance >= ring.inner - 2 && distance <= ring.outer + 2) {
                     return i;
                 }
             }
@@ -677,6 +984,215 @@
                     ctx.stroke();
                 }
             }
+            
+            // Draw collision debug circles for all defenders
+            if (gameState.selectedDefenseType && !gameState.deleteMode) {
+                drawCollisionDebug();
+            }
+            
+            // Draw gun on Saturn
+            drawGun();
+        }
+        
+        function drawCollisionDebug() {
+            // Draw collision areas for all defenders
+            for (const defender of gameState.defenders) {
+                // Use current position instead of calculated position
+                const x = defender.x;
+                const y = defender.y;
+                
+                // Draw collision circle (8 degree radius) - more transparent
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.arc(x, y, defender.orbitRadius * Math.sin(8 * Math.PI / 180), 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Draw defender position - more transparent
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawGun() {
+            // Only calculate target angle and rotate when gun is active
+            if (gameState.gunActive) {
+                // Calculate target angle based on mouse position
+                const dx = gameState.mouseX - saturn.x;
+                const dy = gameState.mouseY - saturn.y;
+                gameState.targetGunAngle = Math.atan2(dy, dx);
+                
+                // Smooth rotation towards target angle
+                let angleDiff = gameState.targetGunAngle - gameState.gunAngle;
+                if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                gameState.gunAngle += angleDiff * gunConfig.rotationSpeed;
+                
+                // Animate barrel extension
+                gameState.barrelExtension = Math.min(1, gameState.barrelExtension + 0.1);
+            } else {
+                // Animate barrel retraction
+                gameState.barrelExtension = Math.max(0, gameState.barrelExtension - 0.1);
+            }
+            
+            ctx.save();
+            ctx.translate(saturn.x, saturn.y);
+            ctx.rotate(gameState.gunAngle);
+            
+            // Draw cannon base (circular platform) - always grey
+            const baseGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, gunConfig.baseSize);
+            baseGradient.addColorStop(0, '#888888');
+            baseGradient.addColorStop(0.7, '#666666');
+            baseGradient.addColorStop(1, '#444444');
+            
+            ctx.fillStyle = baseGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, gunConfig.baseSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw base border - always grey
+            ctx.strokeStyle = '#aaaaaa';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, gunConfig.baseSize, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Draw cannon barrel only when extended
+            if (gameState.barrelExtension > 0) {
+                const barrelLength = gunConfig.barrelLength * gameState.barrelExtension;
+                
+                // Draw cannon barrel - always grey
+                const barrelGradient = ctx.createLinearGradient(0, -gunConfig.barrelWidth/2, barrelLength, -gunConfig.barrelWidth/2);
+                barrelGradient.addColorStop(0, '#666666');
+                barrelGradient.addColorStop(0.5, '#888888');
+                barrelGradient.addColorStop(1, '#aaaaaa');
+                
+                ctx.fillStyle = barrelGradient;
+                ctx.fillRect(0, -gunConfig.barrelWidth/2, barrelLength, gunConfig.barrelWidth);
+                
+                // Draw barrel border - always grey
+                ctx.strokeStyle = '#cccccc';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(0, -gunConfig.barrelWidth/2, barrelLength, gunConfig.barrelWidth);
+                
+                // Draw barrel details - always grey
+                ctx.strokeStyle = '#dddddd';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(5, -gunConfig.barrelWidth/2 + 2);
+                ctx.lineTo(5, gunConfig.barrelWidth/2 - 2);
+                ctx.moveTo(15, -gunConfig.barrelWidth/2 + 2);
+                ctx.lineTo(15, gunConfig.barrelWidth/2 - 2);
+                ctx.stroke();
+            }
+            
+            // Draw targeting reticle on base - always grey
+            ctx.strokeStyle = '#888888';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            ctx.arc(0, 0, gunConfig.baseSize - 5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw status indicator - bigger and green when active, red when inactive
+            ctx.fillStyle = gameState.gunActive ? '#00ff00' : '#ff0000';
+            ctx.beginPath();
+            ctx.arc(0, 0, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+            
+            // Draw gun status text
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Courier New';
+            ctx.textAlign = 'center';
+        }
+        
+        function drawAimRing(mouseX, mouseY) {
+            if (!gameState.gunActive) return;
+            
+            // Draw aiming ring
+            ctx.strokeStyle = gunConfig.aimRingColor;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, gunConfig.aimRingRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw crosshair
+            ctx.strokeStyle = gunConfig.aimRingColor;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(mouseX - 10, mouseY);
+            ctx.lineTo(mouseX + 10, mouseY);
+            ctx.moveTo(mouseX, mouseY - 10);
+            ctx.lineTo(mouseX, mouseY + 10);
+            ctx.stroke();
+        }
+        
+        function fireGun(targetX, targetY) {
+            if (!gameState.gunActive || gameState.gunCooldown > 0 || gameState.money < gunConfig.cost) return;
+            
+            // Deduct cost
+            gameState.money -= gunConfig.cost;
+            gameState.gunCooldown = gunConfig.cooldown;
+            
+            // Calculate firing position from barrel tip (using animated length)
+            const barrelLength = gunConfig.barrelLength * gameState.barrelExtension;
+            const barrelTipX = saturn.x + Math.cos(gameState.gunAngle) * barrelLength;
+            const barrelTipY = saturn.y + Math.sin(gameState.gunAngle) * barrelLength;
+            
+            // Calculate direction from barrel tip to target
+            const dx = targetX - barrelTipX;
+            const dy = targetY - barrelTipY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // Create laser projectile
+            const laser = {
+                x: barrelTipX,
+                y: barrelTipY,
+                targetX: targetX,
+                targetY: targetY,
+                damage: gunConfig.damage,
+                range: gunConfig.range,
+                width: gunConfig.width,
+                color: gunConfig.color,
+                life: 1000,
+                isLaser: true
+            };
+            
+            // Calculate velocity
+            laser.vx = (dx / dist) * 15; // Fast laser speed
+            laser.vy = (dy / dist) * 15;
+            
+            gameState.projectiles.push(laser);
+            
+            // Create muzzle flash effect at barrel tip
+            createMuzzleFlash(barrelTipX, barrelTipY, dx / dist, dy / dist);
+            
+            console.log('Laser cannon fired! Cost: $' + gunConfig.cost + ', Damage: ' + gunConfig.damage);
+        }
+        
+        function createMuzzleFlash(x, y, dirX, dirY) {
+            // Create muzzle flash particles
+            for (let i = 0; i < 5; i++) {
+                gameState.particles.push({
+                    x: x + dirX * 20,
+                    y: y + dirY * 20,
+                    vx: (Math.random() - 0.5) * 3 + dirX * 2,
+                    vy: (Math.random() - 0.5) * 3 + dirY * 2,
+                    color: '#ffff00',
+                    life: 15,
+                    maxLife: 15
+                });
+            }
         }
         
         function updateProjectiles(deltaTime) {
@@ -693,7 +1209,7 @@
                     const enemy = gameState.enemies[j];
                     const dist = Math.sqrt((enemy.x - proj.x) ** 2 + (enemy.y - proj.y) ** 2);
                     
-                    if (dist < enemy.props.size + 5) {
+                    if (dist < enemy.props.size + (proj.isLaser ? proj.width : 5)) {
                         // Hit!
                         if (proj.type === 'shield') {
                             enemy.slow = 0.3; // Slow effect
@@ -743,7 +1259,7 @@
                             createExplosion(proj.x, proj.y, '#ffaa44');
                         }
                         
-                        if (proj.type !== 'plasma') { // Plasma pierces
+                        if (proj.type !== 'plasma' && !proj.isLaser) { // Plasma and lasers pierce
                             hit = true;
                             break;
                         }
@@ -770,6 +1286,32 @@
             }
         }
         
+        function createStars() {
+            // Create 100 stars for the background
+            for (let i = 0; i < 100; i++) {
+                gameState.stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    brightness: Math.random() * 0.8 + 0.2,
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        
+        function drawStars() {
+            for (const star of gameState.stars) {
+                // Twinkling effect
+                const twinkle = Math.sin(Date.now() * 0.001 + star.twinkle) * 0.3 + 0.7;
+                const alpha = star.brightness * twinkle;
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
         function updateParticles(deltaTime) {
             for (let i = gameState.particles.length - 1; i >= 0; i--) {
                 const particle = gameState.particles[i];
@@ -785,18 +1327,45 @@
         
         function drawProjectiles() {
             for (const proj of gameState.projectiles) {
-                ctx.fillStyle = proj.color;
-                ctx.beginPath();
-                ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                if (proj.type === 'laser') {
-                    ctx.strokeStyle = proj.color;
-                    ctx.lineWidth = 2;
+                if (proj.isLaser) {
+                    // Draw laser with special effects
+                    const gradient = ctx.createLinearGradient(proj.x, proj.y, proj.x - proj.vx * 2, proj.y - proj.vy * 2);
+                    gradient.addColorStop(0, proj.color);
+                    gradient.addColorStop(0.5, '#ffffff');
+                    gradient.addColorStop(1, proj.color);
+                    
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = proj.width;
+                    ctx.lineCap = 'round';
                     ctx.beginPath();
-                    ctx.moveTo(proj.x - proj.vx, proj.y - proj.vy);
-                    ctx.lineTo(proj.x, proj.y);
+                    ctx.moveTo(proj.x, proj.y);
+                    ctx.lineTo(proj.x - proj.vx * 2, proj.y - proj.vy * 2);
                     ctx.stroke();
+                    
+                    // Draw laser glow
+                    ctx.strokeStyle = proj.color;
+                    ctx.globalAlpha = 0.3;
+                    ctx.lineWidth = proj.width * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(proj.x, proj.y);
+                    ctx.lineTo(proj.x - proj.vx * 2, proj.y - proj.vy * 2);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                } else {
+                    // Draw normal projectiles
+                    ctx.fillStyle = proj.color;
+                    ctx.beginPath();
+                    ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    if (proj.type === 'laser') {
+                        ctx.strokeStyle = proj.color;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(proj.x - proj.vx, proj.y - proj.vy);
+                        ctx.lineTo(proj.x, proj.y);
+                        ctx.stroke();
+                    }
                 }
             }
         }
@@ -822,8 +1391,9 @@
             
             // Exponentially increasing enemy count: 5 * (1.3 ^ wave)
             const waveSize = Math.min(Math.floor(5 * Math.pow(1.3, gameState.wave)), 100);
-            // Exponentially faster spawning: starts at 800ms, exponentially decreases
-            const spawnInterval = Math.max(50, Math.floor(800 / Math.pow(1.15, gameState.wave)));
+            // Exponentially faster spawning: starts at 800ms, decreases by 10% each wave
+            const baseSpawnInterval = 800;
+            const spawnInterval = Math.max(50, Math.floor(baseSpawnInterval / Math.pow(1.1, gameState.wave)));
             
             console.log('Wave size:', waveSize, 'Spawn interval:', spawnInterval);
             
@@ -835,6 +1405,7 @@
                 
                 if (gameState.wave >= 3 && rand < 0.3) enemyType = 'fast';
                 if (gameState.wave >= 5 && rand < 0.2) enemyType = 'heavy';
+                if (gameState.wave >= 7 && rand < 0.15) enemyType = 'jetpack'; // Add jetpack enemies
                 if (gameState.wave >= 10 && rand < 0.1) enemyType = 'boss';
                 
                 const enemy = new Enemy(enemyType);
@@ -852,14 +1423,15 @@
             
             // Spawn ring boss every 5 waves
             if (gameState.wave % 5 === 0) {
+                gameState.ringBossWaves++; // Increment ring boss wave counter
                 document.getElementById('bossWarning').style.display = 'block';
                 setTimeout(() => {
                     if (gameState.gameRunning) {
                         const ringBoss = new Enemy('ringBoss');
                         gameState.enemies.push(ringBoss);
-                        console.log('Ring boss spawned!');
+                        console.log('Ring boss spawned! Wave:', gameState.ringBossWaves, 'Health:', ringBoss.health, 'Speed multiplier:', 1 + gameState.ringBossWaves * 0.2);
                     }
-                }, 2000); // Spawn ring boss 2 seconds after wave starts
+                }, 2000);
             } else {
                 document.getElementById('bossWarning').style.display = 'none';
             }
@@ -900,16 +1472,65 @@
         
         function gameLoop(timestamp) {
             if (gameState.gamePaused) {
+                // When paused, only draw the current state without updating
+                // Clear canvas
+                ctx.fillStyle = 'rgba(0, 0, 17, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw stars first (background)
+                drawStars();
+                
+                // Draw Saturn and rings
+                drawSaturn();
+                
+                // Draw defenders (without updating)
+                for (const defender of gameState.defenders) {
+                    defender.draw();
+                }
+                
+                // Draw enemies (without updating)
+                for (const enemy of gameState.enemies) {
+                    enemy.draw();
+                }
+                
+                // Draw projectiles and particles (without updating)
+                drawProjectiles();
+                drawParticles();
+                
+                // Draw aim ring if gun is active
+                drawAimRing(gameState.mouseX, gameState.mouseY);
+                
+                // Update UI every frame
+                document.getElementById('money').textContent = gameState.money;
+                document.getElementById('lives').textContent = gameState.lives;
+                document.getElementById('score').textContent = gameState.score;
+                document.getElementById('wave').textContent = gameState.wave;
+                document.getElementById('enemiesLeft').textContent = gameState.enemies.length;
+                document.getElementById('totalKills').textContent = gameState.totalEnemiesKilled;
+                document.getElementById('killMultiplier').textContent = gameState.killMultiplier.toFixed(1);
+                document.getElementById('totalDefenders').textContent = gameState.totalDefendersPlaced;
+                document.getElementById('defenderBonus').textContent = gameState.defenderBonus;
+                document.getElementById('unlockedRings').textContent = gameState.unlockedRings;
+                
                 requestAnimationFrame(gameLoop);
                 return;
             }
             
+            // Only update lastUpdate when not paused to prevent huge deltaTime
             const deltaTime = timestamp - gameState.lastUpdate;
             gameState.lastUpdate = timestamp;
+            
+            // Update gun cooldown
+            if (gameState.gunCooldown > 0) {
+                gameState.gunCooldown -= deltaTime;
+            }
             
             // Clear canvas
             ctx.fillStyle = 'rgba(0, 0, 17, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw stars first (background)
+            drawStars();
             
             // Draw Saturn and rings
             drawSaturn();
@@ -939,6 +1560,9 @@
             drawProjectiles();
             drawParticles();
             
+            // Draw aim ring if gun is active
+            drawAimRing(gameState.mouseX, gameState.mouseY);
+            
             // Check wave completion
             checkWaveComplete();
             
@@ -957,7 +1581,19 @@
             }
             
             // Game over check
-            if (gameState.lives <= 0) {
+            if (gameState.lives <= 0 && !gameState.gameOver) {
+                gameState.gameOver = true;
+                gameState.gameRunning = false;
+                gameState.gameStarted = false;
+                
+                // Show restart button on game over
+                document.getElementById('startButton').style.display = 'block';
+                document.getElementById('startButton').textContent = 'RESTART GAME';
+                document.getElementById('pauseButton').style.display = 'none';
+            }
+            
+            // Draw game over screen if game is over
+            if (gameState.gameOver) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = 'white';
@@ -966,6 +1602,7 @@
                 ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
                 ctx.font = '24px Courier New';
                 ctx.fillText(`Final Score: ${gameState.score}`, canvas.width/2, canvas.height/2 + 60);
+                requestAnimationFrame(gameLoop);
                 return;
             }
             
@@ -974,11 +1611,56 @@
         
         // Event listeners
         canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            
+            // Adjust coordinates for mobile scaling
+            const scale = window.innerWidth <= 768 ? (window.innerWidth <= 480 ? (window.innerWidth <= 360 ? 0.65 : 0.75) : 0.85) : 1;
+            if (scale !== 1) {
+                // Calculate the scaled canvas size
+                const scaledWidth = canvas.width * scale;
+                const scaledHeight = canvas.height * scale;
+                
+                // Calculate the offset to center the scaled canvas
+                const offsetX = (rect.width - scaledWidth) / 2;
+                const offsetY = (rect.height - scaledHeight) / 2;
+                
+                // Adjust click coordinates for scaling
+                x = (x - offsetX) / scale;
+                y = (y - offsetY) / scale;
+            }
+            
+            // Allow clicks when game is over (for restart button)
+            if (gameState.gameOver) {
+                return; // Let the restart button handle the click
+            }
+            
             if (!gameState.gameRunning || gameState.gamePaused) return;
             
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            // Check if clicking on the gun (Saturn center)
+            const distFromSaturn = Math.sqrt((x - saturn.x) ** 2 + (y - saturn.y) ** 2);
+            if (distFromSaturn < gunConfig.baseSize + 5) {
+                // Toggle gun on/off
+                gameState.gunActive = !gameState.gunActive;
+                gameState.selectedDefenseType = null; // Clear defense selection
+                gameState.deleteMode = false; // Exit delete mode
+                
+                // Update UI
+                document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
+                document.getElementById('deleteButton').style.background = '#660000';
+                document.getElementById('deleteButton').style.borderColor = '#880000';
+                document.getElementById('deleteButton').innerHTML = 'Delete Defender<br>50% Refund';
+                
+                console.log('Gun toggled:', gameState.gunActive ? 'ON' : 'OFF');
+                return;
+            }
+            
+            // If gun is active, fire it
+            if (gameState.gunActive) {
+                fireGun(x, y);
+                return;
+            }
             
             // Check if clicking on a defender (for deletion)
             if (gameState.deleteMode) {
@@ -1016,21 +1698,21 @@
                     
                     // Check if spot is free on the clicked ring
                     let canPlace = true;
+                    
                     for (const defender of gameState.defenders) {
                         // Only check conflicts with defenders on the same ring
                         if (defender.ring === clickedRing) {
-                            let angleDiff = Math.abs(defender.angle - angle);
+                            // Calculate current angle of the defender based on its current position
+                            const currentDefenderAngle = Math.atan2(defender.y - saturn.y, defender.x - saturn.x) * 180 / Math.PI;
+                            let angleDiff = Math.abs(currentDefenderAngle - angle);
                             if (angleDiff > 180) angleDiff = 360 - angleDiff; // Handle wrap-around
                             
-                            if (angleDiff < 10) { // Reduced from 15 to 10 degrees
+                            if (angleDiff < 8) { // Reduced from 10 to 8 degrees for easier placement
                                 canPlace = false;
-                                console.log('Too close to existing defender at angle:', defender.angle, 'diff:', angleDiff, 'on ring:', defender.ring);
                                 break;
                             }
                         }
                     }
-                    
-                    console.log('Can place defender:', canPlace, 'at angle:', angle, 'on ring:', clickedRing);
                     
                     if (canPlace) {
                         gameState.totalDefendersPlaced++;
@@ -1039,10 +1721,6 @@
                         const defender = new Defender(angle, gameState.selectedDefenseType, clickedRing);
                         gameState.defenders.push(defender);
                         gameState.money -= cost;
-                        
-                        console.log('Defender placed! Total defenders placed:', gameState.totalDefendersPlaced, 'Damage bonus:', gameState.defenderBonus + '%');
-                    } else {
-                        console.log('Cannot place defender - spot occupied');
                     }
                 } else {
                     console.log('Not enough money - need', cost, 'have', gameState.money);
@@ -1050,6 +1728,32 @@
             } else {
                 console.log('Clicked outside ring area');
             }
+        });
+        
+        // Track mouse position for aim ring
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            
+            // Adjust coordinates for mobile scaling
+            const scale = window.innerWidth <= 768 ? (window.innerWidth <= 480 ? (window.innerWidth <= 360 ? 0.65 : 0.75) : 0.85) : 1;
+            if (scale !== 1) {
+                // Calculate the scaled canvas size
+                const scaledWidth = canvas.width * scale;
+                const scaledHeight = canvas.height * scale;
+                
+                // Calculate the offset to center the scaled canvas
+                const offsetX = (rect.width - scaledWidth) / 2;
+                const offsetY = (rect.height - scaledHeight) / 2;
+                
+                // Adjust mouse coordinates for scaling
+                x = (x - offsetX) / scale;
+                y = (y - offsetY) / scale;
+            }
+            
+            gameState.mouseX = x;
+            gameState.mouseY = y;
         });
         
         // Defense selection
@@ -1063,6 +1767,7 @@
                 if (gameState.money >= cost) {
                     gameState.selectedDefenseType = type;
                     gameState.deleteMode = false; // Exit delete mode
+                    gameState.gunActive = false; // Deactivate gun
                     
                     // Update UI
                     document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
@@ -1079,11 +1784,38 @@
             });
         });
         
+        // Upgrade selection
+        document.querySelectorAll('.upgradeButton').forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.dataset.type;
+                const cost = parseInt(button.dataset.cost);
+                
+                console.log('Upgrade button clicked:', type, 'cost:', cost, 'money:', gameState.money);
+                
+                if (gameState.money >= cost) {
+                    gameState.defenderUpgrades[type]++;
+                    gameState.money -= cost;
+                    gameState.gunActive = false; // Deactivate gun
+                    
+                    // Update button text to show new level
+                    const level = gameState.defenderUpgrades[type];
+                    const damageMultiplier = Math.pow(1.02, level).toFixed(2);
+                    button.innerHTML = `Upgrade ${type.charAt(0).toUpperCase() + type.slice(1)}<br>Lv.${level} ${Math.trunc((damageMultiplier - 1)* 100)}%`;
+                    
+                    console.log('Upgraded', type, 'to level', level, 'damage multiplier:', damageMultiplier);
+                } else {
+                    button.classList.add('disabled');
+                    setTimeout(() => button.classList.remove('disabled'), 500);
+                }
+            });
+        });
+        
         // Ring unlock button
         document.getElementById('unlockRingButton').addEventListener('click', () => {
             if (gameState.unlockedRings < 4 && gameState.money >= 500) {
                 gameState.unlockedRings++;
                 gameState.money -= 500;
+                gameState.gunActive = false; // Deactivate gun
                 document.getElementById('unlockedRings').textContent = gameState.unlockedRings;
                 console.log('Unlocked ring', gameState.unlockedRings);
                 
@@ -1111,6 +1843,7 @@
         document.getElementById('deleteButton').addEventListener('click', () => {
             gameState.deleteMode = !gameState.deleteMode;
             gameState.selectedDefenseType = null; // Clear defense selection
+            gameState.gunActive = false; // Deactivate gun
             
             // Update UI
             document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
@@ -1118,7 +1851,7 @@
             if (gameState.deleteMode) {
                 document.getElementById('deleteButton').style.background = '#ff0000';
                 document.getElementById('deleteButton').style.borderColor = '#ff4444';
-                document.getElementById('deleteButton').textContent = 'Delete Mode Active\nClick Defenders to Delete';
+                document.getElementById('deleteButton').textContent = 'Click Defenders to Delete';
             } else {
                 document.getElementById('deleteButton').style.background = '#660000';
                 document.getElementById('deleteButton').style.borderColor = '#880000';
@@ -1130,25 +1863,92 @@
         
         // Start button
         document.getElementById('startButton').addEventListener('click', () => {
-            if (!gameState.gameStarted) {
-                gameState.gameStarted = true;
-                gameState.gameRunning = true;
+            if (!gameState.gameStarted || gameState.gameOver) {
+                // Reset game state for new game
+                gameState = {
+                    money: 100,
+                    lives: 20,
+                    score: 0,
+                    wave: 1,
+                    selectedDefenseType: null,
+                    unlockedRings: 1,
+                    deleteMode: false,
+                    defenders: [],
+                    enemies: [],
+                    projectiles: [],
+                    particles: [],
+                    stars: [], // Clear stars
+                    lastUpdate: 0,
+                    waveActive: false,
+                    enemiesSpawned: 0,
+                    enemiesKilled: 0,
+                    totalEnemiesKilled: 0,
+                    totalDefendersPlaced: 0,
+                    waveStartTime: 0,
+                    nextWaveDelay: 3000,
+                    gameStarted: true,
+                    gameRunning: true,
+                    gamePaused: false,
+                    gameOver: false, // Reset game over state
+                    killMultiplier: 1,
+                    defenderBonus: 1,
+                    ringBossWaves: 0, // Reset ring boss waves
+                    defenderUpgrades: { laser: 0, missile: 0, plasma: 0, shield: 0 }, // Reset upgrade levels
+                    gunActive: false, // Reset gun state
+                    gunCooldown: 0, // Reset gun cooldown
+                    mouseX: canvas.width / 2, // Reset mouse position to center
+                    mouseY: canvas.height / 2, // Reset mouse position to center
+                    gunAngle: 0, // Reset gun rotation angle
+                    targetGunAngle: 0, // Reset target angle
+                    barrelExtension: 0 // Reset barrel slide animation (0-1)
+                };
+                
+                // Reset UI
                 document.getElementById('startButton').style.display = 'none';
+                document.getElementById('startButton').textContent = 'START GAME';
                 document.getElementById('pauseButton').style.display = 'block';
-                console.log('Game started!');
-                setTimeout(() => spawnWave(), 2000);
+                document.getElementById('bossWarning').style.display = 'none';
+                document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
+                document.getElementById('unlockedRings').textContent = '1';
+                document.getElementById('unlockRingButton').style.background = '#660066';
+                document.getElementById('unlockRingButton').style.borderColor = '#880088';
+                document.getElementById('unlockRingButton').style.cursor = 'pointer';
+                document.getElementById('unlockRingButton').innerHTML = 'Unlock Ring<br>$500';
+                document.getElementById('deleteButton').style.background = '#660000';
+                document.getElementById('deleteButton').style.borderColor = '#880000';
+                document.getElementById('deleteButton').innerHTML = 'Delete Defender<br>50% Refund';
+                
+                // Reset upgrade buttons
+                document.querySelectorAll('.upgradeButton').forEach(button => {
+                    const type = button.dataset.type;
+                    button.innerHTML = `Upgrade<br>$100`;
+                });
+                
+                // Initialize stars
+                createStars();
+                
+                console.log('Game started/restarted!');
+                
+                // Automatically start the game after a short delay
+                setTimeout(() => {
+                    spawnWave();
+                }, 2000);
             }
         });
         
         // Pause button
         document.getElementById('pauseButton').addEventListener('click', () => {
             gameState.gamePaused = true;
+            gameState.pauseStartTime = performance.now();
             document.getElementById('pauseMenu').style.display = 'block';
         });
         
         // Resume button
         document.getElementById('resumeButton').addEventListener('click', () => {
             gameState.gamePaused = false;
+            // Adjust lastUpdate to account for pause time
+            const pauseDuration = performance.now() - gameState.pauseStartTime;
+            gameState.lastUpdate += pauseDuration;
             document.getElementById('pauseMenu').style.display = 'none';
         });
         
@@ -1167,6 +1967,7 @@
                 enemies: [],
                 projectiles: [],
                 particles: [],
+                stars: [], // Clear stars
                 lastUpdate: 0,
                 waveActive: false,
                 enemiesSpawned: 0,
@@ -1175,17 +1976,28 @@
                 totalDefendersPlaced: 0,
                 waveStartTime: 0,
                 nextWaveDelay: 3000,
-                gameStarted: false,
-                gameRunning: false,
+                gameStarted: true,
+                gameRunning: true,
                 gamePaused: false,
+                gameOver: false, // Reset game over state
                 killMultiplier: 1,
-                defenderBonus: 1
+                defenderBonus: 1,
+                ringBossWaves: 0, // Reset ring boss waves
+                defenderUpgrades: { laser: 0, missile: 0, plasma: 0, shield: 0 }, // Reset upgrade levels
+                gunActive: false, // Reset gun state
+                gunCooldown: 0, // Reset gun cooldown
+                mouseX: canvas.width / 2, // Reset mouse position to center
+                mouseY: canvas.height / 2, // Reset mouse position to center
+                gunAngle: 0, // Reset gun rotation angle
+                targetGunAngle: 0, // Reset target angle
+                barrelExtension: 0 // Reset barrel slide animation (0-1)
             };
             
             // Reset UI
             document.getElementById('pauseMenu').style.display = 'none';
-            document.getElementById('startButton').style.display = 'block';
-            document.getElementById('pauseButton').style.display = 'none';
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('startButton').textContent = 'START GAME';
+            document.getElementById('pauseButton').style.display = 'block';
             document.getElementById('bossWarning').style.display = 'none';
             document.querySelectorAll('.defenseButton').forEach(b => b.classList.remove('selected'));
             document.getElementById('unlockedRings').textContent = '1';
@@ -1196,6 +2008,22 @@
             document.getElementById('deleteButton').style.background = '#660000';
             document.getElementById('deleteButton').style.borderColor = '#880000';
             document.getElementById('deleteButton').innerHTML = 'Delete Defender<br>50% Refund';
+            
+            // Reset upgrade buttons
+            document.querySelectorAll('.upgradeButton').forEach(button => {
+                const type = button.dataset.type;
+                button.innerHTML = `Upgrade<br>$100`;
+            });
+            
+            // Initialize stars
+            createStars();
+            
+            console.log('Game restarted from pause menu!');
+            
+            // Automatically start the game after a short delay
+            setTimeout(() => {
+                spawnWave();
+            }, 2000);
         });
         
         // Keyboard shortcuts
@@ -1204,9 +2032,13 @@
                 e.preventDefault();
                 if (gameState.gameRunning && !gameState.gamePaused) {
                     gameState.gamePaused = true;
+                    gameState.pauseStartTime = performance.now();
                     document.getElementById('pauseMenu').style.display = 'block';
                 } else if (gameState.gamePaused) {
                     gameState.gamePaused = false;
+                    // Adjust lastUpdate to account for pause time
+                    const pauseDuration = performance.now() - gameState.pauseStartTime;
+                    gameState.lastUpdate += pauseDuration;
                     document.getElementById('pauseMenu').style.display = 'none';
                 }
             }
@@ -1215,6 +2047,15 @@
         // Update button states
         setInterval(() => {
             document.querySelectorAll('.defenseButton').forEach(button => {
+                const cost = parseInt(button.dataset.cost);
+                if (gameState.money >= cost) {
+                    button.classList.remove('disabled');
+                } else {
+                    button.classList.add('disabled');
+                }
+            });
+            
+            document.querySelectorAll('.upgradeButton').forEach(button => {
                 const cost = parseInt(button.dataset.cost);
                 if (gameState.money >= cost) {
                     button.classList.remove('disabled');
