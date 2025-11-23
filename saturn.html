@@ -330,6 +330,14 @@
                         Upgrade $100
                     </div>
                 </div>
+                <div class="defenseGroup">
+                    <div id="moonsButton" class="defenseButton" style="background: linear-gradient(45deg, #444466, #666688); border-color: #6688aa;">
+                        Moons Menu<br>&nbsp;
+                    </div>
+                    <div id="saturnUpgradeButton" class="upgradeButton">
+                        Upgrade Turret<br><span id="saturnUpgradeCost">$200</span>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -372,6 +380,7 @@
                     <div class="modTab" data-tab="economy" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Economy</div>
                     <div class="modTab" data-tab="waves" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Waves</div>
                     <div class="modTab" data-tab="gameplay" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Gameplay</div>
+                    <div class="modTab" data-tab="moons" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Moons</div>
                 </div>
                 
                 <!-- Tab Content -->
@@ -389,6 +398,44 @@
                 <div id="modMenuMessage" style="margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; display: none;"></div>
             </div>
         </div>
+        
+        <!-- Moons Menu -->
+        <div id="moonsMenuOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 300; overflow-y: auto;">
+            <div style="max-width: 900px; margin: 20px auto; padding: 20px; background: #111; border: 3px solid #6688aa; border-radius: 15px;">
+                <h1 style="color: white; text-align: center; margin-top: 0;">SATURN'S MOONS</h1>
+                <p style="color: #aaa; text-align: center; margin-bottom: 20px;">Equip moons to provide powerful buffs to your defenders</p>
+                
+                <!-- Equipped Moons Section -->
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #aaddff; margin-bottom: 10px;">Equipped Moons (<span id="equippedMoonsCount">0</span>/<span id="maxMoonSlots">3</span>)</h2>
+                    <div id="equippedMoonsContainer" style="display: flex; gap: 10px; flex-wrap: wrap; min-height: 100px; padding: 15px; background: #222; border-radius: 10px; border: 2px solid #444;">
+                        <!-- Equipped moons will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <!-- Buy Slot Button -->
+                <div id="buySlotContainer" style="margin-bottom: 30px; text-align: center;">
+                    <div id="buySlotButton" style="display: inline-block; padding: 12px 25px; background: #444466; border: 2px solid #6688aa; border-radius: 5px; cursor: pointer; color: white;">
+                        Buy Moon Slot - $<span id="slotCost">300</span> (Wave <span id="slotWaveReq">10</span>+)
+                    </div>
+                </div>
+                
+                <!-- Available Moons Section -->
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #aaddff; margin-bottom: 10px;">Available Moons</h2>
+                    <div id="availableMoonsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                        <!-- Available moons will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <!-- Close Button -->
+                <div style="text-align: center; margin-top: 20px;">
+                    <div id="moonsMenuCloseButton" style="display: inline-block; padding: 12px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white;">
+                        Close
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -404,47 +451,40 @@
             laserGuy: 3000
         };
         
-        // Game configuration - will be loaded from config.json or localStorage
+        // Game configuration - embedded directly (no fetch needed!)
         let gameConfig = null;
         let defaultConfig = null; // Store the original config for reset
         
-        // Load game configuration
-        async function loadGameConfig() {
-            try {
+        // Saturn gun upgrade system
+        let saturnGunLevel = 0;
+        const saturnGunUpgradeCost = 200;
+        const saturnGunDamagePerLevel = 20; // +20 damage per level
+        
+        // Load game configuration (synchronous - no network!)
+        function loadGameConfig() {
                 // Check if there's a saved config in localStorage
                 const savedConfig = localStorage.getItem('saturnDefenderModConfig');
                 if (savedConfig) {
                     console.log('Loading config from localStorage');
                     gameConfig = JSON.parse(savedConfig);
-                    defaultConfig = gameConfig; // For now, use this as default
+                defaultConfig = getEmbeddedDefaults(); // Always use embedded as default for reset
                     return;
                 }
                 
-                // Otherwise, fetch from config.json
-                console.log('Fetching config.json');
-                const response = await fetch('config.json');
-                if (!response.ok) throw new Error('Failed to fetch config.json');
-                
-                gameConfig = await response.json();
-                defaultConfig = JSON.parse(JSON.stringify(gameConfig)); // Deep clone for reset
-                console.log('Config loaded successfully from config.json');
-            } catch (error) {
-                console.error('Error loading config:', error);
-                // Fall back to embedded defaults if loading fails
+            // Use embedded defaults
+            console.log('Loading embedded config');
                 gameConfig = getEmbeddedDefaults();
-                defaultConfig = JSON.parse(JSON.stringify(gameConfig));
-                console.log('Using embedded default config');
-            }
+            defaultConfig = JSON.parse(JSON.stringify(gameConfig)); // Deep clone for reset
         }
         
-        // Embedded defaults as fallback
+        // Embedded defaults - complete config (no network request needed!)
         function getEmbeddedDefaults() {
             return {
                 defenseTypes: {
                     laser: { cost: 25, health: 100, damage: 15, range: 120, attackSpeed: 1.0, color: '#ff4444', projectileSpeed: 8, size: 8, orbitSpeed: 0.5 },
                     missile: { cost: 50, health: 120, damage: 30, range: 150, attackSpeed: 1.0, color: '#44ff44', projectileSpeed: 5, size: 10, explosive: true, orbitSpeed: 0.5 },
                     plasma: { cost: 75, health: 150, damage: 25, range: 100, attackSpeed: 1.0, color: '#4444ff', projectileSpeed: 6, size: 12, piercing: true, orbitSpeed: 0.5 },
-                    shield: { cost: 100, health: 300, damage: 0, range: 60, attackSpeed: 0, color: '#ffff44', projectileSpeed: 0, size: 15, blocking: true, orbitSpeed: 0.5, slowEffect: 0.1, pushDistance: 5 }
+                    shield: { cost: 100, health: 600, damage: 0, range: 60, attackSpeed: 0, color: '#ffff44', projectileSpeed: 0, size: 15, blocking: true, orbitSpeed: 0.5, slowEffect: 0.1, pushDistance: 5 }
                 },
                 enemyTypes: {
                     basic: { health: 50, speed: 1, reward: 10, color: '#ff6666', size: 8 },
@@ -455,13 +495,127 @@
                     laserGuy: { health: 90, speed: 0.6, reward: 25, color: '#ffaa00', size: 10, shootsLasers: true, attackSpeed: 1.0, laserDamage: 120, range: 200 },
                     ringBoss: { health: 5000, speed: 0.2, reward: 500, color: '#ff0000', size: 25, isRingBoss: true, orbitRadius: 500, orbitSpeed: 0.1, spiralInward: 0.1 }
                 },
+                gameplay: {
+                    slowEffectRecovery: 0.02,
+                    shieldSlowEffect: 0.3,
+                    upgradeMultiplier: 1.02,
+                    explosionRadius: 50,
+                    explosionDamageMultiplier: 0.5
+                },
                 gunConfig: { damage: 100, cost: 25, cooldown: 500, range: 800, width: 10, color: '#ff0066', aimRingRadius: 15, aimRingColor: '#ff0066', gunSize: 15, barrelLength: 50, barrelWidth: 18, baseSize: 22, rotationSpeed: 0.1, projectileSpeed: 15 },
                 economy: { startingMoney: 100, startingLives: 20, moneyGenerationRate: 2, moneyGenerationInterval: 1000, upgradeBaseCost: 100, upgradeCostIncrease: 50, ringUnlockCost: 500, waveCompletionBonus: 50 },
                 waveConfig: { baseEnemyCount: 5, enemyCountMultiplier: 1.3, maxEnemiesPerWave: 100, baseSpawnInterval: 800, spawnIntervalReduction: 1.1, minSpawnInterval: 50, baseWaveDelay: 3000, waveDelayReduction: 100, minWaveDelay: 1000, ringBossInterval: 5 },
                 enemyScaling: { healthScalingPerWave: 1.1, ringBossHealthMultiplier: 1.5, ringBossSpeedMultiplier: 1.2, ringBossSpiralMultiplier: 1.3 },
                 multipliers: { killMultiplierThresholds: [0, 10, 25, 50, 100, 200], killMultiplierValues: [1.0, 1.2, 1.3, 1.5, 1.7, 2.0], defenderDamageBonus: 5 },
                 enemySpawnChances: { laserGuyWave: 3, laserGuyChance: 0.15, fastWave: 3, fastChance: 0.2, heavyWave: 5, heavyChance: 0.05, jetpackWave: 7, jetpackChance: 0.05, bossWave: 10, bossChance: 0.05 },
-                gameplay: { slowEffectRecovery: 0.02, shieldSlowEffect: 0.3, upgradeMultiplier: 1.02, explosionRadius: 50, explosionDamageMultiplier: 0.5 }
+                moonsConfig: {
+                    slotSystem: {
+                        startingSlots: 3,
+                        maxSlots: 6,
+                        slotCosts: [0, 0, 0, 300, 500, 800],
+                        slotUnlockWaves: [1, 1, 1, 10, 20, 30]
+                    },
+                    upgradeSystem: {
+                        baseUpgradeCost: 150,
+                        upgradeCostIncrease: 75,
+                        maxUpgradeLevel: 10,
+                        healthMultiplierPerLevel: 1.15,
+                        buffMultiplierPerLevel: 1.08
+                    },
+                    enemyTargeting: {
+                        moonTargetChance: 0.3,
+                        moonTargetRange: 150
+                    },
+                    destructionPenalty: {
+                        resetLevelsOnDestroy: true
+                    },
+                    healingSystem: {
+                        baseHealCost: 50,
+                        costPerLevel: 25,
+                        healAmount: 100,
+                        healPercentage: 0.2
+                    },
+                    moons: {
+                        titan: {
+                            name: "Titan",
+                            equipCost: 300,
+                            unlockWave: 3,
+                            baseHealth: 500,
+                            orbitRadius: 300,
+                            orbitSpeed: 0.3,
+                            size: 14,
+                            color: "#ffaa44",
+                            buffType: "damageBoost",
+                            buffValue: 0.2,
+                            description: "+20% damage to all defenders"
+                        },
+                        enceladus: {
+                            name: "Enceladus",
+                            equipCost: 250,
+                            unlockWave: 5,
+                            baseHealth: 400,
+                            orbitRadius: 320,
+                            orbitSpeed: 0.35,
+                            size: 10,
+                            color: "#aaddff",
+                            buffType: "slowEffect",
+                            buffValue: 0.15,
+                            description: "Adds 15% slow effect to projectiles"
+                        },
+                        mimas: {
+                            name: "Mimas",
+                            equipCost: 350,
+                            unlockWave: 7,
+                            baseHealth: 450,
+                            orbitRadius: 340,
+                            orbitSpeed: 0.4,
+                            size: 11,
+                            color: "#cccccc",
+                            buffType: "attackSpeedBoost",
+                            buffValue: 0.1,
+                            description: "+10% attack speed"
+                        },
+                        rhea: {
+                            name: "Rhea",
+                            equipCost: 400,
+                            unlockWave: 10,
+                            baseHealth: 550,
+                            orbitRadius: 360,
+                            orbitSpeed: 0.25,
+                            size: 12,
+                            color: "#ffddaa",
+                            buffType: "rangeBoost",
+                            buffValue: 0.3,
+                            description: "+30% range to all defenders"
+                        },
+                        dione: {
+                            name: "Dione",
+                            equipCost: 450,
+                            unlockWave: 12,
+                            baseHealth: 500,
+                            orbitRadius: 380,
+                            orbitSpeed: 0.28,
+                            size: 11,
+                            color: "#ddaaff",
+                            buffType: "piercing",
+                            buffValue: 1,
+                            description: "Adds piercing to non-piercing defenders"
+                        },
+                        tethys: {
+                            name: "Tethys",
+                            equipCost: 500,
+                            unlockWave: 15,
+                            baseHealth: 600,
+                            orbitRadius: 400,
+                            orbitSpeed: 0.32,
+                            size: 13,
+                            color: "#aaffaa",
+                            buffType: "splashDamage",
+                            buffValue: 40,
+                            description: "Adds splash damage (40px radius)"
+                        }
+                    }
+                }
             };
         }
         
@@ -503,7 +657,14 @@
             gunAngle: 0, // Track gun rotation angle
             targetGunAngle: 0, // Target angle for smooth rotation
             barrelExtension: 0, // Track barrel slide animation (0-1)
-            pauseStartTime: 0 // Track when pause started
+            pauseStartTime: 0, // Track when pause started
+            // Moon system
+            equippedMoons: [], // Array of moon type strings that are currently equipped
+            unlockedMoons: [], // Array of moon type strings that have been unlocked
+            moonSlots: 3, // Current number of available moon slots
+            moonUpgrades: { titan: 0, enceladus: 0, mimas: 0, rhea: 0, dione: 0, tethys: 0 }, // Track upgrade levels for each moon
+            activeMoons: [], // Array of Moon instances currently in play
+            moonsMenuOpen: false // Track if moons menu is open
         };
         
         // Saturn properties
@@ -535,6 +696,7 @@
                 this.lastFire = 0;
                 this.orbitRadius = saturn.rings[ring].inner + (saturn.rings[ring].outer - saturn.rings[ring].inner) / 2;
                 this.angularSpeed = this.props.orbitSpeed || 0.5; // Use config or default
+                this.turretAngle = 0; // Initialize turret rotation
             }
             
             update(deltaTime) {
@@ -553,7 +715,9 @@
                 } else {
                     // Find target and attack
                     const target = this.findTarget();
-                    const fireRate = BASE_FIRE_RATES[this.type] / (this.props.attackSpeed || 1.0);
+                    const buffs = this.getMoonBuffs();
+                    const effectiveAttackSpeed = (this.props.attackSpeed || 1.0) * (1 + buffs.attackSpeedBoost);
+                    const fireRate = BASE_FIRE_RATES[this.type] / effectiveAttackSpeed;
                     if (target && Date.now() - this.lastFire > fireRate) {
                         this.fire(target);
                         this.lastFire = Date.now();
@@ -586,9 +750,50 @@
                 }
             }
             
+            getMoonBuffs() {
+                // Collect all buffs from active moons
+                const buffs = {
+                    damageBoost: 0,
+                    attackSpeedBoost: 0,
+                    rangeBoost: 0,
+                    piercing: false,
+                    splashDamage: 0,
+                    slowEffect: 0
+                };
+                
+                for (const moon of gameState.activeMoons) {
+                    const buff = moon.getBuffForDefender();
+                    switch (buff.type) {
+                        case 'damageBoost':
+                            buffs.damageBoost += buff.value;
+                            break;
+                        case 'attackSpeedBoost':
+                            buffs.attackSpeedBoost += buff.value;
+                            break;
+                        case 'rangeBoost':
+                            buffs.rangeBoost += buff.value;
+                            break;
+                        case 'piercing':
+                            buffs.piercing = true;
+                            break;
+                        case 'splashDamage':
+                            buffs.splashDamage = Math.max(buffs.splashDamage, buff.value);
+                            break;
+                        case 'slowEffect':
+                            buffs.slowEffect += buff.value;
+                            break;
+                    }
+                }
+                
+                return buffs;
+            }
+            
             findTarget() {
+                const buffs = this.getMoonBuffs();
+                const effectiveRange = this.props.range * (1 + buffs.rangeBoost);
+                
                 let closest = null;
-                let closestDist = this.props.range;
+                let closestDist = effectiveRange;
                 
                 for (const enemy of gameState.enemies) {
                     const dist = Math.sqrt((enemy.x - this.x) ** 2 + (enemy.y - this.y) ** 2);
@@ -605,7 +810,11 @@
                 // Apply defender bonus and upgrade bonus to damage
                 const upgradeMultiplier = gameConfig.gameplay ? gameConfig.gameplay.upgradeMultiplier : 1.02;
                 const upgradeBonus = Math.pow(upgradeMultiplier, gameState.defenderUpgrades[this.type]);
-                const bonusDamage = this.props.damage * (1 + (gameState.totalDefendersPlaced * gameConfig.multipliers.defenderDamageBonus) / 100) * upgradeBonus;
+                let bonusDamage = this.props.damage * (1 + (gameState.totalDefendersPlaced * gameConfig.multipliers.defenderDamageBonus) / 100) * upgradeBonus;
+                
+                // Apply moon buffs
+                const buffs = this.getMoonBuffs();
+                bonusDamage *= (1 + buffs.damageBoost);
                 
                 const projectile = {
                     x: this.x,
@@ -617,7 +826,11 @@
                     speed: this.props.projectileSpeed,
                     color: this.props.color,
                     type: this.type,
-                    life: 1000
+                    life: 1000,
+                    // Moon buff properties
+                    moonPiercing: buffs.piercing || this.props.piercing, // Combine moon buff with natural piercing
+                    moonSplashRadius: buffs.splashDamage,
+                    moonSlowEffect: buffs.slowEffect
                 };
                 
                 // Calculate velocity
@@ -627,6 +840,9 @@
                 projectile.vx = (dx / dist) * projectile.speed;
                 projectile.vy = (dy / dist) * projectile.speed;
                 
+                // Store target angle for visual rotation
+                this.turretAngle = Math.atan2(dy, dx);
+                
                 gameState.projectiles.push(projectile);
             }
             
@@ -634,28 +850,99 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 
-                // Draw defender with special effects for shield
-                if (this.type === 'shield') {
-                    // Draw shield with pulsing effect
-                    const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
-                    ctx.fillStyle = this.props.color;
+                // Draw defender with enhanced visuals based on type
+                if (this.type === 'laser') {
+                    // Laser Tower: Red gradient with glowing core and pulsing effect
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#ff8888');
+                    gradient.addColorStop(0.5, '#ff4444');
+                    gradient.addColorStop(1, '#aa0000');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Add pulsing inner glow
+                    const pulse = Math.sin(Date.now() * 0.008) * 0.3 + 0.7;
+                    ctx.fillStyle = 'rgba(255, 200, 200, ' + pulse + ')';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                } else if (this.type === 'missile') {
+                    // Missile Tower: Green gradient with segmented design
+                    const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#88ff88');
+                    gradient.addColorStop(0.6, '#44ff44');
+                    gradient.addColorStop(1, '#00aa00');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Add darker segments around the edge (non-rotating)
+                    ctx.strokeStyle = '#226622';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size * 0.85, angle, angle + Math.PI / 8);
+                        ctx.stroke();
+                    }
+                    
+                } else if (this.type === 'plasma') {
+                    // Plasma Tower: Blue gradient with energy rings
+                    const gradient = ctx.createRadialGradient(-3, -3, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#aaaaff');
+                    gradient.addColorStop(0.5, '#4444ff');
+                    gradient.addColorStop(1, '#0000aa');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Energy rings (don't rotate these, they're part of the base)
+                    ctx.strokeStyle = '#8888ff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size * 0.6, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                } else if (this.type === 'shield') {
+                    // Shield Tower: Metallic gradient with hexagon pattern
+                    const pulse = Math.sin(Date.now() * 0.005) * 0.15 + 0.85;
+                    const gradient = ctx.createRadialGradient(-4, -4, 0, 0, 0, this.props.size * 1.5);
+                    gradient.addColorStop(0, '#ffffaa');
+                    gradient.addColorStop(0.4, '#ffff44');
+                    gradient.addColorStop(0.8, '#cccc00');
+                    gradient.addColorStop(1, 'rgba(255, 255, 68, 0.1)');
+                    ctx.fillStyle = gradient;
                     ctx.globalAlpha = pulse;
                     ctx.beginPath();
                     ctx.arc(0, 0, this.props.size * 1.5, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.globalAlpha = 1;
                     
-                    // Draw shield core
-                    ctx.fillStyle = '#ffffff';
+                    // Draw solid shield core
+                    ctx.fillStyle = '#ffff88';
                     ctx.beginPath();
                     ctx.arc(0, 0, this.props.size * 0.6, 0, Math.PI * 2);
                     ctx.fill();
-                } else {
-                    // Normal defender
-                    ctx.fillStyle = this.props.color;
+                    
+                    // Add hexagon pattern for shield - make bolder
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        const x1 = Math.cos(angle) * this.props.size * 0.8;
+                        const y1 = Math.sin(angle) * this.props.size * 0.8;
+                        const x2 = Math.cos(angle + Math.PI / 3) * this.props.size * 0.8;
+                        const y2 = Math.sin(angle + Math.PI / 3) * this.props.size * 0.8;
                     ctx.beginPath();
-                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
-                    ctx.fill();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
                 }
                 
                 // Draw health bar
@@ -799,12 +1086,78 @@
                     }
                     
                 } else {
-                    // Normal enemy behavior
-                    const dx = saturn.x - this.x;
-                    const dy = saturn.y - this.y;
+                    // Normal enemy behavior - check for moon targets
+                    let targetX = saturn.x;
+                    let targetY = saturn.y;
+                    let targetMoon = null;
+                    
+                    // Check if should target a moon instead of Saturn
+                    if (gameConfig.moonsConfig && gameState.activeMoons.length > 0) {
+                        const moonTargetChance = gameConfig.moonsConfig.enemyTargeting.moonTargetChance;
+                        const moonTargetRange = gameConfig.moonsConfig.enemyTargeting.moonTargetRange;
+                        
+                        // Find closest moon within range
+                        let closestMoon = null;
+                        let closestMoonDist = moonTargetRange;
+                        
+                        for (const moon of gameState.activeMoons) {
+                            const moonDist = Math.sqrt((moon.x - this.x) ** 2 + (moon.y - this.y) ** 2);
+                            if (moonDist < closestMoonDist) {
+                                closestMoon = moon;
+                                closestMoonDist = moonDist;
+                            }
+                        }
+                        
+                        // Decide to target moon based on chance and proximity
+                        if (closestMoon && Math.random() < moonTargetChance) {
+                            targetX = closestMoon.x;
+                            targetY = closestMoon.y;
+                            targetMoon = closestMoon;
+                        }
+                    }
+                    
+                    const dx = targetX - this.x;
+                    const dy = targetY - this.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                    if (dist < saturn.radius) {
+                    // Check if reached target
+                    if (targetMoon) {
+                        // Attack moon if close enough
+                        if (dist < targetMoon.size + this.props.size) {
+                            const moonDamage = Math.floor(this.props.health * 0.1); // Damage based on enemy health
+                            if (targetMoon.takeDamage(moonDamage)) {
+                                // Moon destroyed
+                                const moonType = targetMoon.type;
+                                
+                                // Check if should reset upgrade level
+                                if (gameConfig.moonsConfig.destructionPenalty.resetLevelsOnDestroy) {
+                                    gameState.moonUpgrades[moonType] = 0;
+                                    console.log(`Moon ${moonType} destroyed! Upgrade level reset to 0.`);
+                                } else {
+                                    console.log(`Moon ${moonType} destroyed! Upgrade level preserved.`);
+                                }
+                                
+                                // Remove from active
+                                const moonIndex = gameState.activeMoons.indexOf(targetMoon);
+                                if (moonIndex > -1) {
+                                    gameState.activeMoons.splice(moonIndex, 1);
+                                }
+                                    
+                                    // Remove from equipped
+                                const equippedIndex = gameState.equippedMoons.indexOf(moonType);
+                                    if (equippedIndex > -1) {
+                                        gameState.equippedMoons.splice(equippedIndex, 1);
+                                    }
+                                
+                                // Refresh menu if open
+                                if (gameState.moonsMenuOpen) {
+                                    refreshMoonsMenu();
+                                }
+                            }
+                            // Enemy consumed by attacking moon
+                            return false;
+                        }
+                    } else if (dist < saturn.radius) {
                         // Reached Saturn!
                         gameState.lives--;
                         return false;
@@ -1032,11 +1385,97 @@
                     ctx.lineTo(0, -20);
                     ctx.stroke();
                 } else {
-                    // Draw normal enemy
+                    // Draw normal enemies with enhanced visuals
+                    // Identify enemy type by color
+                    if (this.props.color === '#ff6666') {
+                        // Basic Enemy: Red gradient
+                        const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                        gradient.addColorStop(0, '#ffaaaa');
+                        gradient.addColorStop(0.6, '#ff6666');
+                        gradient.addColorStop(1, '#cc3333');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                    } else if (this.props.color === '#66ff66') {
+                        // Fast Enemy: Green gradient
+                        const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                        gradient.addColorStop(0, '#aaffaa');
+                        gradient.addColorStop(0.6, '#66ff66');
+                        gradient.addColorStop(1, '#33cc33');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                    } else if (this.props.color === '#6666ff') {
+                        // Heavy Enemy: Blue gradient with armor plating
+                        const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                        gradient.addColorStop(0, '#aaaaff');
+                        gradient.addColorStop(0.5, '#6666ff');
+                        gradient.addColorStop(1, '#3333cc');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Armor plates
+                        ctx.fillStyle = '#444488';
+                        ctx.fillRect(-this.props.size * 0.6, -this.props.size * 0.8, this.props.size * 1.2, 3);
+                        ctx.fillRect(-this.props.size * 0.6, 0, this.props.size * 1.2, 3);
+                        ctx.fillRect(-this.props.size * 0.6, this.props.size * 0.8 - 3, this.props.size * 1.2, 3);
+                        
+                    } else if (this.props.color === '#ff66ff') {
+                        // Boss Enemy: Magenta gradient with crown spikes
+                        const gradient = ctx.createRadialGradient(-3, -3, 0, 0, 0, this.props.size);
+                        gradient.addColorStop(0, '#ffaaff');
+                        gradient.addColorStop(0.5, '#ff66ff');
+                        gradient.addColorStop(1, '#cc33cc');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Crown spikes
+                        ctx.fillStyle = '#cccccc';
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (i / 8) * Math.PI * 2;
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(
+                                Math.cos(angle) * this.props.size * 1.2,
+                                Math.sin(angle) * this.props.size * 1.2
+                            );
+                            ctx.lineTo(
+                                Math.cos(angle + Math.PI / 8) * this.props.size,
+                                Math.sin(angle + Math.PI / 8) * this.props.size
+                            );
+                            ctx.fill();
+                        }
+                        
+                        // Add white highlight to tips
+                        ctx.fillStyle = '#ffffff';
+                        for (let i = 0; i < 8; i++) {
+                            const angle = (i / 8) * Math.PI * 2;
+                            ctx.beginPath();
+                            ctx.arc(
+                                Math.cos(angle) * this.props.size * 1.1,
+                                Math.sin(angle) * this.props.size * 1.1,
+                                2,
+                                0,
+                                Math.PI * 2
+                            );
+                            ctx.fill();
+                        }
+                        
+                    } else {
+                        // Fallback for any other enemy type
                     ctx.fillStyle = this.props.color;
                     ctx.beginPath();
                     ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
                     ctx.fill();
+                    }
                 }
                 
                 // Draw health bar
@@ -1050,6 +1489,153 @@
                     
                     ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffff44' : '#ff4444';
                     ctx.fillRect(-barWidth/2, -this.props.size - 8, barWidth * healthPercent, barHeight);
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        class Moon {
+            constructor(type) {
+                this.type = type;
+                this.props = gameConfig.moonsConfig.moons[type];
+                
+                // Calculate health based on upgrade level
+                const upgradeLevel = gameState.moonUpgrades[type] || 0;
+                const healthMultiplier = Math.pow(gameConfig.moonsConfig.upgradeSystem.healthMultiplierPerLevel, upgradeLevel);
+                this.maxHealth = Math.floor(this.props.baseHealth * healthMultiplier);
+                this.health = this.maxHealth;
+                
+                // Orbital properties
+                this.orbitRadius = this.props.orbitRadius;
+                this.orbitAngle = Math.random() * 360; // Start at random position
+                this.orbitSpeed = this.props.orbitSpeed;
+                
+                // Calculate position
+                const rad = this.orbitAngle * Math.PI / 180;
+                this.x = saturn.x + Math.cos(rad) * this.orbitRadius;
+                this.y = saturn.y + Math.sin(rad) * this.orbitRadius;
+                
+                // Buff properties - enhanced by upgrade level
+                const buffMultiplier = Math.pow(gameConfig.moonsConfig.upgradeSystem.buffMultiplierPerLevel, upgradeLevel);
+                this.buffType = this.props.buffType;
+                this.buffValue = this.props.buffValue * buffMultiplier;
+                
+                // Visual properties
+                this.size = this.props.size + upgradeLevel; // Size increases with upgrades
+                this.color = this.props.color;
+                
+                // Trail for visual effect
+                this.trail = [];
+                this.maxTrailLength = 20;
+            }
+            
+            update(deltaTime) {
+                // Orbit around Saturn
+                this.orbitAngle += this.orbitSpeed * deltaTime / 16;
+                if (this.orbitAngle >= 360) this.orbitAngle -= 360;
+                
+                // Calculate position
+                const rad = this.orbitAngle * Math.PI / 180;
+                this.x = saturn.x + Math.cos(rad) * this.orbitRadius;
+                this.y = saturn.y + Math.sin(rad) * this.orbitRadius;
+                
+                // Update trail
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > this.maxTrailLength) {
+                    this.trail.shift();
+                }
+            }
+            
+            takeDamage(damage) {
+                this.health -= damage;
+                if (this.health <= 0) {
+                    this.health = 0;
+                    return true; // Moon destroyed
+                }
+                return false;
+            }
+            
+            getBuffForDefender() {
+                // Return the buff this moon provides
+                return {
+                    type: this.buffType,
+                    value: this.buffValue
+                };
+            }
+            
+            draw() {
+                ctx.save();
+                
+                // Draw orbital trail
+                if (this.trail.length > 1) {
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 2;
+                    ctx.globalAlpha = 0.2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                    for (let i = 1; i < this.trail.length; i++) {
+                        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                    }
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+                
+                ctx.translate(this.x, this.y);
+                
+                // Draw moon glow
+                const pulse = Math.sin(Date.now() * 0.003) * 0.2 + 0.8;
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size * 1.5);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(0.5, this.color);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = pulse * 0.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                
+                // Draw moon body
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw subtle shadow for depth
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.beginPath();
+                ctx.arc(this.size * 0.3, this.size * 0.3, this.size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw moon border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Draw health bar
+                if (this.health < this.maxHealth) {
+                    const barWidth = this.size * 2.5;
+                    const barHeight = 4;
+                    const healthPercent = this.health / this.maxHealth;
+                    
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(-barWidth/2, -this.size - 10, barWidth, barHeight);
+                    
+                    ctx.fillStyle = healthPercent > 0.5 ? '#44ff44' : healthPercent > 0.25 ? '#ffff44' : '#ff4444';
+                    ctx.fillRect(-barWidth/2, -this.size - 10, barWidth * healthPercent, barHeight);
+                }
+                
+                // Draw upgrade level indicator
+                const upgradeLevel = gameState.moonUpgrades[this.type] || 0;
+                if (upgradeLevel > 0) {
+                    ctx.fillStyle = 'white';
+                    ctx.font = '8px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Lv${upgradeLevel}`, 0, this.size + 15);
                 }
                 
                 ctx.restore();
@@ -1076,6 +1662,51 @@
                 }
             }
             return -1;
+        }
+        
+        function getMoonAtPosition(x, y) {
+            for (const moon of gameState.activeMoons) {
+                const dist = Math.sqrt((x - moon.x) ** 2 + (y - moon.y) ** 2);
+                if (dist < moon.size + 5) {
+                    return moon;
+                }
+            }
+            return null;
+        }
+        
+        function healMoon(moon) {
+            // Can't heal if at full health
+            if (moon.health >= moon.maxHealth) {
+                console.log('Moon already at full health!');
+                return;
+            }
+            
+            const healConfig = gameConfig.moonsConfig.healingSystem;
+            const upgradeLevel = gameState.moonUpgrades[moon.type];
+            const healCost = healConfig.baseHealCost + (upgradeLevel * healConfig.costPerLevel);
+            
+            // Check money
+            if (gameState.money < healCost) {
+                console.log('Not enough money to heal moon! Cost: $' + healCost);
+                return;
+            }
+            
+            // Calculate heal amount (use larger of fixed amount or percentage)
+            const fixedHeal = healConfig.healAmount;
+            const percentHeal = Math.floor(moon.maxHealth * healConfig.healPercentage);
+            const healAmount = Math.max(fixedHeal, percentHeal);
+            
+            // Apply heal (don't exceed max health)
+            const actualHeal = Math.min(healAmount, moon.maxHealth - moon.health);
+            moon.health += actualHeal;
+            
+            // Deduct cost
+            gameState.money -= healCost;
+            
+            // Create heal particles
+            createHealEffect(moon.x, moon.y, moon.color);
+            
+            console.log(`Healed ${moon.type} for ${actualHeal} HP! Cost: $${healCost}`);
         }
         
         function drawSaturn() {
@@ -1326,13 +1957,19 @@
                 let hit = false;
                 for (let j = gameState.enemies.length - 1; j >= 0; j--) {
                     const enemy = gameState.enemies[j];
+                    if (!enemy || !enemy.props) continue; // Safety check
+                    
                     const dist = Math.sqrt((enemy.x - proj.x) ** 2 + (enemy.y - proj.y) ** 2);
                     
                     if (dist < enemy.props.size + (proj.isLaser ? proj.width : 5)) {
                         // Hit!
+                        // Apply slow effects
                         if (proj.type === 'shield') {
                             const shieldSlow = gameConfig.gameplay ? gameConfig.gameplay.shieldSlowEffect : 0.3;
-                            enemy.slow = shieldSlow; // Slow effect
+                            enemy.slow = shieldSlow;
+                        }
+                        if (proj.moonSlowEffect > 0) {
+                            enemy.slow = Math.min(enemy.slow, 1 - proj.moonSlowEffect);
                         }
                         
                         if (enemy.takeDamage(proj.damage)) {
@@ -1352,18 +1989,17 @@
                             console.log('Enemy killed! Total kills:', gameState.totalEnemiesKilled, 'Multiplier:', gameState.killMultiplier);
                         }
                         
+                        // Handle splash damage from missiles
                         if (proj.type === 'missile') {
-                            // Explosive damage to nearby enemies
                             const explosionRadius = gameConfig.gameplay ? gameConfig.gameplay.explosionRadius : 50;
                             const explosionDamageMult = gameConfig.gameplay ? gameConfig.gameplay.explosionDamageMultiplier : 0.5;
                             
                             for (let k = gameState.enemies.length - 1; k >= 0; k--) {
                                 const nearbyEnemy = gameState.enemies[k];
-                                if (nearbyEnemy !== enemy) { // Don't double-hit the main target
+                                if (nearbyEnemy !== enemy) {
                                     const explosionDist = Math.sqrt((nearbyEnemy.x - proj.x) ** 2 + (nearbyEnemy.y - proj.y) ** 2);
                                     if (explosionDist < explosionRadius) {
                                         if (nearbyEnemy.takeDamage(proj.damage * explosionDamageMult)) {
-                                            // Nearby enemy also killed by explosion
                                             gameState.totalEnemiesKilled++;
                                             updateMultipliers();
                                             
@@ -1374,7 +2010,6 @@
                                             gameState.enemies.splice(k, 1);
                                             
                                             createExplosion(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.props.color);
-                                            console.log('Explosion kill! Total kills:', gameState.totalEnemiesKilled);
                                         }
                                     }
                                 }
@@ -1382,7 +2017,33 @@
                             createExplosion(proj.x, proj.y, '#ffaa44');
                         }
                         
-                        if (proj.type !== 'plasma' && !proj.isLaser) { // Plasma and lasers pierce
+                        // Handle moon splash damage
+                        if (proj.moonSplashRadius > 0) {
+                            for (let k = gameState.enemies.length - 1; k >= 0; k--) {
+                                const nearbyEnemy = gameState.enemies[k];
+                                if (nearbyEnemy !== enemy) {
+                                    const splashDist = Math.sqrt((nearbyEnemy.x - proj.x) ** 2 + (nearbyEnemy.y - proj.y) ** 2);
+                                    if (splashDist < proj.moonSplashRadius) {
+                                        if (nearbyEnemy.takeDamage(proj.damage * 0.5)) {
+                                            gameState.totalEnemiesKilled++;
+                                            updateMultipliers();
+                                            
+                                            const reward = Math.floor(nearbyEnemy.reward * gameState.killMultiplier);
+                                            gameState.money += reward;
+                                            gameState.score += reward * 10;
+                                            gameState.enemiesKilled++;
+                                            gameState.enemies.splice(k, 1);
+                                            
+                                            createExplosion(nearbyEnemy.x, nearbyEnemy.y, nearbyEnemy.props.color);
+                                        }
+                                    }
+                                }
+                            }
+                            createExplosion(proj.x, proj.y, '#aaffaa');
+                        }
+                        
+                        // Check if projectile should pierce (plasma, lasers, or moon piercing buff)
+                        if (!proj.moonPiercing && proj.type !== 'plasma' && !proj.isLaser) {
                             hit = true;
                             break;
                         }
@@ -1410,17 +2071,22 @@
                     const dist = Math.sqrt((defender.x - proj.x) ** 2 + (defender.y - proj.y) ** 2);
                     
                     if (dist < defender.props.size + 5) {
-                        // Hit! Destroy the defender
+                        // Damage the defender instead of destroying it
+                        defender.health -= proj.damage;
+                        
+                        if (defender.health <= 0) {
+                            // Only destroy if health depleted
                         const refund = Math.floor(gameConfig.defenseTypes[defender.type].cost * 0.5);
                         gameState.money += refund;
                         gameState.totalDefendersPlaced--;
                         gameState.defenders.splice(j, 1);
                         updateMultipliers();
                         
-                        // Create explosion effect
                         createExplosion(defender.x, defender.y, defender.props.color);
-                        
                         console.log('Defender destroyed by laser guy! Refunded $' + refund);
+                        } else {
+                            console.log(`Defender damaged! Health: ${defender.health}/${defender.maxHealth}`);
+                        }
                         
                         hit = true;
                         break;
@@ -1441,6 +2107,21 @@
                     vx: (Math.random() - 0.5) * 4,
                     vy: (Math.random() - 0.5) * 4,
                     color: color,
+                    life: 30,
+                    maxLife: 30
+                });
+            }
+        }
+        
+        function createHealEffect(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                gameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * 2,
+                    vy: Math.sin(angle) * 2,
+                    color: '#44ff44',
                     life: 30,
                     maxLife: 30
                 });
@@ -1662,8 +2343,11 @@
         }
         
         function gameLoop(timestamp) {
-            if (gameState.gamePaused) {
-                // When paused, only draw the current state without updating
+            if (gameState.gamePaused || gameState.moonsMenuOpen) {
+                // When paused or moons menu open, only draw the current state without updating
+                // Update lastUpdate to current time to prevent deltaTime spike when unpausing
+                gameState.lastUpdate = timestamp;
+                
                 // Clear canvas
                 ctx.fillStyle = 'rgba(0, 0, 17, 0.1)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1673,6 +2357,11 @@
                 
                 // Draw Saturn and rings
                 drawSaturn();
+                
+                // Draw moons (without updating)
+                for (const moon of gameState.activeMoons) {
+                    moon.draw();
+                }
                 
                 // Draw defenders (without updating)
                 for (const defender of gameState.defenders) {
@@ -1708,7 +2397,7 @@
                 return;
             }
             
-            // Only update lastUpdate when not paused to prevent huge deltaTime
+            // Calculate deltaTime for smooth updates
             const deltaTime = timestamp - gameState.lastUpdate;
             gameState.lastUpdate = timestamp;
             
@@ -1726,6 +2415,12 @@
             
             // Draw Saturn and rings
             drawSaturn();
+            
+            // Update and draw moons
+            for (const moon of gameState.activeMoons) {
+                moon.update(deltaTime);
+                moon.draw();
+            }
             
             // Update and draw defenders
             for (const defender of gameState.defenders) {
@@ -1854,6 +2549,13 @@
             // If gun is active, fire it
             if (gameState.gunActive) {
                 fireGun(x, y);
+                return;
+            }
+            
+            // Check if clicking on a moon (for healing) - this should work regardless of what's selected
+            const clickedMoon = getMoonAtPosition(x, y);
+            if (clickedMoon) {
+                healMoon(clickedMoon);
                 return;
             }
             
@@ -2039,6 +2741,39 @@
             });
         });
         
+        // Saturn gun upgrade button
+        document.getElementById('saturnUpgradeButton').addEventListener('click', () => {
+            if (!gameConfig || !gameConfig.gunConfig) return;
+            
+            const cost = saturnGunUpgradeCost + (saturnGunLevel * 50);
+            
+            if (gameState.money >= cost) {
+                saturnGunLevel++;
+                gameState.money -= cost;
+                
+                // Update gun damage
+                gameConfig.gunConfig.damage = 100 + (saturnGunLevel * saturnGunDamagePerLevel);
+                
+                // Update button display
+                const nextCost = saturnGunUpgradeCost + (saturnGunLevel * 50);
+                const costElement = document.getElementById('saturnUpgradeCost');
+                if (costElement) {
+                    costElement.textContent = '$' + nextCost;
+                }
+                
+                console.log('Saturn gun upgraded to level', saturnGunLevel, 'Damage:', gameConfig.gunConfig.damage);
+            } else {
+                // Flash red when can't afford
+                const upgradeBtn = document.getElementById('saturnUpgradeButton');
+                if (upgradeBtn) {
+                    upgradeBtn.style.background = 'linear-gradient(45deg, #660000, #880000)';
+                    setTimeout(() => {
+                        upgradeBtn.style.background = 'linear-gradient(45deg, #664444, #886666)';
+                    }, 500);
+                }
+            }
+        });
+        
         // Ring unlock button
         document.getElementById('unlockRingButton').addEventListener('click', () => {
             if (!gameConfig || !gameConfig.economy) return; // Wait for config to load
@@ -2133,7 +2868,14 @@
                     mouseY: canvas.height / 2, // Reset mouse position to center
                     gunAngle: 0, // Reset gun rotation angle
                     targetGunAngle: 0, // Reset target angle
-                    barrelExtension: 0 // Reset barrel slide animation (0-1)
+                    barrelExtension: 0, // Reset barrel slide animation (0-1)
+                    // Moon system
+                    equippedMoons: [],
+                    unlockedMoons: [],
+                    moonSlots: 3,
+                    moonUpgrades: { titan: 0, enceladus: 0, mimas: 0, rhea: 0, dione: 0, tethys: 0 },
+                    activeMoons: [],
+                    moonsMenuOpen: false
                 };
                 
                 // Reset UI
@@ -2153,14 +2895,28 @@
                 
                 // Reset upgrade buttons
                 document.querySelectorAll('.upgradeButton').forEach(button => {
+                    // Skip Saturn upgrade button - it has its own reset
+                    if (button.id === 'saturnUpgradeButton') return;
+                    
                     const type = button.dataset.type;
                     button.innerHTML = `Upgrade<br>$100`;
                 });
+                
+                // Reset Saturn gun upgrade
+                saturnGunLevel = 0;
+                gameConfig.gunConfig.damage = 100; // Reset to base damage
+                const saturnUpgradeBtn = document.getElementById('saturnUpgradeButton');
+                if (saturnUpgradeBtn) {
+                    saturnUpgradeBtn.innerHTML = 'Upgrade Turret<br><span id="saturnUpgradeCost">$200</span>';
+                }
                 
                 // Initialize stars
                 createStars();
                 
                 console.log('Game started/restarted!');
+                
+                // Initialize active moons
+                initializeActiveMoons();
                 
                 // Automatically start the game after a short delay
                 setTimeout(() => {
@@ -2224,7 +2980,14 @@
                 mouseY: canvas.height / 2, // Reset mouse position to center
                 gunAngle: 0, // Reset gun rotation angle
                 targetGunAngle: 0, // Reset target angle
-                barrelExtension: 0 // Reset barrel slide animation (0-1)
+                barrelExtension: 0, // Reset barrel slide animation (0-1)
+                // Moon system
+                equippedMoons: [],
+                unlockedMoons: [],
+                moonSlots: 3,
+                moonUpgrades: { titan: 0, enceladus: 0, mimas: 0, rhea: 0, dione: 0, tethys: 0 },
+                activeMoons: [],
+                moonsMenuOpen: false
             };
             
             // Reset UI
@@ -2245,14 +3008,28 @@
             
             // Reset upgrade buttons
             document.querySelectorAll('.upgradeButton').forEach(button => {
+                // Skip Saturn upgrade button - it has its own reset
+                if (button.id === 'saturnUpgradeButton') return;
+                
                 const type = button.dataset.type;
                 button.innerHTML = `Upgrade<br>$100`;
             });
+            
+            // Reset Saturn gun upgrade
+            saturnGunLevel = 0;
+            gameConfig.gunConfig.damage = 100; // Reset to base damage
+            const saturnUpgradeBtn = document.getElementById('saturnUpgradeButton');
+            if (saturnUpgradeBtn) {
+                saturnUpgradeBtn.innerHTML = 'Upgrade Turret<br><span id="saturnUpgradeCost">$200</span>';
+            }
             
             // Initialize stars
             createStars();
             
             console.log('Game restarted from pause menu!');
+            
+            // Initialize active moons
+            initializeActiveMoons();
             
             // Automatically start the game after a short delay
             setTimeout(() => {
@@ -2281,6 +3058,9 @@
         // Update button states
         setInterval(() => {
             document.querySelectorAll('.defenseButton').forEach(button => {
+                // Skip moon button - it doesn't have a cost
+                if (button.id === 'moonsButton') return;
+                
                 const cost = parseInt(button.dataset.cost);
                 if (gameState.money >= cost) {
                     button.classList.remove('disabled');
@@ -2291,18 +3071,31 @@
             
             // Only update upgrade buttons if config is loaded
             if (gameConfig && gameConfig.economy) {
-            document.querySelectorAll('.upgradeButton').forEach(button => {
+                document.querySelectorAll('.upgradeButton').forEach(button => {
+                    // Skip Saturn upgrade button - it has its own handling
+                    if (button.id === 'saturnUpgradeButton') {
+                        const cost = saturnGunUpgradeCost + (saturnGunLevel * 50);
+                        if (gameState.money >= cost) {
+                            button.classList.remove('disabled');
+                        } else {
+                            button.classList.add('disabled');
+                        }
+                        return;
+                    }
+                    
                     const type = button.dataset.type;
+                    if (!type) return; // Skip if no type
+                    
                     const baseCost = gameConfig.economy.upgradeBaseCost;
                     const currentLevel = gameState.defenderUpgrades[type];
                     const cost = baseCost + (currentLevel * gameConfig.economy.upgradeCostIncrease);
                     
-                if (gameState.money >= cost) {
-                    button.classList.remove('disabled');
-                } else {
-                    button.classList.add('disabled');
-                }
-            });
+                    if (gameState.money >= cost) {
+                        button.classList.remove('disabled');
+                    } else {
+                        button.classList.add('disabled');
+                    }
+                });
             }
         }, 100);
         
@@ -2377,6 +3170,8 @@
                 renderWavesTab(content);
             } else if (tabName === 'gameplay') {
                 renderGameplayTab(content);
+            } else if (tabName === 'moons') {
+                renderMoonsTab(content);
             }
         }
         
@@ -2522,6 +3317,61 @@
             });
         }
         
+        // Render moons tab
+        function renderMoonsTab(container) {
+            // Destruction Penalties
+            const penaltySection = document.createElement('div');
+            penaltySection.style.marginBottom = '30px';
+            penaltySection.innerHTML = '<h3 style="color: #fff;">Destruction Penalties</h3>';
+            penaltySection.appendChild(createToggleControl(
+                'moonsConfig.destructionPenalty.resetLevelsOnDestroy',
+                'Reset Levels on Destroy',
+                gameConfig.moonsConfig.destructionPenalty.resetLevelsOnDestroy
+            ));
+            container.appendChild(penaltySection);
+            
+            // Healing System
+            const healSection = document.createElement('div');
+            healSection.style.marginBottom = '30px';
+            healSection.innerHTML = '<h3 style="color: #fff;">Healing System</h3>';
+            const healProps = gameConfig.moonsConfig.healingSystem;
+            Object.keys(healProps).forEach(key => {
+                healSection.appendChild(createSliderControl(
+                    `moonsConfig.healingSystem.${key}`,
+                    key,
+                    healProps[key],
+                    getSliderRange(key)
+                ));
+            });
+            container.appendChild(healSection);
+            
+            // Individual Moons
+            const moonTypes = ['titan', 'enceladus', 'mimas', 'rhea', 'dione', 'tethys'];
+            moonTypes.forEach(type => {
+                const section = document.createElement('div');
+                section.style.cssText = 'margin-bottom: 30px; padding: 15px; background: #333; border-radius: 8px;';
+                
+                const title = document.createElement('h3');
+                title.textContent = gameConfig.moonsConfig.moons[type].name;
+                title.style.color = gameConfig.moonsConfig.moons[type].color;
+                section.appendChild(title);
+                
+                const props = gameConfig.moonsConfig.moons[type];
+                Object.keys(props).forEach(key => {
+                    if (typeof props[key] === 'number') {
+                        section.appendChild(createSliderControl(
+                            `moonsConfig.moons.${type}.${key}`,
+                            key,
+                            props[key],
+                            getSliderRange(key)
+                        ));
+                    }
+                });
+                
+                container.appendChild(section);
+            });
+        }
+        
         // Create slider control
         function createSliderControl(path, label, value, range) {
             const container = document.createElement('div');
@@ -2572,6 +3422,30 @@
             controlsDiv.appendChild(input);
             container.appendChild(controlsDiv);
             
+            return container;
+        }
+        
+        // Create toggle control
+        function createToggleControl(path, label, value) {
+            const container = document.createElement('div');
+            container.style.cssText = 'margin-bottom: 15px; display: flex; align-items: center; gap: 10px;';
+            
+            const labelEl = document.createElement('label');
+            labelEl.textContent = label;
+            labelEl.style.color = '#aaa';
+            labelEl.style.flex = '1';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = value;
+            checkbox.style.cssText = 'width: 20px; height: 20px; cursor: pointer;';
+            
+            checkbox.addEventListener('change', () => {
+                updateConfigValue(path, checkbox.checked);
+            });
+            
+            container.appendChild(labelEl);
+            container.appendChild(checkbox);
             return container;
         }
         
@@ -2638,12 +3512,21 @@
                 shieldSlowEffect: { min: 0.01, max: 1, step: 0.01 },
                 upgradeMultiplier: { min: 1.001, max: 1.5, step: 0.001 },
                 explosionRadius: { min: 10, max: 200, step: 5 },
-                explosionDamageMultiplier: { min: 0.1, max: 2, step: 0.1 }
+                explosionDamageMultiplier: { min: 0.1, max: 2, step: 0.1 },
+                // Moon properties
+                equipCost: { min: 0, max: 1000, step: 25 },
+                baseHealth: { min: 100, max: 2000, step: 50 },
+                baseHealCost: { min: 0, max: 500, step: 10 },
+                costPerLevel: { min: 0, max: 100, step: 5 },
+                healAmount: { min: 10, max: 500, step: 10 },
+                healPercentage: { min: 0, max: 1, step: 0.05 },
+                buffValue: { min: 0, max: 1, step: 0.05 }
             };
             
             // Default for Wave and Chance values
             if (key.includes('Wave')) return { min: 1, max: 50, step: 1 };
             if (key.includes('Chance')) return { min: 0, max: 1, step: 0.01 };
+            if (key.includes('unlockWave')) return { min: 1, max: 50, step: 1 };
             
             return ranges[key] || { min: 0, max: 1000, step: 1 };
         }
@@ -2658,10 +3541,9 @@
         document.getElementById('modResetButton').addEventListener('click', () => {
             if (confirm('Reset all values to defaults? This will clear your saved configuration.')) {
                 localStorage.removeItem('saturnDefenderModConfig');
-                loadGameConfig().then(() => {
+                loadGameConfig();
                     showModMessage('Configuration reset to defaults!', 'success');
                     loadModTab(currentModTab); // Reload current tab
-                });
             }
         });
         
@@ -2721,33 +3603,310 @@
         
         // ============ END MOD MENU SYSTEM ============
         
-        // Show loading state
-        document.getElementById('startButton').textContent = 'Loading...';
-        document.getElementById('startButton').style.opacity = '0.5';
+        // ============ MOONS MENU SYSTEM ============
         
-        // Load config and start the game loop
-        loadGameConfig().then(() => {
-            console.log('Game config loaded, starting game loop');
+        // Open moons menu
+        document.getElementById('moonsButton').addEventListener('click', () => {
+            gameState.moonsMenuOpen = true;
+            document.getElementById('moonsMenuOverlay').style.display = 'block';
+            refreshMoonsMenu();
+        });
+        
+        // Close moons menu
+        document.getElementById('moonsMenuCloseButton').addEventListener('click', () => {
+            gameState.moonsMenuOpen = false;
+            document.getElementById('moonsMenuOverlay').style.display = 'none';
+        });
+        
+        // Refresh moons menu display
+        function refreshMoonsMenu() {
+            if (!gameConfig || !gameConfig.moonsConfig) {
+                console.error('Game config or moonsConfig not loaded!', gameConfig);
+                return;
+            }
             
-            // Update UI to show ready state
-            document.getElementById('startButton').textContent = 'START GAME';
-            document.getElementById('startButton').style.opacity = '1';
+            const moonsConfig = gameConfig.moonsConfig;
+            console.log('Refreshing moons menu. Wave:', gameState.wave, 'Moons config:', moonsConfig.moons);
+            
+            // Update slot count display
+            document.getElementById('equippedMoonsCount').textContent = gameState.equippedMoons.length;
+            document.getElementById('maxMoonSlots').textContent = gameState.moonSlots;
+            
+            // Render equipped moons
+            const equippedContainer = document.getElementById('equippedMoonsContainer');
+            equippedContainer.innerHTML = '';
+            
+            // Add equipped moon slots
+            for (let i = 0; i < gameState.moonSlots; i++) {
+                const slotDiv = document.createElement('div');
+                slotDiv.style.cssText = 'width: 120px; height: 140px; background: #333; border: 2px solid #555; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;';
+                
+                if (i < gameState.equippedMoons.length) {
+                    const moonType = gameState.equippedMoons[i];
+                    const moonData = moonsConfig.moons[moonType];
+                    const upgradeLevel = gameState.moonUpgrades[moonType];
+                    
+                    slotDiv.innerHTML = `
+                        <div style="width: 40px; height: 40px; background: ${moonData.color}; border-radius: 50%; margin-bottom: 8px; box-shadow: 0 0 10px ${moonData.color};"></div>
+                        <div style="color: white; font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 4px;">${moonData.name}</div>
+                        <div style="color: #aaa; font-size: 10px; text-align: center; margin-bottom: 8px;">Lv ${upgradeLevel}</div>
+                        <div class="unequipMoonButton" data-moon="${moonType}" style="padding: 5px 10px; background: #660000; border: 1px solid #880000; border-radius: 3px; cursor: pointer; color: white; font-size: 10px;">Unequip</div>
+                    `;
+                } else {
+                    slotDiv.innerHTML = '<div style="color: #666; font-size: 14px;">Empty Slot</div>';
+                }
+                
+                equippedContainer.appendChild(slotDiv);
+            }
+            
+            // Add event listeners to unequip buttons
+            document.querySelectorAll('.unequipMoonButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const moonType = button.dataset.moon;
+                    unequipMoon(moonType);
+                });
+            });
+            
+            // Update buy slot button
+            const nextSlotIndex = gameState.moonSlots;
+            if (nextSlotIndex < moonsConfig.slotSystem.maxSlots) {
+                const slotCost = moonsConfig.slotSystem.slotCosts[nextSlotIndex];
+                const slotWaveReq = moonsConfig.slotSystem.slotUnlockWaves[nextSlotIndex];
+                document.getElementById('slotCost').textContent = slotCost;
+                document.getElementById('slotWaveReq').textContent = slotWaveReq;
+                document.getElementById('buySlotContainer').style.display = 'block';
+                
+                const buyButton = document.getElementById('buySlotButton');
+                if (gameState.wave >= slotWaveReq && gameState.money >= slotCost) {
+                    buyButton.style.background = '#444466';
+                    buyButton.style.cursor = 'pointer';
+                    buyButton.style.opacity = '1';
+                } else {
+                    buyButton.style.background = '#333';
+                    buyButton.style.cursor = 'not-allowed';
+                    buyButton.style.opacity = '0.5';
+                }
+            } else {
+                document.getElementById('buySlotContainer').style.display = 'none';
+            }
+            
+            // Render available moons
+            const availableContainer = document.getElementById('availableMoonsContainer');
+            availableContainer.innerHTML = '';
+            
+            console.log('Available moons keys:', Object.keys(moonsConfig.moons));
+            
+            Object.keys(moonsConfig.moons).forEach(moonType => {
+                console.log('Rendering moon:', moonType);
+                const moonData = moonsConfig.moons[moonType];
+                const isUnlocked = gameState.unlockedMoons.includes(moonType) || gameState.wave >= moonData.unlockWave;
+                const isEquipped = gameState.equippedMoons.includes(moonType);
+                const upgradeLevel = gameState.moonUpgrades[moonType];
+                
+                console.log(`Moon ${moonType}: unlocked=${isUnlocked}, equipped=${isEquipped}, level=${upgradeLevel}`);
+                
+                // Unlock moon if wave requirement met
+                if (!gameState.unlockedMoons.includes(moonType) && gameState.wave >= moonData.unlockWave) {
+                    gameState.unlockedMoons.push(moonType);
+                }
+                
+                const moonCard = document.createElement('div');
+                moonCard.style.cssText = `background: ${isUnlocked ? '#2a2a4a' : '#222'}; border: 2px solid ${isUnlocked ? '#6688aa' : '#444'}; border-radius: 10px; padding: 15px;`;
+                
+                if (isUnlocked) {
+                    const upgradeCost = moonsConfig.upgradeSystem.baseUpgradeCost + (upgradeLevel * moonsConfig.upgradeSystem.upgradeCostIncrease);
+                    const canUpgrade = upgradeLevel < moonsConfig.upgradeSystem.maxUpgradeLevel && gameState.money >= upgradeCost;
+                    
+                    moonCard.innerHTML = `
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <div style="width: 50px; height: 50px; background: ${moonData.color}; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 15px ${moonData.color};"></div>
+                            <div>
+                                <div style="color: white; font-size: 16px; font-weight: bold;">${moonData.name}</div>
+                                <div style="color: #aaa; font-size: 11px;">Level ${upgradeLevel}</div>
+                            </div>
+                        </div>
+                        <div style="color: #ccc; font-size: 12px; margin-bottom: 10px;">${moonData.description}</div>
+                        <div style="display: flex; gap: 5px;">
+                            ${!isEquipped && gameState.equippedMoons.length < gameState.moonSlots ? 
+                                `<div class="equipMoonButton" data-moon="${moonType}" style="flex: 1; padding: 8px; background: #006600; border: 1px solid #008800; border-radius: 5px; cursor: pointer; color: white; font-size: 11px; text-align: center;">Equip $${moonData.equipCost}</div>` : 
+                                isEquipped ? 
+                                `<div style="flex: 1; padding: 8px; background: #444; border: 1px solid #666; border-radius: 5px; color: #888; font-size: 11px; text-align: center;">Equipped</div>` :
+                                `<div style="flex: 1; padding: 8px; background: #333; border: 1px solid #555; border-radius: 5px; color: #666; font-size: 11px; text-align: center;">No Slots</div>`
+                            }
+                            ${upgradeLevel < moonsConfig.upgradeSystem.maxUpgradeLevel ?
+                                `<div class="upgradeMoonButton" data-moon="${moonType}" data-cost="${upgradeCost}" style="flex: 1; padding: 8px; background: ${canUpgrade ? '#444466' : '#333'}; border: 1px solid ${canUpgrade ? '#6688aa' : '#555'}; border-radius: 5px; cursor: ${canUpgrade ? 'pointer' : 'not-allowed'}; color: ${canUpgrade ? 'white' : '#666'}; font-size: 11px; text-align: center;">Upgrade $${upgradeCost}</div>` :
+                                `<div style="flex: 1; padding: 8px; background: #333; border: 1px solid #555; border-radius: 5px; color: #666; font-size: 11px; text-align: center;">Max Level</div>`
+                            }
+                        </div>
+                    `;
+                } else {
+                    moonCard.innerHTML = `
+                        <div style="text-align: center; opacity: 0.5;">
+                            <div style="width: 50px; height: 50px; background: #444; border-radius: 50%; margin: 0 auto 10px; filter: grayscale(100%);"></div>
+                            <div style="color: #888; font-size: 14px; font-weight: bold;">???</div>
+                            <div style="color: #666; font-size: 11px; margin-top: 5px;">Unlocks at Wave ${moonData.unlockWave}</div>
+                        </div>
+                    `;
+                }
+                
+                availableContainer.appendChild(moonCard);
+                console.log('Added moon card for:', moonType);
+            });
+            
+            console.log('Total moon cards in container:', availableContainer.children.length);
+            
+            // Add event listeners
+            document.querySelectorAll('.equipMoonButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const moonType = button.dataset.moon;
+                    equipMoon(moonType);
+                });
+            });
+            
+            document.querySelectorAll('.upgradeMoonButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const moonType = button.dataset.moon;
+                    const cost = parseInt(button.dataset.cost);
+                    upgradeMoon(moonType, cost);
+                });
+            });
+        }
+        
+        // Equip a moon
+        function equipMoon(moonType) {
+            const moonData = gameConfig.moonsConfig.moons[moonType];
+            const equipCost = moonData.equipCost;
+            
+            // Check money
+            if (gameState.money < equipCost) {
+                console.log('Not enough money to equip moon! Cost: $' + equipCost);
+                return;
+            }
+            
+            if (gameState.equippedMoons.length >= gameState.moonSlots) {
+                console.log('All moon slots are full!');
+                return;
+            }
+            
+            if (gameState.equippedMoons.includes(moonType)) {
+                console.log('Moon already equipped!');
+                return;
+            }
+            
+            // Deduct cost
+            gameState.money -= equipCost;
+            console.log('Equipped moon:', moonType, 'Cost: $' + equipCost);
+            
+            gameState.equippedMoons.push(moonType);
+            
+            // Create moon instance if game is running
+            if (gameState.gameRunning) {
+                const moon = new Moon(moonType);
+                gameState.activeMoons.push(moon);
+            }
+            
+            refreshMoonsMenu();
+            console.log('Equipped moon:', moonType);
+        }
+        
+        // Unequip a moon
+        function unequipMoon(moonType) {
+            const index = gameState.equippedMoons.indexOf(moonType);
+            if (index > -1) {
+                gameState.equippedMoons.splice(index, 1);
+                
+                // Remove moon instance from active moons
+                const moonIndex = gameState.activeMoons.findIndex(m => m.type === moonType);
+                if (moonIndex > -1) {
+                    gameState.activeMoons.splice(moonIndex, 1);
+                }
+                
+                refreshMoonsMenu();
+                console.log('Unequipped moon:', moonType);
+            }
+        }
+        
+        // Upgrade a moon
+        function upgradeMoon(moonType, cost) {
+            if (gameState.money < cost) {
+                console.log('Not enough money to upgrade moon!');
+                return;
+            }
+            
+            const upgradeLevel = gameState.moonUpgrades[moonType];
+            if (upgradeLevel >= gameConfig.moonsConfig.upgradeSystem.maxUpgradeLevel) {
+                console.log('Moon is already at max level!');
+                return;
+            }
+            
+            gameState.money -= cost;
+            gameState.moonUpgrades[moonType]++;
+            
+            // Update active moon instance if equipped
+            const activeMoon = gameState.activeMoons.find(m => m.type === moonType);
+            if (activeMoon) {
+                // Recreate the moon with new stats
+                const index = gameState.activeMoons.indexOf(activeMoon);
+                gameState.activeMoons[index] = new Moon(moonType);
+            }
+            
+            refreshMoonsMenu();
+            console.log('Upgraded moon:', moonType, 'to level', gameState.moonUpgrades[moonType]);
+        }
+        
+        // Buy moon slot
+        document.getElementById('buySlotButton').addEventListener('click', () => {
+            if (!gameConfig || !gameConfig.moonsConfig) return;
+            
+            const nextSlotIndex = gameState.moonSlots;
+            if (nextSlotIndex >= gameConfig.moonsConfig.slotSystem.maxSlots) {
+                console.log('Already have maximum moon slots!');
+                return;
+            }
+            
+            const slotCost = gameConfig.moonsConfig.slotSystem.slotCosts[nextSlotIndex];
+            const slotWaveReq = gameConfig.moonsConfig.slotSystem.slotUnlockWaves[nextSlotIndex];
+            
+            if (gameState.wave < slotWaveReq) {
+                console.log('Wave requirement not met!');
+                return;
+            }
+            
+            if (gameState.money < slotCost) {
+                console.log('Not enough money to buy slot!');
+                return;
+            }
+            
+            gameState.money -= slotCost;
+            gameState.moonSlots++;
+            
+            refreshMoonsMenu();
+            console.log('Bought moon slot! Now have', gameState.moonSlots, 'slots');
+        });
+        
+        // Initialize active moons when game starts
+        function initializeActiveMoons() {
+            gameState.activeMoons = [];
+            for (const moonType of gameState.equippedMoons) {
+                const moon = new Moon(moonType);
+                gameState.activeMoons.push(moon);
+            }
+        }
+        
+        // ============ END MOONS MENU SYSTEM ============
+        
+        // Load config (synchronous now - no network request!)
+        loadGameConfig();
+            console.log('Game config loaded, starting game loop');
             
             // Money generation (like Battle Cats) - set up after config is loaded
         setInterval(() => {
                 if (gameState.gameRunning && gameConfig && gameConfig.economy) {
                     gameState.money += gameConfig.economy.moneyGenerationRate;
             }
-            }, 1000); // Check every second, use config value when available
+        }, 1000); // Check every second
         
         requestAnimationFrame(gameLoop);
-        }).catch(error => {
-            console.error('Failed to load config:', error);
-            // Start anyway with embedded defaults
-            document.getElementById('startButton').textContent = 'START GAME';
-            document.getElementById('startButton').style.opacity = '1';
-            requestAnimationFrame(gameLoop);
-        });
     </script>
 </body>
 </html>

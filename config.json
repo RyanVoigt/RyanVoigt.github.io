@@ -177,6 +177,99 @@
     "jetpackChance": 0.05,
     "bossWave": 10,
     "bossChance": 0.05
+  },
+  "moonsConfig": {
+    "slotSystem": {
+      "startingSlots": 3,
+      "maxSlots": 6,
+      "slotCosts": [0, 0, 0, 300, 500, 800],
+      "slotUnlockWaves": [1, 1, 1, 10, 20, 30]
+    },
+    "upgradeSystem": {
+      "baseUpgradeCost": 150,
+      "upgradeCostIncrease": 75,
+      "maxUpgradeLevel": 10,
+      "healthMultiplierPerLevel": 1.15,
+      "buffMultiplierPerLevel": 1.08
+    },
+    "enemyTargeting": {
+      "moonTargetChance": 0.3,
+      "moonTargetRange": 150
+    },
+    "moons": {
+      "titan": {
+        "name": "Titan",
+        "unlockWave": 3,
+        "baseHealth": 500,
+        "orbitRadius": 300,
+        "orbitSpeed": 0.3,
+        "size": 14,
+        "color": "#ffaa44",
+        "buffType": "damageBoost",
+        "buffValue": 0.2,
+        "description": "+20% damage to all defenders"
+      },
+      "enceladus": {
+        "name": "Enceladus",
+        "unlockWave": 5,
+        "baseHealth": 400,
+        "orbitRadius": 320,
+        "orbitSpeed": 0.35,
+        "size": 10,
+        "color": "#aaddff",
+        "buffType": "slowEffect",
+        "buffValue": 0.15,
+        "description": "Adds 15% slow effect to projectiles"
+      },
+      "mimas": {
+        "name": "Mimas",
+        "unlockWave": 7,
+        "baseHealth": 450,
+        "orbitRadius": 340,
+        "orbitSpeed": 0.4,
+        "size": 11,
+        "color": "#cccccc",
+        "buffType": "attackSpeedBoost",
+        "buffValue": 0.1,
+        "description": "+10% attack speed"
+      },
+      "rhea": {
+        "name": "Rhea",
+        "unlockWave": 10,
+        "baseHealth": 550,
+        "orbitRadius": 360,
+        "orbitSpeed": 0.25,
+        "size": 12,
+        "color": "#ffddaa",
+        "buffType": "rangeBoost",
+        "buffValue": 0.3,
+        "description": "+30% range to all defenders"
+      },
+      "dione": {
+        "name": "Dione",
+        "unlockWave": 12,
+        "baseHealth": 500,
+        "orbitRadius": 380,
+        "orbitSpeed": 0.28,
+        "size": 11,
+        "color": "#ddaaff",
+        "buffType": "piercing",
+        "buffValue": 1,
+        "description": "Adds piercing to non-piercing defenders"
+      },
+      "tethys": {
+        "name": "Tethys",
+        "unlockWave": 15,
+        "baseHealth": 600,
+        "orbitRadius": 400,
+        "orbitSpeed": 0.32,
+        "size": 13,
+        "color": "#aaffaa",
+        "buffType": "splashDamage",
+        "buffValue": 40,
+        "description": "Adds splash damage (40px radius)"
+      }
+    }
   }
 }
 
