@@ -291,6 +291,9 @@
                 Unlock Ring<br>$500
             </div>
             <div style="text-align: center; font-size: 12px; margin-top: 5px;">Rings: <span id="unlockedRings">1</span>/4</div>
+            <div id="modMenuButton" style="padding: 10px; background: #444466; border: 2px solid #666688; border-radius: 5px; cursor: pointer; text-align: center; color: white; margin-top: 10px;">
+                MOD MENU
+            </div>
         </div>
         
         <div id="defensePanel">
@@ -339,16 +342,133 @@
                 RESTART
             </div>
         </div>
+        
+        <!-- Password Prompt -->
+        <div id="passwordPrompt" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 30px; border: 3px solid #666688; border-radius: 15px; text-align: center; display: none; z-index: 250;">
+            <h2 style="color: white; margin-top: 0;">MOD MENU ACCESS</h2>
+            <p style="color: #aaa;">Enter password to access mod menu</p>
+            <input type="password" id="modPasswordInput" style="padding: 10px; font-size: 16px; border: 2px solid #666; border-radius: 5px; background: #222; color: white; width: 200px; text-align: center;" placeholder="Password">
+            <div style="margin-top: 20px;">
+                <div id="passwordSubmitButton" style="margin: 5px; padding: 10px 20px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
+                    SUBMIT
+                </div>
+                <div id="passwordCancelButton" style="margin: 5px; padding: 10px 20px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
+                    CANCEL
+                </div>
+            </div>
+            <div id="passwordError" style="color: #ff4444; margin-top: 10px; display: none;">Incorrect password</div>
+        </div>
+        
+        <!-- Mod Menu -->
+        <div id="modMenuOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 300; overflow-y: auto;">
+            <div style="max-width: 900px; margin: 20px auto; padding: 20px; background: #111; border: 3px solid #666688; border-radius: 15px;">
+                <h1 style="color: white; text-align: center; margin-top: 0;">MOD MENU</h1>
+                
+                <!-- Tabs -->
+                <div id="modMenuTabs" style="display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <div class="modTab" data-tab="defenders" style="padding: 10px 15px; background: #444466; border: 2px solid #666688; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Defenders</div>
+                    <div class="modTab" data-tab="enemies" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Enemies</div>
+                    <div class="modTab" data-tab="gun" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Gun</div>
+                    <div class="modTab" data-tab="economy" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Economy</div>
+                    <div class="modTab" data-tab="waves" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Waves</div>
+                    <div class="modTab" data-tab="gameplay" style="padding: 10px 15px; background: #333; border: 2px solid #555; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Gameplay</div>
+                </div>
+                
+                <!-- Tab Content -->
+                <div id="modMenuContent" style="background: #222; padding: 20px; border-radius: 10px; max-height: 60vh; overflow-y: auto;"></div>
+                
+                <!-- Bottom Buttons -->
+                <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                    <div id="modSaveButton" style="padding: 12px 20px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Save to LocalStorage</div>
+                    <div id="modResetButton" style="padding: 12px 20px; background: #660066; border: 2px solid #880088; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Reset to Defaults</div>
+                    <div id="modExportButton" style="padding: 12px 20px; background: #444466; border: 2px solid #666688; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Export JSON</div>
+                    <div id="modImportButton" style="padding: 12px 20px; background: #444466; border: 2px solid #666688; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Import JSON</div>
+                    <div id="modCloseButton" style="padding: 12px 20px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white; flex: 1; text-align: center;">Close</div>
+                </div>
+                <input type="file" id="modImportFileInput" accept=".json" style="display: none;">
+                <div id="modMenuMessage" style="margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; display: none;"></div>
+            </div>
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
+        // Base fire rates (in milliseconds) - used with attackSpeed multiplier
+        const BASE_FIRE_RATES = {
+            laser: 800,
+            missile: 1200,
+            plasma: 600,
+            shield: 0,
+            laserGuy: 3000
+        };
+        
+        // Game configuration - will be loaded from config.json or localStorage
+        let gameConfig = null;
+        let defaultConfig = null; // Store the original config for reset
+        
+        // Load game configuration
+        async function loadGameConfig() {
+            try {
+                // Check if there's a saved config in localStorage
+                const savedConfig = localStorage.getItem('saturnDefenderModConfig');
+                if (savedConfig) {
+                    console.log('Loading config from localStorage');
+                    gameConfig = JSON.parse(savedConfig);
+                    defaultConfig = gameConfig; // For now, use this as default
+                    return;
+                }
+                
+                // Otherwise, fetch from config.json
+                console.log('Fetching config.json');
+                const response = await fetch('config.json');
+                if (!response.ok) throw new Error('Failed to fetch config.json');
+                
+                gameConfig = await response.json();
+                defaultConfig = JSON.parse(JSON.stringify(gameConfig)); // Deep clone for reset
+                console.log('Config loaded successfully from config.json');
+            } catch (error) {
+                console.error('Error loading config:', error);
+                // Fall back to embedded defaults if loading fails
+                gameConfig = getEmbeddedDefaults();
+                defaultConfig = JSON.parse(JSON.stringify(gameConfig));
+                console.log('Using embedded default config');
+            }
+        }
+        
+        // Embedded defaults as fallback
+        function getEmbeddedDefaults() {
+            return {
+                defenseTypes: {
+                    laser: { cost: 25, health: 100, damage: 15, range: 120, attackSpeed: 1.0, color: '#ff4444', projectileSpeed: 8, size: 8, orbitSpeed: 0.5 },
+                    missile: { cost: 50, health: 120, damage: 30, range: 150, attackSpeed: 1.0, color: '#44ff44', projectileSpeed: 5, size: 10, explosive: true, orbitSpeed: 0.5 },
+                    plasma: { cost: 75, health: 150, damage: 25, range: 100, attackSpeed: 1.0, color: '#4444ff', projectileSpeed: 6, size: 12, piercing: true, orbitSpeed: 0.5 },
+                    shield: { cost: 100, health: 300, damage: 0, range: 60, attackSpeed: 0, color: '#ffff44', projectileSpeed: 0, size: 15, blocking: true, orbitSpeed: 0.5, slowEffect: 0.1, pushDistance: 5 }
+                },
+                enemyTypes: {
+                    basic: { health: 50, speed: 1, reward: 10, color: '#ff6666', size: 8 },
+                    fast: { health: 30, speed: 2, reward: 15, color: '#66ff66', size: 6 },
+                    heavy: { health: 150, speed: 0.5, reward: 30, color: '#6666ff', size: 12 },
+                    jetpack: { health: 180, speed: 0.5, reward: 25, color: '#ffaa44', size: 10, isJetpack: true },
+                    boss: { health: 500, speed: 0.3, reward: 100, color: '#ff66ff', size: 20 },
+                    laserGuy: { health: 90, speed: 0.6, reward: 25, color: '#ffaa00', size: 10, shootsLasers: true, attackSpeed: 1.0, laserDamage: 120, range: 200 },
+                    ringBoss: { health: 5000, speed: 0.2, reward: 500, color: '#ff0000', size: 25, isRingBoss: true, orbitRadius: 500, orbitSpeed: 0.1, spiralInward: 0.1 }
+                },
+                gunConfig: { damage: 100, cost: 25, cooldown: 500, range: 800, width: 10, color: '#ff0066', aimRingRadius: 15, aimRingColor: '#ff0066', gunSize: 15, barrelLength: 50, barrelWidth: 18, baseSize: 22, rotationSpeed: 0.1, projectileSpeed: 15 },
+                economy: { startingMoney: 100, startingLives: 20, moneyGenerationRate: 2, moneyGenerationInterval: 1000, upgradeBaseCost: 100, upgradeCostIncrease: 50, ringUnlockCost: 500, waveCompletionBonus: 50 },
+                waveConfig: { baseEnemyCount: 5, enemyCountMultiplier: 1.3, maxEnemiesPerWave: 100, baseSpawnInterval: 800, spawnIntervalReduction: 1.1, minSpawnInterval: 50, baseWaveDelay: 3000, waveDelayReduction: 100, minWaveDelay: 1000, ringBossInterval: 5 },
+                enemyScaling: { healthScalingPerWave: 1.1, ringBossHealthMultiplier: 1.5, ringBossSpeedMultiplier: 1.2, ringBossSpiralMultiplier: 1.3 },
+                multipliers: { killMultiplierThresholds: [0, 10, 25, 50, 100, 200], killMultiplierValues: [1.0, 1.2, 1.3, 1.5, 1.7, 2.0], defenderDamageBonus: 5 },
+                enemySpawnChances: { laserGuyWave: 3, laserGuyChance: 0.15, fastWave: 3, fastChance: 0.2, heavyWave: 5, heavyChance: 0.05, jetpackWave: 7, jetpackChance: 0.05, bossWave: 10, bossChance: 0.05 },
+                gameplay: { slowEffectRecovery: 0.02, shieldSlowEffect: 0.3, upgradeMultiplier: 1.02, explosionRadius: 50, explosionDamageMultiplier: 0.5 }
+            };
+        }
+        
         // Game state
         let gameState = {
-            money: 100,
-            lives: 20,
+            money: 100, // Will be set from config on game start
+            lives: 20, // Will be set from config on game start
             score: 0,
             wave: 1,
             selectedDefenseType: null,
@@ -357,6 +477,7 @@
             defenders: [],
             enemies: [],
             projectiles: [],
+            enemyProjectiles: [],
             particles: [],
             stars: [], // Add stars array
             lastUpdate: 0,
@@ -398,129 +519,22 @@
             ]
         };
         
-        // Gun configuration - easy to modify
-        const gunConfig = {
-            damage: 100,           // Damage per shot
-            cost: 25,              // Cost per shot
-            cooldown: 500,         // Cooldown between shots (ms)
-            range: 800,            // Range of the laser
-            width: 10,              // Width of the laser beam
-            color: '#ff0066',      // Color of the laser
-            aimRingRadius: 15,     // Radius of the aiming ring
-            aimRingColor: '#ff0066', // Color of the aiming ring
-            gunSize: 15,           // Size of the gun on Saturn
-            barrelLength: 50,      // Length of the cannon barrel
-            barrelWidth: 18,        // Width of the cannon barrel
-            baseSize: 22,          // Size of the cannon base
-            rotationSpeed: 0.1     // How fast the cannon rotates (0-1)
-        };
-        
-        // Defense types
-        const defenseTypes = {
-            laser: {
-                cost: 25,
-                health: 100,
-                damage: 15,
-                range: 120,
-                fireRate: 800,
-                color: '#ff4444',
-                projectileSpeed: 8,
-                size: 8
-            },
-            missile: {
-                cost: 50,
-                health: 120,
-                damage: 30,
-                range: 150,
-                fireRate: 1200,
-                color: '#44ff44',
-                projectileSpeed: 5,
-                size: 10,
-                explosive: true
-            },
-            plasma: {
-                cost: 75,
-                health: 150,
-                damage: 25,
-                range: 100,
-                fireRate: 600,
-                color: '#4444ff',
-                projectileSpeed: 6,
-                size: 12,
-                piercing: true
-            },
-            shield: {
-                cost: 100,
-                health: 300,
-                damage: 0,
-                range: 60,
-                fireRate: 0,
-                color: '#ffff44',
-                projectileSpeed: 0,
-                size: 15,
-                blocking: true
-            }
-        };
-        
-        // Enemy types
-        const enemyTypes = {
-            basic: {
-                health: 50,
-                speed: 1,
-                reward: 10,
-                color: '#ff6666',
-                size: 8
-            },
-            fast: {
-                health: 30,
-                speed: 2,
-                reward: 15,
-                color: '#66ff66',
-                size: 6
-            },
-            heavy: {
-                health: 150,
-                speed: 0.5,
-                reward: 30,
-                color: '#6666ff',
-                size: 12
-            },
-            jetpack: {
-                health: 180, // Increased from 120 to 180
-                speed: 0.5, // Reduced from 0.8 to 0.5
-                reward: 25,
-                color: '#ffaa44',
-                size: 10,
-                isJetpack: true
-            },
-            boss: {
-                health: 500,
-                speed: 0.3,
-                reward: 100,
-                color: '#ff66ff',
-                size: 20
-            },
-            ringBoss: {
-                health: 5000,
-                speed: 0.2,
-                reward: 500,
-                color: '#ff0000',
-                size: 25,
-                isRingBoss: true
-            }
-        };
+        // Configuration getters - these reference gameConfig
+        function getGunConfig() { return gameConfig.gunConfig; }
+        function getDefenseTypes() { return gameConfig.defenseTypes; }
+        function getEnemyTypes() { return gameConfig.enemyTypes; }
         
         class Defender {
             constructor(angle, type, ring) {
                 this.angle = angle;
                 this.type = type;
                 this.ring = ring;
-                this.props = defenseTypes[type];
+                this.props = gameConfig.defenseTypes[type];
                 this.health = this.props.health;
                 this.maxHealth = this.props.health;
                 this.lastFire = 0;
                 this.orbitRadius = saturn.rings[ring].inner + (saturn.rings[ring].outer - saturn.rings[ring].inner) / 2;
-                this.angularSpeed = 0.5; // degrees per frame
+                this.angularSpeed = this.props.orbitSpeed || 0.5; // Use config or default
             }
             
             update(deltaTime) {
@@ -539,7 +553,8 @@
                 } else {
                     // Find target and attack
                     const target = this.findTarget();
-                    if (target && Date.now() - this.lastFire > this.props.fireRate) {
+                    const fireRate = BASE_FIRE_RATES[this.type] / (this.props.attackSpeed || 1.0);
+                    if (target && Date.now() - this.lastFire > fireRate) {
                         this.fire(target);
                         this.lastFire = Date.now();
                     }
@@ -548,13 +563,16 @@
             
             blockEnemies() {
                 // Shield towers physically block enemies
+                const pushBuffer = this.props.pushDistance || 5;
+                const slowEffect = this.props.slowEffect || 0.1;
+                
                 for (const enemy of gameState.enemies) {
                     const dist = Math.sqrt((enemy.x - this.x) ** 2 + (enemy.y - this.y) ** 2);
-                    if (dist < this.props.size + enemy.props.size + 5) {
+                    if (dist < this.props.size + enemy.props.size + pushBuffer) {
                         // Push enemy away from shield
                         const dx = enemy.x - this.x;
                         const dy = enemy.y - this.y;
-                        const pushDist = this.props.size + enemy.props.size + 5;
+                        const pushDist = this.props.size + enemy.props.size + pushBuffer;
                         const currentDist = Math.sqrt(dx * dx + dy * dy);
                         
                         if (currentDist > 0) {
@@ -563,7 +581,7 @@
                         }
                         
                         // Slow down the enemy significantly
-                        enemy.slow = Math.min(enemy.slow, 0.1);
+                        enemy.slow = Math.min(enemy.slow, slowEffect);
                     }
                 }
             }
@@ -585,8 +603,9 @@
             
             fire(target) {
                 // Apply defender bonus and upgrade bonus to damage
-                const upgradeBonus = Math.pow(1.02, gameState.defenderUpgrades[this.type]);
-                const bonusDamage = this.props.damage * (1 + gameState.defenderBonus / 100) * upgradeBonus;
+                const upgradeMultiplier = gameConfig.gameplay ? gameConfig.gameplay.upgradeMultiplier : 1.02;
+                const upgradeBonus = Math.pow(upgradeMultiplier, gameState.defenderUpgrades[this.type]);
+                const bonusDamage = this.props.damage * (1 + (gameState.totalDefendersPlaced * gameConfig.multipliers.defenderDamageBonus) / 100) * upgradeBonus;
                 
                 const projectile = {
                     x: this.x,
@@ -659,10 +678,10 @@
         class Enemy {
             constructor(type) {
                 this.type = type;
-                this.props = enemyTypes[type];
+                this.props = gameConfig.enemyTypes[type];
                 
-                // Apply health scaling: enemies get 10% more health each wave
-                const healthScaling = Math.pow(1.1, gameState.wave - 1);
+                // Apply health scaling: enemies get more health each wave
+                const healthScaling = Math.pow(gameConfig.enemyScaling.healthScalingPerWave, gameState.wave - 1);
                 this.health = Math.floor(this.props.health * healthScaling);
                 this.maxHealth = this.health;
                 
@@ -670,19 +689,27 @@
                 this.reward = this.props.reward;
                 this.slow = 1;
                 
+                // Laser guy properties
+                if (this.props.shootsLasers) {
+                    this.lastFire = 0;
+                    this.attackSpeed = this.props.attackSpeed || 1.0;
+                    this.laserDamage = this.props.laserDamage;
+                    this.range = this.props.range;
+                }
+                
                 if (this.props.isRingBoss) {
                     // Ring boss starts at outer edge and orbits
-                    this.orbitRadius = 500; // Much farther start
+                    this.orbitRadius = this.props.orbitRadius || 500;
                     this.orbitAngle = Math.random() * 360;
-                    this.orbitSpeed = 0.1; // Much slower orbit
-                    this.spiralInward = 0.1; // Much slower inward movement
+                    this.orbitSpeed = this.props.orbitSpeed || 0.1;
+                    this.spiralInward = this.props.spiralInward || 0.1;
                     
                     // Scale ring boss based on how many times it has appeared
-                    const bossScaling = 1 + (gameState.ringBossWaves * 0.5); // 50% increase each time
+                    const bossScaling = 1 + (gameState.ringBossWaves * gameConfig.enemyScaling.ringBossHealthMultiplier);
                     this.health = Math.floor(this.props.health * bossScaling);
                     this.maxHealth = this.health;
-                    this.orbitSpeed *= (1 + gameState.ringBossWaves * 0.2); // 20% speed increase each time
-                    this.spiralInward *= (1 + gameState.ringBossWaves * 0.3); // 30% faster inward movement
+                    this.orbitSpeed *= (1 + gameState.ringBossWaves * gameConfig.enemyScaling.ringBossSpeedMultiplier);
+                    this.spiralInward *= (1 + gameState.ringBossWaves * gameConfig.enemyScaling.ringBossSpiralMultiplier);
                     
                     this.x = saturn.x + Math.cos(this.orbitAngle * Math.PI / 180) * this.orbitRadius;
                     this.y = saturn.y + Math.sin(this.orbitAngle * Math.PI / 180) * this.orbitRadius;
@@ -788,10 +815,60 @@
                     this.y += (dy / dist) * moveSpeed;
                     
                     // Reset slow effect
-                    this.slow = Math.min(1, this.slow + 0.02);
+                    const slowRecovery = gameConfig.gameplay ? gameConfig.gameplay.slowEffectRecovery : 0.02;
+                    this.slow = Math.min(1, this.slow + slowRecovery);
+                }
+                
+                // Laser guy shooting behavior
+                if (this.props.shootsLasers) {
+                    const target = this.findDefenderTarget();
+                    const fireRate = BASE_FIRE_RATES.laserGuy / this.attackSpeed;
+                    if (target && Date.now() - this.lastFire > fireRate) {
+                        this.fireLaser(target);
+                        this.lastFire = Date.now();
+                    }
                 }
                 
                 return true;
+            }
+            
+            findDefenderTarget() {
+                let closest = null;
+                let closestDist = this.range;
+                
+                for (const defender of gameState.defenders) {
+                    const dist = Math.sqrt((defender.x - this.x) ** 2 + (defender.y - this.y) ** 2);
+                    if (dist < closestDist) {
+                        closest = defender;
+                        closestDist = dist;
+                    }
+                }
+                
+                return closest;
+            }
+            
+            fireLaser(target) {
+                const projectile = {
+                    x: this.x,
+                    y: this.y,
+                    targetX: target.x,
+                    targetY: target.y,
+                    target: target,
+                    damage: this.laserDamage,
+                    speed: 6,
+                    color: this.props.color,
+                    type: 'enemyLaser',
+                    life: 1000
+                };
+                
+                // Calculate velocity
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                projectile.vx = (dx / dist) * projectile.speed;
+                projectile.vy = (dy / dist) * projectile.speed;
+                
+                gameState.enemyProjectiles.push(projectile);
             }
             
             killDefendersInPath() {
@@ -879,6 +956,47 @@
                     ctx.beginPath();
                     ctx.arc(0, 0, this.props.size + 5, 0, Math.PI * 2);
                     ctx.stroke();
+                } else if (this.props.shootsLasers) {
+                    // Draw laser guy with special effects
+                    const pulse = Math.sin(Date.now() * 0.008) * 0.2 + 0.8;
+                    
+                    // Outer glow
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.props.color;
+                    ctx.fillStyle = this.props.color;
+                    ctx.globalAlpha = pulse;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size * 1.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                    
+                    // Main body
+                    ctx.fillStyle = this.props.color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw "eyes" or laser emitters
+                    ctx.fillStyle = '#ffff00';
+                    ctx.beginPath();
+                    ctx.arc(-this.props.size * 0.3, -this.props.size * 0.2, this.props.size * 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(this.props.size * 0.3, -this.props.size * 0.2, this.props.size * 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Charging indicator when about to fire
+                    const timeSinceLastFire = Date.now() - this.lastFire;
+                    const fireRate = BASE_FIRE_RATES.laserGuy / this.attackSpeed;
+                    if (timeSinceLastFire > fireRate - 500 && timeSinceLastFire < fireRate) {
+                        const chargeProgress = (timeSinceLastFire - (fireRate - 500)) / 500;
+                        ctx.strokeStyle = '#ffff00';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size + 3, 0, Math.PI * 2 * chargeProgress);
+                        ctx.stroke();
+                    }
                 } else if (this.props.isJetpack) {
                     // Draw jetpack enemy with jetpack effects
                     ctx.fillStyle = this.props.color;
@@ -1031,7 +1149,7 @@
                 if (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 if (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
                 
-                gameState.gunAngle += angleDiff * gunConfig.rotationSpeed;
+                gameState.gunAngle += angleDiff * gameConfig.gunConfig.rotationSpeed;
                 
                 // Animate barrel extension
                 gameState.barrelExtension = Math.min(1, gameState.barrelExtension + 0.1);
@@ -1045,49 +1163,49 @@
             ctx.rotate(gameState.gunAngle);
             
             // Draw cannon base (circular platform) - always grey
-            const baseGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, gunConfig.baseSize);
+            const baseGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, gameConfig.gunConfig.baseSize);
             baseGradient.addColorStop(0, '#888888');
             baseGradient.addColorStop(0.7, '#666666');
             baseGradient.addColorStop(1, '#444444');
             
             ctx.fillStyle = baseGradient;
             ctx.beginPath();
-            ctx.arc(0, 0, gunConfig.baseSize, 0, Math.PI * 2);
+            ctx.arc(0, 0, gameConfig.gunConfig.baseSize, 0, Math.PI * 2);
             ctx.fill();
             
             // Draw base border - always grey
             ctx.strokeStyle = '#aaaaaa';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(0, 0, gunConfig.baseSize, 0, Math.PI * 2);
+            ctx.arc(0, 0, gameConfig.gunConfig.baseSize, 0, Math.PI * 2);
             ctx.stroke();
             
             // Draw cannon barrel only when extended
             if (gameState.barrelExtension > 0) {
-                const barrelLength = gunConfig.barrelLength * gameState.barrelExtension;
+                const barrelLength = gameConfig.gunConfig.barrelLength * gameState.barrelExtension;
                 
                 // Draw cannon barrel - always grey
-                const barrelGradient = ctx.createLinearGradient(0, -gunConfig.barrelWidth/2, barrelLength, -gunConfig.barrelWidth/2);
+                const barrelGradient = ctx.createLinearGradient(0, -gameConfig.gunConfig.barrelWidth/2, barrelLength, -gameConfig.gunConfig.barrelWidth/2);
                 barrelGradient.addColorStop(0, '#666666');
                 barrelGradient.addColorStop(0.5, '#888888');
                 barrelGradient.addColorStop(1, '#aaaaaa');
                 
                 ctx.fillStyle = barrelGradient;
-                ctx.fillRect(0, -gunConfig.barrelWidth/2, barrelLength, gunConfig.barrelWidth);
+                ctx.fillRect(0, -gameConfig.gunConfig.barrelWidth/2, barrelLength, gameConfig.gunConfig.barrelWidth);
                 
                 // Draw barrel border - always grey
                 ctx.strokeStyle = '#cccccc';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(0, -gunConfig.barrelWidth/2, barrelLength, gunConfig.barrelWidth);
+                ctx.strokeRect(0, -gameConfig.gunConfig.barrelWidth/2, barrelLength, gameConfig.gunConfig.barrelWidth);
                 
                 // Draw barrel details - always grey
                 ctx.strokeStyle = '#dddddd';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(5, -gunConfig.barrelWidth/2 + 2);
-                ctx.lineTo(5, gunConfig.barrelWidth/2 - 2);
-                ctx.moveTo(15, -gunConfig.barrelWidth/2 + 2);
-                ctx.lineTo(15, gunConfig.barrelWidth/2 - 2);
+                ctx.moveTo(5, -gameConfig.gunConfig.barrelWidth/2 + 2);
+                ctx.lineTo(5, gameConfig.gunConfig.barrelWidth/2 - 2);
+                ctx.moveTo(15, -gameConfig.gunConfig.barrelWidth/2 + 2);
+                ctx.lineTo(15, gameConfig.gunConfig.barrelWidth/2 - 2);
                 ctx.stroke();
             }
             
@@ -1096,7 +1214,7 @@
             ctx.lineWidth = 1;
             ctx.setLineDash([2, 2]);
             ctx.beginPath();
-            ctx.arc(0, 0, gunConfig.baseSize - 5, 0, Math.PI * 2);
+            ctx.arc(0, 0, gameConfig.gunConfig.baseSize - 5, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
             
@@ -1118,16 +1236,16 @@
             if (!gameState.gunActive) return;
             
             // Draw aiming ring
-            ctx.strokeStyle = gunConfig.aimRingColor;
+            ctx.strokeStyle = gameConfig.gunConfig.aimRingColor;
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
-            ctx.arc(mouseX, mouseY, gunConfig.aimRingRadius, 0, Math.PI * 2);
+            ctx.arc(mouseX, mouseY, gameConfig.gunConfig.aimRingRadius, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
             
             // Draw crosshair
-            ctx.strokeStyle = gunConfig.aimRingColor;
+            ctx.strokeStyle = gameConfig.gunConfig.aimRingColor;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(mouseX - 10, mouseY);
@@ -1138,14 +1256,14 @@
         }
         
         function fireGun(targetX, targetY) {
-            if (!gameState.gunActive || gameState.gunCooldown > 0 || gameState.money < gunConfig.cost) return;
+            if (!gameState.gunActive || gameState.gunCooldown > 0 || gameState.money < gameConfig.gunConfig.cost) return;
             
             // Deduct cost
-            gameState.money -= gunConfig.cost;
-            gameState.gunCooldown = gunConfig.cooldown;
+            gameState.money -= gameConfig.gunConfig.cost;
+            gameState.gunCooldown = gameConfig.gunConfig.cooldown;
             
             // Calculate firing position from barrel tip (using animated length)
-            const barrelLength = gunConfig.barrelLength * gameState.barrelExtension;
+            const barrelLength = gameConfig.gunConfig.barrelLength * gameState.barrelExtension;
             const barrelTipX = saturn.x + Math.cos(gameState.gunAngle) * barrelLength;
             const barrelTipY = saturn.y + Math.sin(gameState.gunAngle) * barrelLength;
             
@@ -1160,24 +1278,25 @@
                 y: barrelTipY,
                 targetX: targetX,
                 targetY: targetY,
-                damage: gunConfig.damage,
-                range: gunConfig.range,
-                width: gunConfig.width,
-                color: gunConfig.color,
+                damage: gameConfig.gunConfig.damage,
+                range: gameConfig.gunConfig.range,
+                width: gameConfig.gunConfig.width,
+                color: gameConfig.gunConfig.color,
                 life: 1000,
                 isLaser: true
             };
             
             // Calculate velocity
-            laser.vx = (dx / dist) * 15; // Fast laser speed
-            laser.vy = (dy / dist) * 15;
+            const laserSpeed = gameConfig.gunConfig.projectileSpeed || 15;
+            laser.vx = (dx / dist) * laserSpeed;
+            laser.vy = (dy / dist) * laserSpeed;
             
             gameState.projectiles.push(laser);
             
             // Create muzzle flash effect at barrel tip
             createMuzzleFlash(barrelTipX, barrelTipY, dx / dist, dy / dist);
             
-            console.log('Laser cannon fired! Cost: $' + gunConfig.cost + ', Damage: ' + gunConfig.damage);
+            console.log('Laser cannon fired! Cost: $' + gameConfig.gunConfig.cost + ', Damage: ' + gameConfig.gunConfig.damage);
         }
         
         function createMuzzleFlash(x, y, dirX, dirY) {
@@ -1212,7 +1331,8 @@
                     if (dist < enemy.props.size + (proj.isLaser ? proj.width : 5)) {
                         // Hit!
                         if (proj.type === 'shield') {
-                            enemy.slow = 0.3; // Slow effect
+                            const shieldSlow = gameConfig.gameplay ? gameConfig.gameplay.shieldSlowEffect : 0.3;
+                            enemy.slow = shieldSlow; // Slow effect
                         }
                         
                         if (enemy.takeDamage(proj.damage)) {
@@ -1234,12 +1354,15 @@
                         
                         if (proj.type === 'missile') {
                             // Explosive damage to nearby enemies
+                            const explosionRadius = gameConfig.gameplay ? gameConfig.gameplay.explosionRadius : 50;
+                            const explosionDamageMult = gameConfig.gameplay ? gameConfig.gameplay.explosionDamageMultiplier : 0.5;
+                            
                             for (let k = gameState.enemies.length - 1; k >= 0; k--) {
                                 const nearbyEnemy = gameState.enemies[k];
                                 if (nearbyEnemy !== enemy) { // Don't double-hit the main target
                                     const explosionDist = Math.sqrt((nearbyEnemy.x - proj.x) ** 2 + (nearbyEnemy.y - proj.y) ** 2);
-                                    if (explosionDist < 50) {
-                                        if (nearbyEnemy.takeDamage(proj.damage * 0.5)) {
+                                    if (explosionDist < explosionRadius) {
+                                        if (nearbyEnemy.takeDamage(proj.damage * explosionDamageMult)) {
                                             // Nearby enemy also killed by explosion
                                             gameState.totalEnemiesKilled++;
                                             updateMultipliers();
@@ -1268,6 +1391,44 @@
                 
                 if (hit || proj.life <= 0) {
                     gameState.projectiles.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateEnemyProjectiles(deltaTime) {
+            for (let i = gameState.enemyProjectiles.length - 1; i >= 0; i--) {
+                const proj = gameState.enemyProjectiles[i];
+                
+                proj.x += proj.vx * deltaTime / 16;
+                proj.y += proj.vy * deltaTime / 16;
+                proj.life -= deltaTime;
+                
+                // Check collision with defenders
+                let hit = false;
+                for (let j = gameState.defenders.length - 1; j >= 0; j--) {
+                    const defender = gameState.defenders[j];
+                    const dist = Math.sqrt((defender.x - proj.x) ** 2 + (defender.y - proj.y) ** 2);
+                    
+                    if (dist < defender.props.size + 5) {
+                        // Hit! Destroy the defender
+                        const refund = Math.floor(gameConfig.defenseTypes[defender.type].cost * 0.5);
+                        gameState.money += refund;
+                        gameState.totalDefendersPlaced--;
+                        gameState.defenders.splice(j, 1);
+                        updateMultipliers();
+                        
+                        // Create explosion effect
+                        createExplosion(defender.x, defender.y, defender.props.color);
+                        
+                        console.log('Defender destroyed by laser guy! Refunded $' + refund);
+                        
+                        hit = true;
+                        break;
+                    }
+                }
+                
+                if (hit || proj.life <= 0) {
+                    gameState.enemyProjectiles.splice(i, 1);
                 }
             }
         }
@@ -1370,6 +1531,38 @@
             }
         }
         
+        function drawEnemyProjectiles() {
+            for (const proj of gameState.enemyProjectiles) {
+                // Draw enemy laser with glow effect
+                ctx.save();
+                
+                // Outer glow
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = proj.color;
+                ctx.fillStyle = proj.color;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Laser trail
+                ctx.strokeStyle = proj.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(proj.x - proj.vx * 2, proj.y - proj.vy * 2);
+                ctx.lineTo(proj.x, proj.y);
+                ctx.stroke();
+                
+                // Inner bright core
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
         function drawParticles() {
             for (const particle of gameState.particles) {
                 const alpha = particle.life / particle.maxLife;
@@ -1389,11 +1582,10 @@
             gameState.enemiesKilled = 0;
             gameState.waveStartTime = Date.now();
             
-            // Exponentially increasing enemy count: 5 * (1.3 ^ wave)
-            const waveSize = Math.min(Math.floor(5 * Math.pow(1.3, gameState.wave)), 100);
-            // Exponentially faster spawning: starts at 800ms, decreases by 10% each wave
-            const baseSpawnInterval = 800;
-            const spawnInterval = Math.max(50, Math.floor(baseSpawnInterval / Math.pow(1.1, gameState.wave)));
+            // Exponentially increasing enemy count
+            const waveSize = Math.min(Math.floor(gameConfig.waveConfig.baseEnemyCount * Math.pow(gameConfig.waveConfig.enemyCountMultiplier, gameState.wave)), gameConfig.waveConfig.maxEnemiesPerWave);
+            // Exponentially faster spawning
+            const spawnInterval = Math.max(gameConfig.waveConfig.minSpawnInterval, Math.floor(gameConfig.waveConfig.baseSpawnInterval / Math.pow(gameConfig.waveConfig.spawnIntervalReduction, gameState.wave)));
             
             console.log('Wave size:', waveSize, 'Spawn interval:', spawnInterval);
             
@@ -1403,16 +1595,19 @@
                 let enemyType = 'basic';
                 const rand = Math.random();
                 
-                if (gameState.wave >= 3 && rand < 0.3) enemyType = 'fast';
-                if (gameState.wave >= 5 && rand < 0.2) enemyType = 'heavy';
-                if (gameState.wave >= 7 && rand < 0.15) enemyType = 'jetpack'; // Add jetpack enemies
-                if (gameState.wave >= 10 && rand < 0.1) enemyType = 'boss';
+                // Enemy spawn chances based on config
+                const sc = gameConfig.enemySpawnChances;
+                if (gameState.wave >= sc.laserGuyWave && rand < sc.laserGuyChance) enemyType = 'laserGuy';
+                else if (gameState.wave >= sc.fastWave && rand < sc.fastChance + sc.laserGuyChance) enemyType = 'fast';
+                else if (gameState.wave >= sc.heavyWave && rand < sc.fastChance + sc.laserGuyChance + sc.heavyChance) enemyType = 'heavy';
+                else if (gameState.wave >= sc.jetpackWave && rand < sc.fastChance + sc.laserGuyChance + sc.heavyChance + sc.jetpackChance) enemyType = 'jetpack';
+                else if (gameState.wave >= sc.bossWave && rand < sc.fastChance + sc.laserGuyChance + sc.heavyChance + sc.jetpackChance + sc.bossChance) enemyType = 'boss';
                 
                 const enemy = new Enemy(enemyType);
                 gameState.enemies.push(enemy);
                 gameState.enemiesSpawned++;
                 
-                console.log('Spawned enemy', gameState.enemiesSpawned, 'of', waveSize, 'at position', enemy.x, enemy.y);
+                console.log('Spawned enemy', gameState.enemiesSpawned, 'of', waveSize, 'type:', enemyType, 'at position', enemy.x, enemy.y);
                 
                 if (gameState.enemiesSpawned < waveSize) {
                     setTimeout(spawnEnemy, spawnInterval);
@@ -1421,8 +1616,8 @@
             
             spawnEnemy();
             
-            // Spawn ring boss every 5 waves
-            if (gameState.wave % 5 === 0) {
+            // Spawn ring boss every N waves
+            if (gameState.wave % gameConfig.waveConfig.ringBossInterval === 0) {
                 gameState.ringBossWaves++; // Increment ring boss wave counter
                 document.getElementById('bossWarning').style.display = 'block';
                 setTimeout(() => {
@@ -1441,10 +1636,10 @@
             if (gameState.waveActive && gameState.enemies.length === 0 && gameState.enemiesSpawned > 0) {
                 gameState.waveActive = false;
                 gameState.wave++;
-                gameState.money += 50; // Wave completion bonus
+                gameState.money += gameConfig.economy.waveCompletionBonus;
                 
                 // Reduce delay between waves as game progresses
-                const waveDelay = Math.max(1000, 3000 - gameState.wave * 100);
+                const waveDelay = Math.max(gameConfig.waveConfig.minWaveDelay, gameConfig.waveConfig.baseWaveDelay - gameState.wave * gameConfig.waveConfig.waveDelayReduction);
                 console.log('Wave completed! Starting wave', gameState.wave, 'in', waveDelay, 'ms');
                 setTimeout(() => spawnWave(), waveDelay);
             }
@@ -1452,22 +1647,18 @@
         
         function updateMultipliers() {
             // Kill multiplier thresholds
-            if (gameState.totalEnemiesKilled >= 200) {
-                gameState.killMultiplier = 2.0;
-            } else if (gameState.totalEnemiesKilled >= 100) {
-                gameState.killMultiplier = 1.7;
-            } else if (gameState.totalEnemiesKilled >= 50) {
-                gameState.killMultiplier = 1.5;
-            } else if (gameState.totalEnemiesKilled >= 25) {
-                gameState.killMultiplier = 1.3;
-            } else if (gameState.totalEnemiesKilled >= 10) {
-                gameState.killMultiplier = 1.2;
-            } else {
-                gameState.killMultiplier = 1.0;
+            const thresholds = gameConfig.multipliers.killMultiplierThresholds;
+            const values = gameConfig.multipliers.killMultiplierValues;
+            
+            for (let i = thresholds.length - 1; i >= 0; i--) {
+                if (gameState.totalEnemiesKilled >= thresholds[i]) {
+                    gameState.killMultiplier = values[i];
+                    break;
+                }
             }
             
-            // Defender damage bonus (5% per defender)
-            gameState.defenderBonus = gameState.totalDefendersPlaced * 5;
+            // Defender damage bonus
+            gameState.defenderBonus = gameState.totalDefendersPlaced * gameConfig.multipliers.defenderDamageBonus;
         }
         
         function gameLoop(timestamp) {
@@ -1495,6 +1686,7 @@
                 
                 // Draw projectiles and particles (without updating)
                 drawProjectiles();
+                drawEnemyProjectiles();
                 drawParticles();
                 
                 // Draw aim ring if gun is active
@@ -1554,10 +1746,12 @@
             
             // Update projectiles and particles
             updateProjectiles(deltaTime);
+            updateEnemyProjectiles(deltaTime);
             updateParticles(deltaTime);
             
             // Draw projectiles and particles
             drawProjectiles();
+            drawEnemyProjectiles();
             drawParticles();
             
             // Draw aim ring if gun is active
@@ -1640,7 +1834,8 @@
             
             // Check if clicking on the gun (Saturn center)
             const distFromSaturn = Math.sqrt((x - saturn.x) ** 2 + (y - saturn.y) ** 2);
-            if (distFromSaturn < gunConfig.baseSize + 5) {
+            const gunBaseSize = (gameConfig && gameConfig.gunConfig) ? gameConfig.gunConfig.baseSize : 22; // Default to 22
+            if (distFromSaturn < gunBaseSize + 5) {
                 // Toggle gun on/off
                 gameState.gunActive = !gameState.gunActive;
                 gameState.selectedDefenseType = null; // Clear defense selection
@@ -1667,7 +1862,11 @@
                 const defenderIndex = getDefenderAtPosition(x, y);
                 if (defenderIndex !== -1) {
                     const defender = gameState.defenders[defenderIndex];
-                    const refund = Math.floor(defenseTypes[defender.type].cost * 0.5);
+                    
+                    // Wait for config to load
+                    if (!gameConfig || !gameConfig.defenseTypes) return;
+                    
+                    const refund = Math.floor(gameConfig.defenseTypes[defender.type].cost * 0.5);
                     gameState.money += refund;
                     gameState.totalDefendersPlaced--;
                     gameState.defenders.splice(defenderIndex, 1);
@@ -1680,6 +1879,12 @@
             // Normal placement mode
             if (!gameState.selectedDefenseType) return;
             
+            // Wait for config to load
+            if (!gameConfig || !gameConfig.defenseTypes) {
+                console.log('Config not loaded yet, cannot place defenders');
+                return;
+            }
+            
             console.log('Canvas clicked at', x, y, 'Selected type:', gameState.selectedDefenseType);
             
             // Check if click is on any of Saturn's rings
@@ -1689,7 +1894,7 @@
             console.log('Distance from Saturn center:', dist, 'Clicked ring:', clickedRing);
             
             if (clickedRing !== -1) {
-                const cost = defenseTypes[gameState.selectedDefenseType].cost;
+                const cost = gameConfig.defenseTypes[gameState.selectedDefenseType].cost;
                 console.log('Clicked on ring', clickedRing, 'cost:', cost, 'money:', gameState.money);
                 
                 if (gameState.money >= cost) {
@@ -1699,6 +1904,10 @@
                     // Check if spot is free on the clicked ring
                     let canPlace = true;
                     
+                    // Get the size of the defender we're trying to place
+                    const newDefenderSize = gameConfig.defenseTypes[gameState.selectedDefenseType].size;
+                    const ringRadius = saturn.rings[clickedRing].inner + (saturn.rings[clickedRing].outer - saturn.rings[clickedRing].inner) / 2;
+                    
                     for (const defender of gameState.defenders) {
                         // Only check conflicts with defenders on the same ring
                         if (defender.ring === clickedRing) {
@@ -1707,8 +1916,22 @@
                             let angleDiff = Math.abs(currentDefenderAngle - angle);
                             if (angleDiff > 180) angleDiff = 360 - angleDiff; // Handle wrap-around
                             
-                            if (angleDiff < 8) { // Reduced from 10 to 8 degrees for easier placement
+                            // Calculate minimum angular separation based on defender sizes
+                            // Arc length = (size1 + size2 + buffer), convert to degrees
+                            const combinedSize = defender.props.size + newDefenderSize + 5; // 5px buffer
+                            const minAngleDegrees = (combinedSize / ringRadius) * (180 / Math.PI);
+                            
+                            console.log('Collision check:', {
+                                angleDiff,
+                                minAngleDegrees,
+                                existingSize: defender.props.size,
+                                newSize: newDefenderSize,
+                                ringRadius
+                            });
+                            
+                            if (angleDiff < minAngleDegrees) {
                                 canPlace = false;
+                                console.log('Cannot place - too close! Need', minAngleDegrees, 'degrees, only have', angleDiff);
                                 break;
                             }
                         }
@@ -1787,8 +2010,12 @@
         // Upgrade selection
         document.querySelectorAll('.upgradeButton').forEach(button => {
             button.addEventListener('click', () => {
+                if (!gameConfig || !gameConfig.economy) return; // Wait for config to load
+                
                 const type = button.dataset.type;
-                const cost = parseInt(button.dataset.cost);
+                const baseCost = gameConfig.economy.upgradeBaseCost;
+                const currentLevel = gameState.defenderUpgrades[type];
+                const cost = baseCost + (currentLevel * gameConfig.economy.upgradeCostIncrease);
                 
                 console.log('Upgrade button clicked:', type, 'cost:', cost, 'money:', gameState.money);
                 
@@ -1797,12 +2024,14 @@
                     gameState.money -= cost;
                     gameState.gunActive = false; // Deactivate gun
                     
-                    // Update button text to show new level
+                    // Update button text to show new level and next cost
                     const level = gameState.defenderUpgrades[type];
-                    const damageMultiplier = Math.pow(1.02, level).toFixed(2);
-                    button.innerHTML = `Upgrade ${type.charAt(0).toUpperCase() + type.slice(1)}<br>Lv.${level} ${Math.trunc((damageMultiplier - 1)* 100)}%`;
+                    const upgradeMultiplier = gameConfig.gameplay ? gameConfig.gameplay.upgradeMultiplier : 1.02;
+                    const damageMultiplier = Math.pow(upgradeMultiplier, level).toFixed(2);
+                    const nextCost = baseCost + (level * gameConfig.economy.upgradeCostIncrease);
+                    button.innerHTML = `Upgrade<br>$${nextCost}`;
                     
-                    console.log('Upgraded', type, 'to level', level, 'damage multiplier:', damageMultiplier);
+                    console.log('Upgraded', type, 'to level', level, 'damage multiplier:', damageMultiplier, 'next cost:', nextCost);
                 } else {
                     button.classList.add('disabled');
                     setTimeout(() => button.classList.remove('disabled'), 500);
@@ -1812,9 +2041,12 @@
         
         // Ring unlock button
         document.getElementById('unlockRingButton').addEventListener('click', () => {
-            if (gameState.unlockedRings < 4 && gameState.money >= 500) {
+            if (!gameConfig || !gameConfig.economy) return; // Wait for config to load
+            
+            const ringCost = gameConfig.economy.ringUnlockCost;
+            if (gameState.unlockedRings < 4 && gameState.money >= ringCost) {
                 gameState.unlockedRings++;
-                gameState.money -= 500;
+                gameState.money -= ringCost;
                 gameState.gunActive = false; // Deactivate gun
                 document.getElementById('unlockedRings').textContent = gameState.unlockedRings;
                 console.log('Unlocked ring', gameState.unlockedRings);
@@ -1866,8 +2098,8 @@
             if (!gameState.gameStarted || gameState.gameOver) {
                 // Reset game state for new game
                 gameState = {
-                    money: 100,
-                    lives: 20,
+                    money: gameConfig.economy.startingMoney,
+                    lives: gameConfig.economy.startingLives,
                     score: 0,
                     wave: 1,
                     selectedDefenseType: null,
@@ -1876,6 +2108,7 @@
                     defenders: [],
                     enemies: [],
                     projectiles: [],
+                    enemyProjectiles: [],
                     particles: [],
                     stars: [], // Clear stars
                     lastUpdate: 0,
@@ -1956,8 +2189,8 @@
         document.getElementById('restartButton').addEventListener('click', () => {
             // Reset all game state
             gameState = {
-                money: 100,
-                lives: 20,
+                money: gameConfig.economy.startingMoney,
+                lives: gameConfig.economy.startingLives,
                 score: 0,
                 wave: 1,
                 selectedDefenseType: null,
@@ -1966,6 +2199,7 @@
                 defenders: [],
                 enemies: [],
                 projectiles: [],
+                enemyProjectiles: [],
                 particles: [],
                 stars: [], // Clear stars
                 lastUpdate: 0,
@@ -2055,25 +2289,465 @@
                 }
             });
             
+            // Only update upgrade buttons if config is loaded
+            if (gameConfig && gameConfig.economy) {
             document.querySelectorAll('.upgradeButton').forEach(button => {
-                const cost = parseInt(button.dataset.cost);
+                    const type = button.dataset.type;
+                    const baseCost = gameConfig.economy.upgradeBaseCost;
+                    const currentLevel = gameState.defenderUpgrades[type];
+                    const cost = baseCost + (currentLevel * gameConfig.economy.upgradeCostIncrease);
+                    
                 if (gameState.money >= cost) {
                     button.classList.remove('disabled');
                 } else {
                     button.classList.add('disabled');
                 }
             });
+            }
         }, 100);
         
-        // Money generation (like Battle Cats)
-        setInterval(() => {
-            if (gameState.gameRunning) {
-                gameState.money += 2;
-            }
-        }, 1000);
+        // ============ MOD MENU SYSTEM ============
         
-        // Start the game loop
+        let currentModTab = 'defenders';
+        
+        // Mod menu button click
+        document.getElementById('modMenuButton').addEventListener('click', () => {
+            document.getElementById('passwordPrompt').style.display = 'block';
+            document.getElementById('modPasswordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('modPasswordInput').focus();
+        });
+        
+        // Password submit
+        document.getElementById('passwordSubmitButton').addEventListener('click', checkPassword);
+        document.getElementById('modPasswordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+        
+        function checkPassword() {
+            const password = document.getElementById('modPasswordInput').value;
+            if (password === '6767') {
+                document.getElementById('passwordPrompt').style.display = 'none';
+                openModMenu();
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+            }
+        }
+        
+        // Password cancel
+        document.getElementById('passwordCancelButton').addEventListener('click', () => {
+            document.getElementById('passwordPrompt').style.display = 'none';
+        });
+        
+        // Open mod menu
+        function openModMenu() {
+            document.getElementById('modMenuOverlay').style.display = 'block';
+            loadModTab('defenders');
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.modTab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.modTab').forEach(t => {
+                    t.style.background = '#333';
+                    t.style.borderColor = '#555';
+                });
+                tab.style.background = '#444466';
+                tab.style.borderColor = '#666688';
+                loadModTab(tabName);
+            });
+        });
+        
+        // Load tab content
+        function loadModTab(tabName) {
+            currentModTab = tabName;
+            const content = document.getElementById('modMenuContent');
+            content.innerHTML = '';
+            
+            if (tabName === 'defenders') {
+                renderDefendersTab(content);
+            } else if (tabName === 'enemies') {
+                renderEnemiesTab(content);
+            } else if (tabName === 'gun') {
+                renderGunTab(content);
+            } else if (tabName === 'economy') {
+                renderEconomyTab(content);
+            } else if (tabName === 'waves') {
+                renderWavesTab(content);
+            } else if (tabName === 'gameplay') {
+                renderGameplayTab(content);
+            }
+        }
+        
+        // Render defenders tab
+        function renderDefendersTab(container) {
+            const types = ['laser', 'missile', 'plasma', 'shield'];
+            types.forEach(type => {
+                const section = document.createElement('div');
+                section.style.marginBottom = '30px';
+                section.style.padding = '15px';
+                section.style.background = '#333';
+                section.style.borderRadius = '8px';
+                
+                const title = document.createElement('h3');
+                title.textContent = type.charAt(0).toUpperCase() + type.slice(1) + ' Tower';
+                title.style.color = '#fff';
+                title.style.marginTop = '0';
+                section.appendChild(title);
+                
+                const props = gameConfig.defenseTypes[type];
+                Object.keys(props).forEach(key => {
+                    if (typeof props[key] === 'number') {
+                        section.appendChild(createSliderControl(`defenseTypes.${type}.${key}`, key, props[key], getSliderRange(key)));
+                    }
+                });
+                
+                container.appendChild(section);
+            });
+        }
+        
+        // Render enemies tab
+        function renderEnemiesTab(container) {
+            const types = ['basic', 'fast', 'heavy', 'jetpack', 'boss', 'laserGuy', 'ringBoss'];
+            types.forEach(type => {
+                const section = document.createElement('div');
+                section.style.marginBottom = '30px';
+                section.style.padding = '15px';
+                section.style.background = '#333';
+                section.style.borderRadius = '8px';
+                
+                const title = document.createElement('h3');
+                title.textContent = type.charAt(0).toUpperCase() + type.slice(1) + ' Enemy';
+                title.style.color = '#fff';
+                title.style.marginTop = '0';
+                section.appendChild(title);
+                
+                const props = gameConfig.enemyTypes[type];
+                Object.keys(props).forEach(key => {
+                    if (typeof props[key] === 'number') {
+                        section.appendChild(createSliderControl(`enemyTypes.${type}.${key}`, key, props[key], getSliderRange(key)));
+                    }
+                });
+                
+                container.appendChild(section);
+            });
+        }
+        
+        // Render gun tab
+        function renderGunTab(container) {
+            const props = gameConfig.gunConfig;
+            Object.keys(props).forEach(key => {
+                if (typeof props[key] === 'number') {
+                    container.appendChild(createSliderControl(`gunConfig.${key}`, key, props[key], getSliderRange(key)));
+                }
+            });
+        }
+        
+        // Render economy tab
+        function renderEconomyTab(container) {
+            const props = gameConfig.economy;
+            Object.keys(props).forEach(key => {
+                container.appendChild(createSliderControl(`economy.${key}`, key, props[key], getSliderRange(key)));
+            });
+        }
+        
+        // Render waves tab
+        function renderWavesTab(container) {
+            // Wave config
+            const waveSection = document.createElement('div');
+            waveSection.style.marginBottom = '20px';
+            const waveTitle = document.createElement('h3');
+            waveTitle.textContent = 'Wave Configuration';
+            waveTitle.style.color = '#fff';
+            waveSection.appendChild(waveTitle);
+            
+            const waveProps = gameConfig.waveConfig;
+            Object.keys(waveProps).forEach(key => {
+                if (typeof waveProps[key] === 'number') {
+                    waveSection.appendChild(createSliderControl(`waveConfig.${key}`, key, waveProps[key], getSliderRange(key)));
+                }
+            });
+            container.appendChild(waveSection);
+            
+            // Enemy scaling
+            const scalingSection = document.createElement('div');
+            scalingSection.style.marginBottom = '20px';
+            const scalingTitle = document.createElement('h3');
+            scalingTitle.textContent = 'Enemy Scaling';
+            scalingTitle.style.color = '#fff';
+            scalingSection.appendChild(scalingTitle);
+            
+            const scalingProps = gameConfig.enemyScaling;
+            Object.keys(scalingProps).forEach(key => {
+                if (typeof scalingProps[key] === 'number') {
+                    scalingSection.appendChild(createSliderControl(`enemyScaling.${key}`, key, scalingProps[key], getSliderRange(key)));
+                }
+            });
+            container.appendChild(scalingSection);
+            
+            // Spawn chances
+            const spawnSection = document.createElement('div');
+            const spawnTitle = document.createElement('h3');
+            spawnTitle.textContent = 'Spawn Chances';
+            spawnTitle.style.color = '#fff';
+            spawnSection.appendChild(spawnTitle);
+            
+            const spawnProps = gameConfig.enemySpawnChances;
+            Object.keys(spawnProps).forEach(key => {
+                if (typeof spawnProps[key] === 'number') {
+                    spawnSection.appendChild(createSliderControl(`enemySpawnChances.${key}`, key, spawnProps[key], getSliderRange(key)));
+                }
+            });
+            container.appendChild(spawnSection);
+        }
+        
+        // Render gameplay tab
+        function renderGameplayTab(container) {
+            if (!gameConfig.gameplay) {
+                gameConfig.gameplay = {
+                    slowEffectRecovery: 0.02,
+                    shieldSlowEffect: 0.3,
+                    upgradeMultiplier: 1.02,
+                    explosionRadius: 50,
+                    explosionDamageMultiplier: 0.5
+                };
+            }
+            
+            const props = gameConfig.gameplay;
+            Object.keys(props).forEach(key => {
+                if (typeof props[key] === 'number') {
+                    container.appendChild(createSliderControl(`gameplay.${key}`, key, props[key], getSliderRange(key)));
+                }
+            });
+        }
+        
+        // Create slider control
+        function createSliderControl(path, label, value, range) {
+            const container = document.createElement('div');
+            container.style.marginBottom = '15px';
+            
+            const labelEl = document.createElement('div');
+            labelEl.textContent = label;
+            labelEl.style.color = '#aaa';
+            labelEl.style.marginBottom = '5px';
+            container.appendChild(labelEl);
+            
+            const controlsDiv = document.createElement('div');
+            controlsDiv.style.display = 'flex';
+            controlsDiv.style.gap = '10px';
+            controlsDiv.style.alignItems = 'center';
+            
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.min = range.min;
+            slider.max = range.max;
+            slider.step = range.step;
+            slider.value = value;
+            slider.style.flex = '1';
+            slider.style.cursor = 'pointer';
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = value;
+            input.step = range.step;
+            input.style.width = '80px';
+            input.style.padding = '5px';
+            input.style.background = '#444';
+            input.style.border = '1px solid #666';
+            input.style.borderRadius = '3px';
+            input.style.color = 'white';
+            
+            slider.addEventListener('input', () => {
+                input.value = slider.value;
+                updateConfigValue(path, parseFloat(slider.value));
+            });
+            
+            input.addEventListener('input', () => {
+                slider.value = input.value;
+                updateConfigValue(path, parseFloat(input.value));
+            });
+            
+            controlsDiv.appendChild(slider);
+            controlsDiv.appendChild(input);
+            container.appendChild(controlsDiv);
+            
+            return container;
+        }
+        
+        // Update config value
+        function updateConfigValue(path, value) {
+            const parts = path.split('.');
+            let obj = gameConfig;
+            for (let i = 0; i < parts.length - 1; i++) {
+                obj = obj[parts[i]];
+            }
+            obj[parts[parts.length - 1]] = value;
+        }
+        
+        // Get slider range for different properties
+        function getSliderRange(key) {
+            const ranges = {
+                cost: { min: 0, max: 500, step: 5 },
+                health: { min: 10, max: 10000, step: 10 },
+                damage: { min: 0, max: 500, step: 5 },
+                range: { min: 10, max: 500, step: 10 },
+                attackSpeed: { min: 0.1, max: 10, step: 0.1 },
+                projectileSpeed: { min: 1, max: 20, step: 0.5 },
+                size: { min: 1, max: 50, step: 1 },
+                speed: { min: 0.1, max: 5, step: 0.1 },
+                reward: { min: 0, max: 1000, step: 10 },
+                laserDamage: { min: 10, max: 500, step: 10 },
+                cooldown: { min: 100, max: 5000, step: 100 },
+                width: { min: 1, max: 50, step: 1 },
+                aimRingRadius: { min: 5, max: 50, step: 1 },
+                gunSize: { min: 5, max: 50, step: 1 },
+                barrelLength: { min: 10, max: 100, step: 5 },
+                barrelWidth: { min: 5, max: 50, step: 1 },
+                baseSize: { min: 10, max: 50, step: 1 },
+                rotationSpeed: { min: 0.01, max: 1, step: 0.01 },
+                startingMoney: { min: 0, max: 1000, step: 10 },
+                startingLives: { min: 1, max: 100, step: 1 },
+                moneyGenerationRate: { min: 0, max: 20, step: 1 },
+                moneyGenerationInterval: { min: 100, max: 5000, step: 100 },
+                upgradeBaseCost: { min: 0, max: 500, step: 10 },
+                upgradeCostIncrease: { min: 0, max: 200, step: 5 },
+                ringUnlockCost: { min: 0, max: 2000, step: 50 },
+                waveCompletionBonus: { min: 0, max: 500, step: 10 },
+                baseEnemyCount: { min: 1, max: 50, step: 1 },
+                enemyCountMultiplier: { min: 1, max: 3, step: 0.1 },
+                maxEnemiesPerWave: { min: 10, max: 500, step: 10 },
+                baseSpawnInterval: { min: 100, max: 5000, step: 100 },
+                spawnIntervalReduction: { min: 1, max: 2, step: 0.05 },
+                minSpawnInterval: { min: 10, max: 1000, step: 10 },
+                baseWaveDelay: { min: 100, max: 10000, step: 100 },
+                waveDelayReduction: { min: 0, max: 500, step: 10 },
+                minWaveDelay: { min: 100, max: 5000, step: 100 },
+                ringBossInterval: { min: 1, max: 20, step: 1 },
+                healthScalingPerWave: { min: 1, max: 2, step: 0.05 },
+                ringBossHealthMultiplier: { min: 0, max: 5, step: 0.1 },
+                ringBossSpeedMultiplier: { min: 0, max: 2, step: 0.1 },
+                ringBossSpiralMultiplier: { min: 0, max: 2, step: 0.1 },
+                defenderDamageBonus: { min: 0, max: 50, step: 1 },
+                orbitSpeed: { min: 0.1, max: 5, step: 0.1 },
+                orbitRadius: { min: 100, max: 1000, step: 10 },
+                spiralInward: { min: 0.01, max: 5, step: 0.01 },
+                slowEffect: { min: 0.01, max: 1, step: 0.01 },
+                pushDistance: { min: 0, max: 50, step: 1 },
+                slowEffectRecovery: { min: 0.001, max: 0.1, step: 0.001 },
+                shieldSlowEffect: { min: 0.01, max: 1, step: 0.01 },
+                upgradeMultiplier: { min: 1.001, max: 1.5, step: 0.001 },
+                explosionRadius: { min: 10, max: 200, step: 5 },
+                explosionDamageMultiplier: { min: 0.1, max: 2, step: 0.1 }
+            };
+            
+            // Default for Wave and Chance values
+            if (key.includes('Wave')) return { min: 1, max: 50, step: 1 };
+            if (key.includes('Chance')) return { min: 0, max: 1, step: 0.01 };
+            
+            return ranges[key] || { min: 0, max: 1000, step: 1 };
+        }
+        
+        // Save to localStorage
+        document.getElementById('modSaveButton').addEventListener('click', () => {
+            localStorage.setItem('saturnDefenderModConfig', JSON.stringify(gameConfig));
+            showModMessage('Configuration saved to localStorage!', 'success');
+        });
+        
+        // Reset to defaults
+        document.getElementById('modResetButton').addEventListener('click', () => {
+            if (confirm('Reset all values to defaults? This will clear your saved configuration.')) {
+                localStorage.removeItem('saturnDefenderModConfig');
+                loadGameConfig().then(() => {
+                    showModMessage('Configuration reset to defaults!', 'success');
+                    loadModTab(currentModTab); // Reload current tab
+                });
+            }
+        });
+        
+        // Export JSON
+        document.getElementById('modExportButton').addEventListener('click', () => {
+            const dataStr = JSON.stringify(gameConfig, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'config.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            showModMessage('Configuration exported!', 'success');
+        });
+        
+        // Import JSON
+        document.getElementById('modImportButton').addEventListener('click', () => {
+            document.getElementById('modImportFileInput').click();
+        });
+        
+        document.getElementById('modImportFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedConfig = JSON.parse(event.target.result);
+                    gameConfig = importedConfig;
+                    showModMessage('Configuration imported successfully!', 'success');
+                    loadModTab(currentModTab); // Reload current tab
+                } catch (error) {
+                    showModMessage('Error importing configuration: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset file input
+        });
+        
+        // Close mod menu
+        document.getElementById('modCloseButton').addEventListener('click', () => {
+            document.getElementById('modMenuOverlay').style.display = 'none';
+        });
+        
+        // Show message
+        function showModMessage(message, type) {
+            const msgEl = document.getElementById('modMenuMessage');
+            msgEl.textContent = message;
+            msgEl.style.display = 'block';
+            msgEl.style.background = type === 'success' ? '#006600' : '#660000';
+            msgEl.style.color = 'white';
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        // ============ END MOD MENU SYSTEM ============
+        
+        // Show loading state
+        document.getElementById('startButton').textContent = 'Loading...';
+        document.getElementById('startButton').style.opacity = '0.5';
+        
+        // Load config and start the game loop
+        loadGameConfig().then(() => {
+            console.log('Game config loaded, starting game loop');
+            
+            // Update UI to show ready state
+            document.getElementById('startButton').textContent = 'START GAME';
+            document.getElementById('startButton').style.opacity = '1';
+            
+            // Money generation (like Battle Cats) - set up after config is loaded
+        setInterval(() => {
+                if (gameState.gameRunning && gameConfig && gameConfig.economy) {
+                    gameState.money += gameConfig.economy.moneyGenerationRate;
+            }
+            }, 1000); // Check every second, use config value when available
+        
         requestAnimationFrame(gameLoop);
+        }).catch(error => {
+            console.error('Failed to load config:', error);
+            // Start anyway with embedded defaults
+            document.getElementById('startButton').textContent = 'START GAME';
+            document.getElementById('startButton').style.opacity = '1';
+            requestAnimationFrame(gameLoop);
+        });
     </script>
 </body>
 </html>

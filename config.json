@@ -1,0 +1,182 @@
+{
+  "defenseTypes": {
+    "laser": {
+      "cost": 25,
+      "health": 100,
+      "damage": 15,
+      "range": 120,
+      "attackSpeed": 1.0,
+      "color": "#ff4444",
+      "projectileSpeed": 8,
+      "size": 8,
+      "orbitSpeed": 0.5
+    },
+    "missile": {
+      "cost": 50,
+      "health": 120,
+      "damage": 30,
+      "range": 150,
+      "attackSpeed": 1.0,
+      "color": "#44ff44",
+      "projectileSpeed": 5,
+      "size": 10,
+      "explosive": true,
+      "orbitSpeed": 0.5
+    },
+    "plasma": {
+      "cost": 75,
+      "health": 150,
+      "damage": 25,
+      "range": 100,
+      "attackSpeed": 1.0,
+      "color": "#4444ff",
+      "projectileSpeed": 6,
+      "size": 12,
+      "piercing": true,
+      "orbitSpeed": 0.5
+    },
+    "shield": {
+      "cost": 100,
+      "health": 300,
+      "damage": 0,
+      "range": 60,
+      "attackSpeed": 0,
+      "color": "#ffff44",
+      "projectileSpeed": 0,
+      "size": 15,
+      "blocking": true,
+      "orbitSpeed": 0.5,
+      "slowEffect": 0.1,
+      "pushDistance": 5
+    }
+  },
+  "enemyTypes": {
+    "basic": {
+      "health": 50,
+      "speed": 1,
+      "reward": 10,
+      "color": "#ff6666",
+      "size": 8
+    },
+    "fast": {
+      "health": 30,
+      "speed": 2,
+      "reward": 15,
+      "color": "#66ff66",
+      "size": 6
+    },
+    "heavy": {
+      "health": 150,
+      "speed": 0.5,
+      "reward": 30,
+      "color": "#6666ff",
+      "size": 12
+    },
+    "jetpack": {
+      "health": 180,
+      "speed": 0.5,
+      "reward": 25,
+      "color": "#ffaa44",
+      "size": 10,
+      "isJetpack": true
+    },
+    "boss": {
+      "health": 500,
+      "speed": 0.3,
+      "reward": 100,
+      "color": "#ff66ff",
+      "size": 20
+    },
+    "laserGuy": {
+      "health": 90,
+      "speed": 0.6,
+      "reward": 25,
+      "color": "#ffaa00",
+      "size": 10,
+      "shootsLasers": true,
+      "attackSpeed": 1.0,
+      "laserDamage": 120,
+      "range": 200
+    },
+    "ringBoss": {
+      "health": 5000,
+      "speed": 0.2,
+      "reward": 500,
+      "color": "#ff0000",
+      "size": 25,
+      "isRingBoss": true,
+      "orbitRadius": 500,
+      "orbitSpeed": 0.1,
+      "spiralInward": 0.1
+    }
+  },
+  "gameplay": {
+    "slowEffectRecovery": 0.02,
+    "shieldSlowEffect": 0.3,
+    "upgradeMultiplier": 1.02,
+    "explosionRadius": 50,
+    "explosionDamageMultiplier": 0.5
+  },
+  "gunConfig": {
+    "damage": 100,
+    "cost": 25,
+    "cooldown": 500,
+    "range": 800,
+    "width": 10,
+    "color": "#ff0066",
+    "aimRingRadius": 15,
+    "aimRingColor": "#ff0066",
+    "gunSize": 15,
+    "barrelLength": 50,
+    "barrelWidth": 18,
+    "baseSize": 22,
+    "rotationSpeed": 0.1,
+    "projectileSpeed": 15
+  },
+  "economy": {
+    "startingMoney": 100,
+    "startingLives": 20,
+    "moneyGenerationRate": 2,
+    "moneyGenerationInterval": 1000,
+    "upgradeBaseCost": 100,
+    "upgradeCostIncrease": 50,
+    "ringUnlockCost": 500,
+    "waveCompletionBonus": 50
+  },
+  "waveConfig": {
+    "baseEnemyCount": 5,
+    "enemyCountMultiplier": 1.3,
+    "maxEnemiesPerWave": 100,
+    "baseSpawnInterval": 800,
+    "spawnIntervalReduction": 1.1,
+    "minSpawnInterval": 50,
+    "baseWaveDelay": 3000,
+    "waveDelayReduction": 100,
+    "minWaveDelay": 1000,
+    "ringBossInterval": 5
+  },
+  "enemyScaling": {
+    "healthScalingPerWave": 1.1,
+    "ringBossHealthMultiplier": 1.5,
+    "ringBossSpeedMultiplier": 1.2,
+    "ringBossSpiralMultiplier": 1.3
+  },
+  "multipliers": {
+    "killMultiplierThresholds": [0, 10, 25, 50, 100, 200],
+    "killMultiplierValues": [1.0, 1.2, 1.3, 1.5, 1.7, 2.0],
+    "defenderDamageBonus": 5
+  },
+  "enemySpawnChances": {
+    "laserGuyWave": 3,
+    "laserGuyChance": 0.15,
+    "fastWave": 3,
+    "fastChance": 0.2,
+    "heavyWave": 5,
+    "heavyChance": 0.05,
+    "jetpackWave": 7,
+    "jetpackChance": 0.05,
+    "bossWave": 10,
+    "bossChance": 0.05
+  }
+}
+
