@@ -259,6 +259,11 @@
     </style>
 </head>
 <body>
+    <!-- Background Music -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="assets/single_pattern_clean.mp3" type="audio/mpeg">
+    </audio>
+    
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="800"></canvas>
         
@@ -293,6 +298,14 @@
             <div style="text-align: center; font-size: 12px; margin-top: 5px;">Rings: <span id="unlockedRings">1</span>/4</div>
             <div id="modMenuButton" style="padding: 10px; background: #444466; border: 2px solid #666688; border-radius: 5px; cursor: pointer; text-align: center; color: white; margin-top: 10px;">
                 MOD MENU
+            </div>
+            <div style="display: flex; gap: 3px; margin-top: 5px;">
+                <div id="muteMusicButton" style="flex: 1; padding: 6px 4px; background: #226622; border: 2px solid #448844; border-radius: 5px; cursor: pointer; text-align: center; color: white; font-size: 10px;">
+                    🎵 MUSIC
+                </div>
+                <div id="muteSfxButton" style="flex: 1; padding: 6px 4px; background: #226622; border: 2px solid #448844; border-radius: 5px; cursor: pointer; text-align: center; color: white; font-size: 10px;">
+                    🔊 SFX
+                </div>
             </div>
         </div>
         
@@ -341,13 +354,52 @@
             </div>
         </div>
         
-        <div id="pauseMenu" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #666; border-radius: 15px; text-align: center; display: none; z-index: 200;">
+        <div id="pauseMenu" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 30px; border: 3px solid #666; border-radius: 15px; text-align: center; display: none; z-index: 200; min-width: 350px;">
             <h2 style="color: white; margin-top: 0;">GAME PAUSED</h2>
-            <div id="resumeButton" style="margin: 10px; padding: 15px 25px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
-                RESUME
+            
+            <!-- Main buttons -->
+            <div style="margin-bottom: 20px;">
+                <div id="resumeButton" style="margin: 10px; padding: 15px 25px; background: #006600; border: 2px solid #008800; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
+                    RESUME
+                </div>
+                <div id="restartButton" style="margin: 10px; padding: 15px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
+                    RESTART
+                </div>
             </div>
-            <div id="restartButton" style="margin: 10px; padding: 15px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white; display: inline-block;">
-                RESTART
+            
+            <!-- Difficulty Selector -->
+            <div style="margin: 20px 0; padding: 15px; background: #222; border-radius: 10px; border: 2px solid #444;">
+                <div style="color: #aaa; font-size: 14px; margin-bottom: 10px;">DIFFICULTY</div>
+                <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                    <div class="difficultyBtn" data-difficulty="easy" style="padding: 8px 15px; background: #224422; border: 2px solid #446644; border-radius: 5px; cursor: pointer; color: #88ff88; font-size: 12px;">EASY</div>
+                    <div class="difficultyBtn" data-difficulty="normal" style="padding: 8px 15px; background: #444422; border: 2px solid #666644; border-radius: 5px; cursor: pointer; color: #ffff88; font-size: 12px;">NORMAL</div>
+                    <div class="difficultyBtn" data-difficulty="hard" style="padding: 8px 15px; background: #442222; border: 2px solid #664444; border-radius: 5px; cursor: pointer; color: #ff8888; font-size: 12px;">HARD</div>
+                    <div class="difficultyBtn" data-difficulty="nightmare" style="padding: 8px 15px; background: #330033; border: 2px solid #550055; border-radius: 5px; cursor: pointer; color: #ff44ff; font-size: 12px;">NIGHTMARE</div>
+                </div>
+                <div id="difficultyDesc" style="color: #888; font-size: 11px; margin-top: 10px;">Standard enemy stats</div>
+            </div>
+            
+            <!-- Logbook Button -->
+            <div id="logbookButton" style="margin: 10px; padding: 12px 25px; background: #444466; border: 2px solid #666688; border-radius: 5px; cursor: pointer; color: white;">
+                📖 ENEMY LOGBOOK
+            </div>
+        </div>
+        
+        <!-- Enemy Logbook Overlay -->
+        <div id="logbookOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 210; overflow-y: auto;">
+            <div style="max-width: 800px; margin: 20px auto; padding: 20px; background: #111; border: 3px solid #666688; border-radius: 15px;">
+                <h1 style="color: white; text-align: center; margin-top: 0;">📖 ENEMY LOGBOOK</h1>
+                <p style="color: #aaa; text-align: center; margin-bottom: 20px;">Know your enemies to defeat them!</p>
+                
+                <div id="logbookContent" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px;">
+                    <!-- Enemy entries will be dynamically added here -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <div id="logbookCloseButton" style="display: inline-block; padding: 12px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white;">
+                        CLOSE
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -401,9 +453,13 @@
         
         <!-- Moons Menu -->
         <div id="moonsMenuOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; z-index: 300; overflow-y: auto;">
-            <div style="max-width: 900px; margin: 20px auto; padding: 20px; background: #111; border: 3px solid #6688aa; border-radius: 15px;">
-                <h1 style="color: white; text-align: center; margin-top: 0;">SATURN'S MOONS</h1>
-                <p style="color: #aaa; text-align: center; margin-bottom: 20px;">Equip moons to provide powerful buffs to your defenders</p>
+            <div style="max-width: 1100px; width: 95%; margin: 10px auto; padding: 15px; background: #111; border: 3px solid #6688aa; border-radius: 15px;">
+                <!-- Sticky Header with Close Button -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: sticky; top: 0; background: #111; padding: 10px 0; z-index: 10;">
+                    <h1 style="color: white; margin: 0; font-size: 24px;">SATURN'S MOONS</h1>
+                    <div id="moonsMenuCloseButtonTop" style="padding: 10px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white; font-weight: bold;">✕ CLOSE</div>
+                </div>
+                <p style="color: #aaa; text-align: center; margin-bottom: 15px; font-size: 14px;">Equip moons to provide powerful buffs to your defenders</p>
                 
                 <!-- Equipped Moons Section -->
                 <div style="margin-bottom: 30px;">
@@ -421,19 +477,13 @@
                 </div>
                 
                 <!-- Available Moons Section -->
-                <div style="margin-bottom: 30px;">
+                <div style="margin-bottom: 20px;">
                     <h2 style="color: #aaddff; margin-bottom: 10px;">Available Moons</h2>
-                    <div id="availableMoonsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                    <div id="availableMoonsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;">
                         <!-- Available moons will be dynamically added here -->
                     </div>
                 </div>
                 
-                <!-- Close Button -->
-                <div style="text-align: center; margin-top: 20px;">
-                    <div id="moonsMenuCloseButton" style="display: inline-block; padding: 12px 25px; background: #660000; border: 2px solid #880000; border-radius: 5px; cursor: pointer; color: white;">
-                        Close
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -441,6 +491,104 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        
+        // ============ SOUND EFFECTS SYSTEM ============
+        let audioCtx = null;
+        let soundEnabled = true;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        function playLaserSound(type = 'laser', volume = 0.15) {
+            if (!soundEnabled || !audioCtx) return;
+            
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+                
+                oscillator.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                const now = audioCtx.currentTime;
+                
+                if (type === 'laser') {
+                    // Quick zap sound for laser towers
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(800, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(2000, now);
+                    gainNode.gain.setValueAtTime(volume, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.1);
+                    
+                } else if (type === 'missile') {
+                    // Whoosh sound for missiles
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(150, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(500, now);
+                    gainNode.gain.setValueAtTime(volume * 0.8, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.15);
+                    
+                } else if (type === 'plasma') {
+                    // Electric buzz for plasma
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(400, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, now + 0.05);
+                    oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(800, now);
+                    filter.Q.setValueAtTime(5, now);
+                    gainNode.gain.setValueAtTime(volume * 0.6, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.12);
+                    
+                } else if (type === 'cannon') {
+                    // Big powerful blast for main cannon
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(200, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1500, now);
+                    filter.frequency.exponentialRampToValueAtTime(300, now + 0.3);
+                    gainNode.gain.setValueAtTime(volume * 2.5, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.3);
+                    
+                    // Add a sub-bass thump
+                    const subOsc = audioCtx.createOscillator();
+                    const subGain = audioCtx.createGain();
+                    subOsc.connect(subGain);
+                    subGain.connect(audioCtx.destination);
+                    subOsc.type = 'sine';
+                    subOsc.frequency.setValueAtTime(60, now);
+                    subOsc.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+                    subGain.gain.setValueAtTime(volume * 1.5, now);
+                    subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    subOsc.start(now);
+                    subOsc.stop(now + 0.2);
+                }
+            } catch (e) {
+                // Audio failed, silently ignore
+            }
+        }
+        
+        // ============ END SOUND EFFECTS SYSTEM ============
         
         // Base fire rates (in milliseconds) - used with attackSpeed multiplier
         const BASE_FIRE_RATES = {
@@ -459,6 +607,31 @@
         let saturnGunLevel = 0;
         const saturnGunUpgradeCost = 200;
         const saturnGunDamagePerLevel = 20; // +20 damage per level
+        
+        // Difficulty system
+        let currentDifficulty = localStorage.getItem('saturnDefenderDifficulty') || 'normal';
+        const difficultySettings = {
+            easy: { healthMult: 0.6, damageMult: 0.5, speedMult: 0.8, rewardMult: 0.8, name: 'Easy', desc: 'Enemies have -40% health, -50% damage, -20% speed', color: '#88ff88' },
+            normal: { healthMult: 1.0, damageMult: 1.0, speedMult: 1.0, rewardMult: 1.0, name: 'Normal', desc: 'Standard enemy stats', color: '#ffff88' },
+            hard: { healthMult: 1.5, damageMult: 1.5, speedMult: 1.3, rewardMult: 1.2, name: 'Hard', desc: 'Enemies have +50% health, +50% damage, +30% speed', color: '#ff8888' },
+            nightmare: { healthMult: 2.5, damageMult: 2.0, speedMult: 1.6, rewardMult: 1.5, name: 'Nightmare', desc: 'Enemies have +150% health, +100% damage, +60% speed', color: '#ff44ff' }
+        };
+        
+        // Enemy logbook data
+        const enemyLogbook = {
+            basic: { name: 'Basic', icon: '🔴', color: '#ff6666', description: 'Standard enemy. Moves directly toward Saturn at moderate speed. Easy to kill but can overwhelm in numbers.', tips: 'Focus fire with any tower type.' },
+            fast: { name: 'Scout', icon: '💚', color: '#66ff66', description: 'Speedy enemy that rushes toward Saturn. Low health but hard to hit due to speed.', tips: 'Plasma towers with piercing work well against groups.' },
+            heavy: { name: 'Heavy', icon: '🔵', color: '#6666ff', description: 'Armored enemy with lots of health. Slow but tanky. Takes many hits to bring down.', tips: 'Use missile towers for splash damage or focus fire.' },
+            jetpack: { name: 'Jetpack', icon: '🔶', color: '#ffaa44', description: 'Flies in from above in a U-shaped swoop. DESTROYS any defenders it touches during its flight path!', tips: 'Keep defenders spread out. Cannot be stopped mid-swoop.' },
+            boss: { name: 'Mini Boss', icon: '👑', color: '#ff66ff', description: 'Large, powerful enemy with crown spikes. High health and rewards. Appears in later waves.', tips: 'Concentrate all firepower. Worth lots of money!' },
+            laserGuy: { name: 'Laser Guy', icon: '⚡', color: '#ffaa00', description: 'SHOOTS LASERS at your defenders! Can destroy towers from range while approaching Saturn.', tips: 'Prioritize killing before it gets in range. Shield towers can absorb hits.' },
+            ringBoss: { name: 'Ring Boss', icon: '💀', color: '#ff0000', description: 'MASSIVE boss that orbits Saturn and spirals inward. DESTROYS entire rings and all defenders on them!', tips: 'Kill quickly before it reaches inner rings. Appears every 5 waves.' },
+            warper: { name: 'Warper', icon: '🌀', color: '#aa00ff', description: 'Teleports directly toward Saturn! Charges up then blinks closer, bypassing some of your defenses.', tips: 'Place defenders in multiple layers. Watch for charge-up glow.' },
+            spiral: { name: 'Serpent', icon: '🐍', color: '#00ffaa', description: 'Moves in a wavy serpentine pattern, making it harder to hit with projectiles.', tips: 'Use splash damage or plasma piercing to compensate for erratic movement.' },
+            splitter: { name: 'Splitter', icon: '💥', color: '#ff8800', description: 'When killed, SPLITS into 3 smaller fast enemies! Mini-splitters have decent health and speed.', tips: 'Be ready for the split! Have backup defenses for the mini enemies.' },
+            phantom: { name: 'Phantom', icon: '👻', color: '#8888ff', description: 'Phases in and out of visibility. IMMUNE to all damage while invisible! Can walk right through defenses.', tips: 'Time your attacks for when it becomes visible. Watch the fade animation.' },
+            bomber: { name: 'Bomber', icon: '💣', color: '#884400', description: 'Drops EXPLOSIVE MINES that damage defenders AND moons! Mines arm after a short delay.', tips: 'Destroy bombers quickly. Avoid placing defenders near mine drop paths.' }
+        };
         
         // Load game configuration (synchronous - no network!)
         function loadGameConfig() {
@@ -493,7 +666,12 @@
                     jetpack: { health: 180, speed: 0.5, reward: 25, color: '#ffaa44', size: 10, isJetpack: true },
                     boss: { health: 500, speed: 0.3, reward: 100, color: '#ff66ff', size: 20 },
                     laserGuy: { health: 90, speed: 0.6, reward: 25, color: '#ffaa00', size: 10, shootsLasers: true, attackSpeed: 1.0, laserDamage: 120, range: 200 },
-                    ringBoss: { health: 5000, speed: 0.2, reward: 500, color: '#ff0000', size: 25, isRingBoss: true, orbitRadius: 500, orbitSpeed: 0.1, spiralInward: 0.1 }
+                    ringBoss: { health: 5000, speed: 0.2, reward: 500, color: '#ff0000', size: 25, isRingBoss: true, orbitRadius: 500, orbitSpeed: 0.1, spiralInward: 0.1 },
+                    warper: { health: 120, speed: 0.8, reward: 35, color: '#aa00ff', size: 9, isWarper: true, teleportInterval: 3000, teleportDistance: 150 },
+                    spiral: { health: 80, speed: 1.0, reward: 20, color: '#00ffaa', size: 7, isSpiral: true, spiralAmplitude: 60, spiralFrequency: 0.08 },
+                    splitter: { health: 200, speed: 0.6, reward: 40, color: '#ff8800', size: 14, isSplitter: true, splitCount: 3 },
+                    phantom: { health: 70, speed: 1.0, reward: 30, color: '#8888ff', size: 8, isPhantom: true, phaseInterval: 2000, phaseDuration: 1500 },
+                    bomber: { health: 100, speed: 0.5, reward: 45, color: '#884400', size: 11, isBomber: true, mineInterval: 4000, mineDamage: 80, mineRadius: 30 }
                 },
                 gameplay: {
                     slowEffectRecovery: 0.02,
@@ -504,10 +682,10 @@
                 },
                 gunConfig: { damage: 100, cost: 25, cooldown: 500, range: 800, width: 10, color: '#ff0066', aimRingRadius: 15, aimRingColor: '#ff0066', gunSize: 15, barrelLength: 50, barrelWidth: 18, baseSize: 22, rotationSpeed: 0.1, projectileSpeed: 15 },
                 economy: { startingMoney: 100, startingLives: 20, moneyGenerationRate: 2, moneyGenerationInterval: 1000, upgradeBaseCost: 100, upgradeCostIncrease: 50, ringUnlockCost: 500, waveCompletionBonus: 50 },
-                waveConfig: { baseEnemyCount: 5, enemyCountMultiplier: 1.3, maxEnemiesPerWave: 100, baseSpawnInterval: 800, spawnIntervalReduction: 1.1, minSpawnInterval: 50, baseWaveDelay: 3000, waveDelayReduction: 100, minWaveDelay: 1000, ringBossInterval: 5 },
+                waveConfig: { baseEnemyCount: 5, enemyCountMultiplier: 1.3, maxEnemiesPerWave: 100, baseSpawnInterval: 800, spawnIntervalReduction: 1.1, minSpawnInterval: 50, baseWaveDelay: 800, waveDelayReduction: 30, minWaveDelay: 300, ringBossInterval: 5 },
                 enemyScaling: { healthScalingPerWave: 1.1, ringBossHealthMultiplier: 1.5, ringBossSpeedMultiplier: 1.2, ringBossSpiralMultiplier: 1.3 },
                 multipliers: { killMultiplierThresholds: [0, 10, 25, 50, 100, 200], killMultiplierValues: [1.0, 1.2, 1.3, 1.5, 1.7, 2.0], defenderDamageBonus: 5 },
-                enemySpawnChances: { laserGuyWave: 3, laserGuyChance: 0.15, fastWave: 3, fastChance: 0.2, heavyWave: 5, heavyChance: 0.05, jetpackWave: 7, jetpackChance: 0.05, bossWave: 10, bossChance: 0.05 },
+                enemySpawnChances: { laserGuyWave: 3, laserGuyChance: 0.15, fastWave: 3, fastChance: 0.2, heavyWave: 5, heavyChance: 0.05, jetpackWave: 7, jetpackChance: 0.05, bossWave: 10, bossChance: 0.05, warperWave: 4, warperChance: 0.08, spiralWave: 2, spiralChance: 0.12, splitterWave: 6, splitterChance: 0.06, phantomWave: 8, phantomChance: 0.07, bomberWave: 9, bomberChance: 0.05 },
                 moonsConfig: {
                     slotSystem: {
                         startingSlots: 3,
@@ -638,6 +816,7 @@
             waveActive: false,
             enemiesSpawned: 0,
             enemiesKilled: 0,
+            currentWaveSize: 0,
             totalEnemiesKilled: 0,
             totalDefendersPlaced: 0,
             waveStartTime: 0,
@@ -645,6 +824,7 @@
             gameStarted: false,
             gameRunning: false,
             gamePaused: false,
+            modMenuPausedGame: false,
             gameOver: false, // Add game over state
             killMultiplier: 1,
             defenderBonus: 1,
@@ -796,6 +976,9 @@
                 let closestDist = effectiveRange;
                 
                 for (const enemy of gameState.enemies) {
+                    // Skip invisible phantom enemies
+                    if (enemy.props.isPhantom && !enemy.isVisible) continue;
+                    
                     const dist = Math.sqrt((enemy.x - this.x) ** 2 + (enemy.y - this.y) ** 2);
                     if (dist < closestDist) {
                         closest = enemy;
@@ -807,6 +990,9 @@
             }
             
             fire(target) {
+                // Play laser sound effect based on defender type
+                playLaserSound(this.type, 0.12);
+                
                 // Apply defender bonus and upgrade bonus to damage
                 const upgradeMultiplier = gameConfig.gameplay ? gameConfig.gameplay.upgradeMultiplier : 1.02;
                 const upgradeBonus = Math.pow(upgradeMultiplier, gameState.defenderUpgrades[this.type]);
@@ -967,21 +1153,64 @@
                 this.type = type;
                 this.props = gameConfig.enemyTypes[type];
                 
-                // Apply health scaling: enemies get more health each wave
+                // Get difficulty multipliers
+                const diff = difficultySettings[currentDifficulty];
+                
+                // Apply health scaling: enemies get more health each wave + difficulty
                 const healthScaling = Math.pow(gameConfig.enemyScaling.healthScalingPerWave, gameState.wave - 1);
-                this.health = Math.floor(this.props.health * healthScaling);
+                this.health = Math.floor(this.props.health * healthScaling * diff.healthMult);
                 this.maxHealth = this.health;
                 
-                this.speed = this.props.speed;
-                this.reward = this.props.reward;
+                this.speed = this.props.speed * diff.speedMult;
+                this.reward = Math.floor(this.props.reward * diff.rewardMult);
                 this.slow = 1;
                 
                 // Laser guy properties
                 if (this.props.shootsLasers) {
                     this.lastFire = 0;
                     this.attackSpeed = this.props.attackSpeed || 1.0;
-                    this.laserDamage = this.props.laserDamage;
+                    this.laserDamage = Math.floor(this.props.laserDamage * diff.damageMult);
                     this.range = this.props.range;
+                }
+                
+                // Warper properties - teleports across Saturn
+                if (this.props.isWarper) {
+                    this.lastTeleport = Date.now();
+                    this.teleportInterval = this.props.teleportInterval || 3000;
+                    this.teleportDistance = this.props.teleportDistance || 150;
+                    this.teleportCharging = false;
+                    this.teleportChargeStart = 0;
+                }
+                
+                // Spiral properties - moves in swirvy pattern
+                if (this.props.isSpiral) {
+                    this.spiralPhase = Math.random() * Math.PI * 2;
+                    this.spiralAmplitude = this.props.spiralAmplitude || 80;
+                    this.spiralFrequency = this.props.spiralFrequency || 0.05;
+                    this.baseAngle = 0;
+                }
+                
+                // Splitter properties - splits into smaller enemies on death
+                if (this.props.isSplitter) {
+                    this.splitCount = this.props.splitCount || 3;
+                    this.isMini = false; // Full-size splitter
+                }
+                
+                // Phantom properties - phases in and out
+                if (this.props.isPhantom) {
+                    this.phaseInterval = this.props.phaseInterval || 2000;
+                    this.phaseDuration = this.props.phaseDuration || 1500;
+                    this.lastPhaseChange = Date.now();
+                    this.isVisible = true;
+                    this.phaseAlpha = 1;
+                }
+                
+                // Bomber properties - drops explosive mines
+                if (this.props.isBomber) {
+                    this.lastMineDrop = Date.now();
+                    this.mineInterval = this.props.mineInterval || 4000;
+                    this.mineDamage = Math.floor((this.props.mineDamage || 80) * diff.damageMult);
+                    this.mineRadius = this.props.mineRadius || 30;
                 }
                 
                 if (this.props.isRingBoss) {
@@ -1075,6 +1304,13 @@
                         // Phase 3: Exit screen
                         this.y -= this.speed * deltaTime / 16 * 2;
                         if (this.y < -100) {
+                            // Count as escaped/killed and give partial reward
+                            gameState.totalEnemiesKilled++;
+                            gameState.enemiesKilled++;
+                            const reward = Math.floor(this.reward * 0.25); // 25% reward for escaping
+                            gameState.money += reward;
+                            gameState.score += Math.floor(this.reward * 0.25);
+                            updateMultipliers();
                             return false; // Remove enemy
                         }
                     }
@@ -1084,6 +1320,162 @@
                         this.killDefendersInPath();
                         this.lastDefenderKill = Date.now();
                     }
+                    
+                } else if (this.props.isWarper) {
+                    // Warper - teleports across Saturn periodically
+                    const now = Date.now();
+                    
+                    // Check if charging for teleport
+                    if (!this.teleportCharging && now - this.lastTeleport > this.teleportInterval) {
+                        this.teleportCharging = true;
+                        this.teleportChargeStart = now;
+                    }
+                    
+                    // Execute teleport after short charge
+                    if (this.teleportCharging && now - this.teleportChargeStart > 500) {
+                        // Calculate teleport destination - across Saturn towards center
+                        const dx = saturn.x - this.x;
+                        const dy = saturn.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Teleport to the other side of Saturn, closer to center
+                        const teleportDist = Math.min(this.teleportDistance, dist * 0.7);
+                        this.x += (dx / dist) * teleportDist;
+                        this.y += (dy / dist) * teleportDist;
+                        
+                        // Create teleport particles
+                        createExplosion(this.x, this.y, this.props.color);
+                        
+                        this.lastTeleport = now;
+                        this.teleportCharging = false;
+                    }
+                    
+                    // Normal movement when not teleporting
+                    const dx = saturn.x - this.x;
+                    const dy = saturn.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < saturn.radius) {
+                        gameState.lives--;
+                        return false;
+                    }
+                    
+                    const moveSpeed = this.speed * this.slow * deltaTime / 16 * (this.teleportCharging ? 0.3 : 1);
+                    this.x += (dx / dist) * moveSpeed;
+                    this.y += (dy / dist) * moveSpeed;
+                    
+                    const slowRecovery = gameConfig.gameplay ? gameConfig.gameplay.slowEffectRecovery : 0.02;
+                    this.slow = Math.min(1, this.slow + slowRecovery);
+                    
+                } else if (this.props.isSpiral) {
+                    // Spiral/Serpent - moves in serpentine wave toward Saturn
+                    
+                    // Initialize on first update
+                    if (this.spiralTime === undefined) {
+                        this.spiralTime = 0;
+                        this.baseX = this.x;
+                        this.baseY = this.y;
+                        // Calculate fixed angle to Saturn from spawn
+                        this.toSaturnAngle = Math.atan2(saturn.y - this.y, saturn.x - this.x);
+                    }
+                    
+                    // Increment time
+                    this.spiralTime += deltaTime / 16;
+                    
+                    // Calculate how far base position has moved toward Saturn
+                    const distanceMoved = this.spiralTime * this.speed * this.slow;
+                    
+                    // Base position moves in straight line toward Saturn
+                    const baseX = this.baseX + Math.cos(this.toSaturnAngle) * distanceMoved;
+                    const baseY = this.baseY + Math.sin(this.toSaturnAngle) * distanceMoved;
+                    
+                    // Perpendicular angle for wave offset
+                    const perpAngle = this.toSaturnAngle + Math.PI / 2;
+                    
+                    // Calculate wave offset - oscillates side to side
+                    const waveOffset = Math.sin(this.spiralTime * this.spiralFrequency) * this.spiralAmplitude;
+                    
+                    // Final position = base position + perpendicular wave offset
+                    this.x = baseX + Math.cos(perpAngle) * waveOffset;
+                    this.y = baseY + Math.sin(perpAngle) * waveOffset;
+                    
+                    // Check distance to Saturn (use base position for cleaner collision)
+                    const dx = saturn.x - baseX;
+                    const dy = saturn.y - baseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Check if reached Saturn
+                    if (dist < saturn.radius + 20) {
+                        gameState.lives--;
+                        return false;
+                    }
+                    
+                    // Check if way past Saturn (failsafe)
+                    if (distanceMoved > 2000) {
+                        return false; // Remove if too far
+                    }
+                    
+                    const slowRecovery = gameConfig.gameplay ? gameConfig.gameplay.slowEffectRecovery : 0.02;
+                    this.slow = Math.min(1, this.slow + slowRecovery);
+                    
+                } else if (this.props.isPhantom) {
+                    // Phantom - phases in and out of visibility
+                    const now = Date.now();
+                    
+                    if (this.isVisible && now - this.lastPhaseChange > this.phaseInterval) {
+                        this.isVisible = false;
+                        this.lastPhaseChange = now;
+                    } else if (!this.isVisible && now - this.lastPhaseChange > this.phaseDuration) {
+                        this.isVisible = true;
+                        this.lastPhaseChange = now;
+                    }
+                    
+                    // Smooth alpha transition
+                    const targetAlpha = this.isVisible ? 1 : 0.15;
+                    this.phaseAlpha += (targetAlpha - this.phaseAlpha) * 0.1;
+                    
+                    // Normal movement
+                    const dx = saturn.x - this.x;
+                    const dy = saturn.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < saturn.radius) {
+                        gameState.lives--;
+                        return false;
+                    }
+                    
+                    const moveSpeed = this.speed * this.slow * deltaTime / 16;
+                    this.x += (dx / dist) * moveSpeed;
+                    this.y += (dy / dist) * moveSpeed;
+                    
+                    const slowRecovery = gameConfig.gameplay ? gameConfig.gameplay.slowEffectRecovery : 0.02;
+                    this.slow = Math.min(1, this.slow + slowRecovery);
+                    
+                } else if (this.props.isBomber) {
+                    // Bomber - drops explosive mines
+                    const now = Date.now();
+                    
+                    if (now - this.lastMineDrop > this.mineInterval) {
+                        this.dropMine();
+                        this.lastMineDrop = now;
+                    }
+                    
+                    // Normal movement
+                    const dx = saturn.x - this.x;
+                    const dy = saturn.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < saturn.radius) {
+                        gameState.lives--;
+                        return false;
+                    }
+                    
+                    const moveSpeed = this.speed * this.slow * deltaTime / 16;
+                    this.x += (dx / dist) * moveSpeed;
+                    this.y += (dy / dist) * moveSpeed;
+                    
+                    const slowRecovery = gameConfig.gameplay ? gameConfig.gameplay.slowEffectRecovery : 0.02;
+                    this.slow = Math.min(1, this.slow + slowRecovery);
                     
                 } else {
                     // Normal enemy behavior - check for moon targets
@@ -1244,6 +1636,24 @@
                 }
             }
             
+            dropMine() {
+                // Create a mine projectile that targets nearby defenders
+                const mine = {
+                    x: this.x,
+                    y: this.y,
+                    damage: this.mineDamage,
+                    radius: this.mineRadius,
+                    color: '#884400',
+                    life: 3000, // Mine lasts 3 seconds
+                    maxLife: 3000,
+                    isMine: true,
+                    armed: false,
+                    armTime: 500 // Time to arm
+                };
+                
+                gameState.enemyProjectiles.push(mine);
+            }
+            
             checkRingDestruction() {
                 // Check if ring boss touches any rings
                 for (let i = 0; i < gameState.unlockedRings; i++) {
@@ -1384,6 +1794,166 @@
                     ctx.moveTo(0, 0);
                     ctx.lineTo(0, -20);
                     ctx.stroke();
+                } else if (this.props.isWarper) {
+                    // Warper - Purple enemy with teleport effect
+                    const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#dd88ff');
+                    gradient.addColorStop(0.5, '#aa00ff');
+                    gradient.addColorStop(1, '#6600aa');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Teleport charging effect
+                    if (this.teleportCharging) {
+                        const chargeProgress = (Date.now() - this.teleportChargeStart) / 500;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size * 1.5 * chargeProgress, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Inner portal effect
+                        ctx.fillStyle = `rgba(170, 0, 255, ${0.5 * chargeProgress})`;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size * 0.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // Draw portal symbol
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1;
+                    const rotation = Date.now() * 0.003;
+                    for (let i = 0; i < 3; i++) {
+                        const angle = rotation + (i / 3) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.props.size * 0.6, angle, angle + Math.PI / 2);
+                        ctx.stroke();
+                    }
+                    
+                } else if (this.props.isSpiral) {
+                    // Spiral - Teal enemy with swirl pattern
+                    const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#88ffdd');
+                    gradient.addColorStop(0.5, '#00ffaa');
+                    gradient.addColorStop(1, '#00aa77');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw spiral pattern
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    const spiralRotation = this.spiralPhase;
+                    for (let t = 0; t < Math.PI * 2; t += 0.2) {
+                        const r = t * this.props.size / (Math.PI * 2);
+                        const x = Math.cos(t + spiralRotation) * r;
+                        const y = Math.sin(t + spiralRotation) * r;
+                        if (t === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    
+                } else if (this.props.isSplitter) {
+                    // Splitter - Orange enemy with segmented look
+                    const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#ffcc88');
+                    gradient.addColorStop(0.5, '#ff8800');
+                    gradient.addColorStop(1, '#aa5500');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw segment lines
+                    ctx.strokeStyle = '#553300';
+                    ctx.lineWidth = 2;
+                    for (let i = 0; i < this.splitCount; i++) {
+                        const angle = (i / this.splitCount) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(Math.cos(angle) * this.props.size, Math.sin(angle) * this.props.size);
+                        ctx.stroke();
+                    }
+                    
+                    // Draw mini circles to show it will split
+                    ctx.fillStyle = '#ffaa44';
+                    for (let i = 0; i < this.splitCount; i++) {
+                        const angle = (i / this.splitCount) * Math.PI * 2 + Math.PI / this.splitCount;
+                        ctx.beginPath();
+                        ctx.arc(Math.cos(angle) * this.props.size * 0.5, Math.sin(angle) * this.props.size * 0.5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                } else if (this.props.isPhantom) {
+                    // Phantom - Blue-white ghost with phase effect
+                    ctx.globalAlpha = this.phaseAlpha;
+                    
+                    const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#ddddff');
+                    gradient.addColorStop(0.5, '#8888ff');
+                    gradient.addColorStop(1, '#4444aa');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Ghost-like wavy bottom
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.moveTo(-this.props.size, 0);
+                    for (let i = 0; i <= 4; i++) {
+                        const x = -this.props.size + (i / 4) * this.props.size * 2;
+                        const y = this.props.size * 0.5 + Math.sin(Date.now() * 0.01 + i) * 3;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(this.props.size, 0);
+                    ctx.fill();
+                    
+                    // Spooky eyes
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(-this.props.size * 0.3, -this.props.size * 0.1, this.props.size * 0.25, 0, Math.PI * 2);
+                    ctx.arc(this.props.size * 0.3, -this.props.size * 0.1, this.props.size * 0.25, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.globalAlpha = 1;
+                    
+                } else if (this.props.isBomber) {
+                    // Bomber - Brown/dark orange with bomb symbol
+                    const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, this.props.size);
+                    gradient.addColorStop(0, '#aa7744');
+                    gradient.addColorStop(0.5, '#884400');
+                    gradient.addColorStop(1, '#552200');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.props.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw bomb symbol
+                    ctx.fillStyle = '#222222';
+                    ctx.beginPath();
+                    ctx.arc(0, this.props.size * 0.1, this.props.size * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Fuse
+                    ctx.strokeStyle = '#888888';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.props.size * 0.4);
+                    ctx.lineTo(0, -this.props.size * 0.7);
+                    ctx.stroke();
+                    
+                    // Spark on fuse
+                    const sparkSize = Math.sin(Date.now() * 0.02) * 2 + 3;
+                    ctx.fillStyle = '#ffaa00';
+                    ctx.beginPath();
+                    ctx.arc(0, -this.props.size * 0.7, sparkSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    
                 } else {
                     // Draw normal enemies with enhanced visuals
                     // Identify enemy type by color
@@ -1889,6 +2459,9 @@
         function fireGun(targetX, targetY) {
             if (!gameState.gunActive || gameState.gunCooldown > 0 || gameState.money < gameConfig.gunConfig.cost) return;
             
+            // Play powerful cannon sound
+            playLaserSound('cannon', 0.25);
+            
             // Deduct cost
             gameState.money -= gameConfig.gunConfig.cost;
             gameState.gunCooldown = gameConfig.gunConfig.cooldown;
@@ -1959,6 +2532,9 @@
                     const enemy = gameState.enemies[j];
                     if (!enemy || !enemy.props) continue; // Safety check
                     
+                    // Skip invisible phantom enemies
+                    if (enemy.props.isPhantom && !enemy.isVisible) continue;
+                    
                     const dist = Math.sqrt((enemy.x - proj.x) ** 2 + (enemy.y - proj.y) ** 2);
                     
                     if (dist < enemy.props.size + (proj.isLaser ? proj.width : 5)) {
@@ -1981,6 +2557,12 @@
                             gameState.money += reward;
                             gameState.score += reward * 10;
                             gameState.enemiesKilled++;
+                            
+                            // Handle splitter - spawn mini enemies
+                            if (enemy.props.isSplitter && !enemy.isMini) {
+                                spawnMiniSplitters(enemy.x, enemy.y, enemy.splitCount);
+                            }
+                            
                             gameState.enemies.splice(j, 1);
                             
                             // Create explosion particles
@@ -2060,6 +2642,93 @@
             for (let i = gameState.enemyProjectiles.length - 1; i >= 0; i--) {
                 const proj = gameState.enemyProjectiles[i];
                 
+                // Handle mines differently
+                if (proj.isMine) {
+                    proj.life -= deltaTime;
+                    
+                    // Arm the mine after armTime
+                    if (!proj.armed && proj.maxLife - proj.life > proj.armTime) {
+                        proj.armed = true;
+                    }
+                    
+                    // Check for defender and moon proximity if armed
+                    if (proj.armed) {
+                        let mineExploded = false;
+                        
+                        // Check defenders
+                        for (let j = gameState.defenders.length - 1; j >= 0; j--) {
+                            const defender = gameState.defenders[j];
+                            const dist = Math.sqrt((defender.x - proj.x) ** 2 + (defender.y - proj.y) ** 2);
+                            
+                            if (dist < proj.radius) {
+                                // Mine explodes!
+                                defender.health -= proj.damage;
+                                
+                                if (defender.health <= 0) {
+                                    const refund = Math.floor(gameConfig.defenseTypes[defender.type].cost * 0.5);
+                                    gameState.money += refund;
+                                    gameState.totalDefendersPlaced--;
+                                    gameState.defenders.splice(j, 1);
+                                    updateMultipliers();
+                                    console.log('Defender destroyed by mine! Refunded $' + refund);
+                                }
+                                
+                                createExplosion(proj.x, proj.y, '#ff6600');
+                                mineExploded = true;
+                                break;
+                            }
+                        }
+                        
+                        // Check moons if mine hasn't exploded yet
+                        if (!mineExploded) {
+                            for (let m = gameState.activeMoons.length - 1; m >= 0; m--) {
+                                const moon = gameState.activeMoons[m];
+                                const dist = Math.sqrt((moon.x - proj.x) ** 2 + (moon.y - proj.y) ** 2);
+                                
+                                if (dist < proj.radius + moon.size) {
+                                    // Mine damages moon!
+                                    if (moon.takeDamage(proj.damage)) {
+                                        // Moon destroyed
+                                        const moonType = moon.type;
+                                        
+                                        if (gameConfig.moonsConfig.destructionPenalty.resetLevelsOnDestroy) {
+                                            gameState.moonUpgrades[moonType] = 0;
+                                            console.log(`Moon ${moonType} destroyed by mine! Upgrade level reset.`);
+                                        }
+                                        
+                                        gameState.activeMoons.splice(m, 1);
+                                        const equippedIndex = gameState.equippedMoons.indexOf(moonType);
+                                        if (equippedIndex > -1) {
+                                            gameState.equippedMoons.splice(equippedIndex, 1);
+                                        }
+                                        
+                                        if (gameState.moonsMenuOpen) {
+                                            refreshMoonsMenu();
+                                        }
+                                    } else {
+                                        console.log(`Moon ${moon.type} damaged by mine! Health: ${moon.health}/${moon.maxHealth}`);
+                                    }
+                                    
+                                    createExplosion(proj.x, proj.y, '#ff6600');
+                                    mineExploded = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (mineExploded) {
+                            gameState.enemyProjectiles.splice(i, 1);
+                            continue;
+                        }
+                    }
+                    
+                    // Remove expired mines
+                    if (proj.life <= 0) {
+                        gameState.enemyProjectiles.splice(i, 1);
+                    }
+                    continue;
+                }
+                
                 proj.x += proj.vx * deltaTime / 16;
                 proj.y += proj.vy * deltaTime / 16;
                 proj.life -= deltaTime;
@@ -2111,6 +2780,40 @@
                     maxLife: 30
                 });
             }
+        }
+        
+        function spawnMiniSplitters(x, y, count) {
+            // Spawn mini splitter enemies with decent health
+            // Health scales with wave for difficulty
+            const baseHealth = 60 + (gameState.wave * 10);
+            
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                const offsetX = Math.cos(angle) * 25;
+                const offsetY = Math.sin(angle) * 25;
+                
+                // Create mini enemy with moderate stats
+                const mini = new Enemy('basic'); // Base on basic enemy
+                mini.x = x + offsetX;
+                mini.y = y + offsetY;
+                mini.health = baseHealth;
+                mini.maxHealth = baseHealth;
+                mini.speed = 1.8;
+                mini.reward = 8;
+                mini.isMini = true;
+                mini.props = {
+                    ...gameConfig.enemyTypes.basic,
+                    size: 6,
+                    color: '#ffcc66',
+                    health: baseHealth,
+                    speed: 1.8,
+                    reward: 8
+                };
+                
+                gameState.enemies.push(mini);
+            }
+            
+            console.log('Spawned', count, 'mini splitters with', baseHealth, 'HP each!');
         }
         
         function createHealEffect(x, y, color) {
@@ -2214,9 +2917,42 @@
         
         function drawEnemyProjectiles() {
             for (const proj of gameState.enemyProjectiles) {
-                // Draw enemy laser with glow effect
                 ctx.save();
                 
+                // Draw mines differently
+                if (proj.isMine) {
+                    // Mine body
+                    const pulse = Math.sin(Date.now() * 0.01) * 0.2 + 0.8;
+                    ctx.fillStyle = proj.armed ? '#ff4400' : '#884400';
+                    ctx.beginPath();
+                    ctx.arc(proj.x, proj.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Mine spikes
+                    ctx.fillStyle = proj.armed ? '#ffaa00' : '#664400';
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(proj.x + Math.cos(angle) * 5, proj.y + Math.sin(angle) * 5);
+                        ctx.lineTo(proj.x + Math.cos(angle) * 12, proj.y + Math.sin(angle) * 12);
+                        ctx.lineTo(proj.x + Math.cos(angle + 0.3) * 5, proj.y + Math.sin(angle + 0.3) * 5);
+                        ctx.fill();
+                    }
+                    
+                    // Warning glow when armed
+                    if (proj.armed) {
+                        ctx.strokeStyle = `rgba(255, 68, 0, ${pulse})`;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.restore();
+                    continue;
+                }
+                
+                // Draw enemy laser with glow effect
                 // Outer glow
                 ctx.shadowBlur = 15;
                 ctx.shadowColor = proj.color;
@@ -2255,7 +2991,17 @@
         }
         
         function spawnWave() {
-            if (gameState.waveActive || !gameState.gameRunning) return;
+            // If game not running, don't spawn
+            if (!gameState.gameRunning) return;
+            
+            // If paused, wait and retry
+            if (gameState.gamePaused) {
+                setTimeout(() => spawnWave(), 100);
+                return;
+            }
+            
+            // If wave already active, don't start another
+            if (gameState.waveActive) return;
             
             console.log('Spawning wave', gameState.wave);
             gameState.waveActive = true;
@@ -2265,24 +3011,55 @@
             
             // Exponentially increasing enemy count
             const waveSize = Math.min(Math.floor(gameConfig.waveConfig.baseEnemyCount * Math.pow(gameConfig.waveConfig.enemyCountMultiplier, gameState.wave)), gameConfig.waveConfig.maxEnemiesPerWave);
+            // Store wave size for completion check
+            gameState.currentWaveSize = waveSize;
             // Exponentially faster spawning
             const spawnInterval = Math.max(gameConfig.waveConfig.minSpawnInterval, Math.floor(gameConfig.waveConfig.baseSpawnInterval / Math.pow(gameConfig.waveConfig.spawnIntervalReduction, gameState.wave)));
             
             console.log('Wave size:', waveSize, 'Spawn interval:', spawnInterval);
             
             function spawnEnemy() {
-                if (gameState.enemiesSpawned >= waveSize || !gameState.gameRunning) return;
+                // If game is not running, stop spawning
+                if (!gameState.gameRunning) return;
+                
+                // If paused, wait and try again
+                if (gameState.gamePaused) {
+                    setTimeout(spawnEnemy, 100);
+                    return;
+                }
+                
+                // If all enemies spawned, stop
+                if (gameState.enemiesSpawned >= waveSize) return;
                 
                 let enemyType = 'basic';
                 const rand = Math.random();
                 
                 // Enemy spawn chances based on config
                 const sc = gameConfig.enemySpawnChances;
-                if (gameState.wave >= sc.laserGuyWave && rand < sc.laserGuyChance) enemyType = 'laserGuy';
-                else if (gameState.wave >= sc.fastWave && rand < sc.fastChance + sc.laserGuyChance) enemyType = 'fast';
-                else if (gameState.wave >= sc.heavyWave && rand < sc.fastChance + sc.laserGuyChance + sc.heavyChance) enemyType = 'heavy';
-                else if (gameState.wave >= sc.jetpackWave && rand < sc.fastChance + sc.laserGuyChance + sc.heavyChance + sc.jetpackChance) enemyType = 'jetpack';
-                else if (gameState.wave >= sc.bossWave && rand < sc.fastChance + sc.laserGuyChance + sc.heavyChance + sc.jetpackChance + sc.bossChance) enemyType = 'boss';
+                let cumulative = 0;
+                
+                // Check each enemy type in order
+                if (gameState.wave >= sc.spiralWave && rand < (cumulative += sc.spiralChance)) {
+                    enemyType = 'spiral';
+                } else if (gameState.wave >= sc.laserGuyWave && rand < (cumulative += sc.laserGuyChance)) {
+                    enemyType = 'laserGuy';
+                } else if (gameState.wave >= sc.warperWave && rand < (cumulative += sc.warperChance)) {
+                    enemyType = 'warper';
+                } else if (gameState.wave >= sc.fastWave && rand < (cumulative += sc.fastChance)) {
+                    enemyType = 'fast';
+                } else if (gameState.wave >= sc.phantomWave && rand < (cumulative += sc.phantomChance)) {
+                    enemyType = 'phantom';
+                } else if (gameState.wave >= sc.splitterWave && rand < (cumulative += sc.splitterChance)) {
+                    enemyType = 'splitter';
+                } else if (gameState.wave >= sc.heavyWave && rand < (cumulative += sc.heavyChance)) {
+                    enemyType = 'heavy';
+                } else if (gameState.wave >= sc.bomberWave && rand < (cumulative += sc.bomberChance)) {
+                    enemyType = 'bomber';
+                } else if (gameState.wave >= sc.jetpackWave && rand < (cumulative += sc.jetpackChance)) {
+                    enemyType = 'jetpack';
+                } else if (gameState.wave >= sc.bossWave && rand < (cumulative += sc.bossChance)) {
+                    enemyType = 'boss';
+                }
                 
                 const enemy = new Enemy(enemyType);
                 gameState.enemies.push(enemy);
@@ -2313,8 +3090,86 @@
             }
         }
         
+        // Check if enemies collide with defenders - destroys both on impact
+        function checkEnemyDefenderCollisions() {
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                const enemy = gameState.enemies[i];
+                if (!enemy) continue;
+                
+                // Skip phantom enemies when phased (they pass through)
+                if (enemy.props.isPhantom && !enemy.isVisible) continue;
+                
+                for (let j = gameState.defenders.length - 1; j >= 0; j--) {
+                    const defender = gameState.defenders[j];
+                    if (!defender) continue;
+                    
+                    // Calculate distance between enemy and defender
+                    const dx = enemy.x - defender.x;
+                    const dy = enemy.y - defender.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Collision threshold - enemy size + defender size
+                    const collisionDist = enemy.props.size + defender.props.size;
+                    
+                    if (dist < collisionDist) {
+                        // Create explosion effect at collision point
+                        for (let k = 0; k < 10; k++) {
+                            gameState.particles.push({
+                                x: (enemy.x + defender.x) / 2,
+                                y: (enemy.y + defender.y) / 2,
+                                vx: (Math.random() - 0.5) * 8,
+                                vy: (Math.random() - 0.5) * 8,
+                                life: 30,
+                                maxLife: 30,
+                                color: defender.props.color,
+                                size: 3
+                            });
+                        }
+                        
+                        // Destroy the defender
+                        gameState.defenders.splice(j, 1);
+                        gameState.totalDefendersPlaced--;
+                        updateMultipliers();
+                        
+                        // Destroy the enemy
+                        gameState.enemies.splice(i, 1);
+                        gameState.totalEnemiesKilled++;
+                        gameState.enemiesKilled++;
+                        
+                        // Give partial reward for collision kill
+                        const reward = Math.floor(enemy.reward * gameState.killMultiplier * 0.5);
+                        gameState.money += reward;
+                        gameState.score += Math.floor(enemy.reward * 0.5);
+                        
+                        break; // Enemy is destroyed, move to next enemy
+                    }
+                }
+            }
+        }
+        
         function checkWaveComplete() {
-            if (gameState.waveActive && gameState.enemies.length === 0 && gameState.enemiesSpawned > 0) {
+            // Clean up any stuck enemies (off-screen or invalid)
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                const enemy = gameState.enemies[i];
+                if (!enemy || !enemy.props) {
+                    gameState.enemies.splice(i, 1);
+                    continue;
+                }
+                // Remove enemies that are way off screen
+                if (enemy.x < -300 || enemy.x > canvas.width + 300 || 
+                    enemy.y < -300 || enemy.y > canvas.height + 300) {
+                    gameState.enemies.splice(i, 1);
+                    console.log('Removed off-screen enemy at', enemy.x, enemy.y);
+                }
+            }
+            
+            // Check if all spawns complete and no enemies remain
+            const allSpawned = gameState.enemiesSpawned >= gameState.currentWaveSize;
+            const noEnemiesLeft = gameState.enemies.length === 0;
+            
+            // Only complete wave when ALL enemies have been spawned AND killed
+            if (gameState.waveActive && noEnemiesLeft && allSpawned && gameState.enemiesSpawned > 0) {
+                
                 gameState.waveActive = false;
                 gameState.wave++;
                 gameState.money += gameConfig.economy.waveCompletionBonus;
@@ -2343,7 +3198,10 @@
         }
         
         function gameLoop(timestamp) {
-            if (gameState.gamePaused || gameState.moonsMenuOpen) {
+            // Check if mod menu is open
+            const modMenuOpen = document.getElementById('modMenuOverlay').style.display === 'block';
+            
+            if (gameState.gamePaused || gameState.moonsMenuOpen || modMenuOpen) {
                 // When paused or moons menu open, only draw the current state without updating
                 // Update lastUpdate to current time to prevent deltaTime spike when unpausing
                 gameState.lastUpdate = timestamp;
@@ -2434,6 +3292,9 @@
                     gameState.enemies.splice(i, 1);
                 }
             }
+            
+            // Check enemy-defender collisions (enemies hitting defenders destroys both)
+            checkEnemyDefenderCollisions();
             
             for (const enemy of gameState.enemies) {
                 enemy.draw();
@@ -2828,8 +3689,41 @@
             console.log('Delete mode:', gameState.deleteMode ? 'ON' : 'OFF');
         });
         
+        // Background music control
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.volume = 0.3; // Set initial volume to 30%
+        let musicMuted = false;
+        
+        function startMusic() {
+            bgMusic.play().catch(e => {
+                // Autoplay was prevented, will start on next user interaction
+                console.log('Music autoplay prevented, will start on interaction');
+            });
+        }
+        
+        function toggleMusic() {
+            musicMuted = !musicMuted;
+            bgMusic.muted = musicMuted;
+            const muteBtn = document.getElementById('muteMusicButton');
+            if (muteBtn) {
+                muteBtn.textContent = musicMuted ? '🎵 OFF' : '🎵 MUSIC';
+                muteBtn.style.background = musicMuted ? '#662222' : '#226622';
+            }
+        }
+        
+        function toggleSfx() {
+            soundEnabled = !soundEnabled;
+            const sfxBtn = document.getElementById('muteSfxButton');
+            if (sfxBtn) {
+                sfxBtn.textContent = soundEnabled ? '🔊 SFX' : '🔇 OFF';
+                sfxBtn.style.background = soundEnabled ? '#226622' : '#662222';
+            }
+        }
+        
         // Start button
         document.getElementById('startButton').addEventListener('click', () => {
+            initAudio(); // Initialize sound effects
+            startMusic(); // Start music when game starts
             if (!gameState.gameStarted || gameState.gameOver) {
                 // Reset game state for new game
                 gameState = {
@@ -2850,6 +3744,7 @@
                     waveActive: false,
                     enemiesSpawned: 0,
                     enemiesKilled: 0,
+                    currentWaveSize: 0,
                     totalEnemiesKilled: 0,
                     totalDefendersPlaced: 0,
                     waveStartTime: 0,
@@ -2857,6 +3752,7 @@
                     gameStarted: true,
                     gameRunning: true,
                     gamePaused: false,
+                    modMenuPausedGame: false,
                     gameOver: false, // Reset game over state
                     killMultiplier: 1,
                     defenderBonus: 1,
@@ -2962,6 +3858,7 @@
                 waveActive: false,
                 enemiesSpawned: 0,
                 enemiesKilled: 0,
+                currentWaveSize: 0,
                 totalEnemiesKilled: 0,
                 totalDefendersPlaced: 0,
                 waveStartTime: 0,
@@ -2969,6 +3866,7 @@
                 gameStarted: true,
                 gameRunning: true,
                 gamePaused: false,
+                modMenuPausedGame: false,
                 gameOver: false, // Reset game over state
                 killMultiplier: 1,
                 defenderBonus: 1,
@@ -3041,11 +3939,17 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === ' ' || e.key === 'Escape') {
                 e.preventDefault();
+                
+                // Don't toggle pause if mod menu or password prompt is open
+                const modMenuOpen = document.getElementById('modMenuOverlay').style.display === 'block';
+                const passwordPromptOpen = document.getElementById('passwordPrompt').style.display === 'block';
+                if (modMenuOpen || passwordPromptOpen) return;
+                
                 if (gameState.gameRunning && !gameState.gamePaused) {
                     gameState.gamePaused = true;
                     gameState.pauseStartTime = performance.now();
                     document.getElementById('pauseMenu').style.display = 'block';
-                } else if (gameState.gamePaused) {
+                } else if (gameState.gamePaused && !gameState.modMenuPausedGame) {
                     gameState.gamePaused = false;
                     // Adjust lastUpdate to account for pause time
                     const pauseDuration = performance.now() - gameState.pauseStartTime;
@@ -3103,12 +4007,22 @@
         
         let currentModTab = 'defenders';
         
+        // Mute button clicks
+        document.getElementById('muteMusicButton').addEventListener('click', toggleMusic);
+        document.getElementById('muteSfxButton').addEventListener('click', toggleSfx);
+        
         // Mod menu button click
         document.getElementById('modMenuButton').addEventListener('click', () => {
             document.getElementById('passwordPrompt').style.display = 'block';
             document.getElementById('modPasswordInput').value = '';
             document.getElementById('passwordError').style.display = 'none';
             document.getElementById('modPasswordInput').focus();
+            // Pause game when password prompt is shown
+            if (!gameState.gamePaused) {
+                gameState.modMenuPausedGame = true;
+                gameState.gamePaused = true;
+                gameState.pauseStartTime = performance.now();
+            }
         });
         
         // Password submit
@@ -3130,12 +4044,25 @@
         // Password cancel
         document.getElementById('passwordCancelButton').addEventListener('click', () => {
             document.getElementById('passwordPrompt').style.display = 'none';
+            // Unpause game if we paused it for password prompt
+            if (gameState.modMenuPausedGame) {
+                gameState.gamePaused = false;
+                gameState.modMenuPausedGame = false;
+                const pauseDuration = performance.now() - gameState.pauseStartTime;
+                gameState.lastUpdate += pauseDuration;
+            }
         });
         
         // Open mod menu
         function openModMenu() {
             document.getElementById('modMenuOverlay').style.display = 'block';
             loadModTab('defenders');
+            // Pause game when mod menu is open
+            if (!gameState.gamePaused) {
+                gameState.modMenuPausedGame = true;
+                gameState.gamePaused = true;
+                gameState.pauseStartTime = performance.now();
+            }
         }
         
         // Tab switching
@@ -3204,7 +4131,7 @@
         
         // Render enemies tab
         function renderEnemiesTab(container) {
-            const types = ['basic', 'fast', 'heavy', 'jetpack', 'boss', 'laserGuy', 'ringBoss'];
+            const types = ['basic', 'fast', 'heavy', 'jetpack', 'boss', 'laserGuy', 'ringBoss', 'warper', 'spiral', 'splitter', 'phantom', 'bomber'];
             types.forEach(type => {
                 const section = document.createElement('div');
                 section.style.marginBottom = '30px';
@@ -3520,7 +4447,18 @@
                 costPerLevel: { min: 0, max: 100, step: 5 },
                 healAmount: { min: 10, max: 500, step: 10 },
                 healPercentage: { min: 0, max: 1, step: 0.05 },
-                buffValue: { min: 0, max: 1, step: 0.05 }
+                buffValue: { min: 0, max: 1, step: 0.05 },
+                // New enemy properties
+                teleportInterval: { min: 500, max: 10000, step: 100 },
+                teleportDistance: { min: 50, max: 400, step: 10 },
+                spiralAmplitude: { min: 10, max: 200, step: 5 },
+                spiralFrequency: { min: 0.01, max: 0.2, step: 0.01 },
+                splitCount: { min: 2, max: 8, step: 1 },
+                phaseInterval: { min: 500, max: 5000, step: 100 },
+                phaseDuration: { min: 500, max: 5000, step: 100 },
+                mineInterval: { min: 1000, max: 10000, step: 250 },
+                mineDamage: { min: 10, max: 200, step: 5 },
+                mineRadius: { min: 10, max: 100, step: 5 }
             };
             
             // Default for Wave and Chance values
@@ -3587,6 +4525,13 @@
         // Close mod menu
         document.getElementById('modCloseButton').addEventListener('click', () => {
             document.getElementById('modMenuOverlay').style.display = 'none';
+            // Unpause game if mod menu paused it
+            if (gameState.modMenuPausedGame) {
+                gameState.gamePaused = false;
+                gameState.modMenuPausedGame = false;
+                const pauseDuration = performance.now() - gameState.pauseStartTime;
+                gameState.lastUpdate += pauseDuration;
+            }
         });
         
         // Show message
@@ -3603,6 +4548,401 @@
         
         // ============ END MOD MENU SYSTEM ============
         
+        // ============ DIFFICULTY & LOGBOOK SYSTEM ============
+        
+        // Initialize difficulty UI on load
+        function initDifficultyUI() {
+            updateDifficultyUI();
+        }
+        
+        // Update difficulty button states
+        function updateDifficultyUI() {
+            document.querySelectorAll('.difficultyBtn').forEach(btn => {
+                const diff = btn.dataset.difficulty;
+                const settings = difficultySettings[diff];
+                
+                if (diff === currentDifficulty) {
+                    btn.style.background = settings.color.replace('88', '44').replace('ff', 'aa');
+                    btn.style.borderColor = settings.color;
+                    btn.style.boxShadow = `0 0 10px ${settings.color}`;
+                } else {
+                    btn.style.boxShadow = 'none';
+                    // Reset to default colors
+                    if (diff === 'easy') {
+                        btn.style.background = '#224422';
+                        btn.style.borderColor = '#446644';
+                    } else if (diff === 'normal') {
+                        btn.style.background = '#444422';
+                        btn.style.borderColor = '#666644';
+                    } else if (diff === 'hard') {
+                        btn.style.background = '#442222';
+                        btn.style.borderColor = '#664444';
+                    } else if (diff === 'nightmare') {
+                        btn.style.background = '#330033';
+                        btn.style.borderColor = '#550055';
+                    }
+                }
+            });
+            
+            // Update description
+            const desc = document.getElementById('difficultyDesc');
+            if (desc) {
+                desc.textContent = difficultySettings[currentDifficulty].desc;
+                desc.style.color = difficultySettings[currentDifficulty].color;
+            }
+        }
+        
+        // Difficulty button click handlers
+        document.querySelectorAll('.difficultyBtn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event from bubbling
+                currentDifficulty = btn.dataset.difficulty;
+                localStorage.setItem('saturnDefenderDifficulty', currentDifficulty);
+                updateDifficultyUI();
+                console.log('Difficulty set to:', currentDifficulty);
+            });
+        });
+        
+        // Logbook button handler
+        document.getElementById('logbookButton').addEventListener('click', () => {
+            openLogbook();
+        });
+        
+        // Close logbook handler
+        document.getElementById('logbookCloseButton').addEventListener('click', () => {
+            document.getElementById('logbookOverlay').style.display = 'none';
+        });
+        
+        // Open and populate logbook
+        function openLogbook() {
+            const content = document.getElementById('logbookContent');
+            content.innerHTML = '';
+            
+            // Create entry for each enemy
+            Object.keys(enemyLogbook).forEach(type => {
+                const enemy = enemyLogbook[type];
+                const baseStats = gameConfig.enemyTypes[type];
+                
+                const entry = document.createElement('div');
+                entry.style.cssText = 'background: #1a1a2e; border: 2px solid #333; border-radius: 10px; padding: 15px; border-left: 4px solid ' + enemy.color + ';';
+                
+                // Create canvas for enemy preview
+                const canvasId = 'enemyPreview_' + type;
+                
+                entry.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <canvas id="${canvasId}" width="60" height="60" style="margin-right: 12px; background: radial-gradient(circle, #001133 0%, #000011 100%); border-radius: 8px;"></canvas>
+                        <div>
+                            <div style="color: ${enemy.color}; font-size: 18px; font-weight: bold;">${enemy.name}</div>
+                            <div style="color: #666; font-size: 11px;">Type: ${type}</div>
+                        </div>
+                    </div>
+                    <div style="color: #ccc; font-size: 12px; margin-bottom: 10px; line-height: 1.4;">${enemy.description}</div>
+                    <div style="background: #222; padding: 8px; border-radius: 5px; margin-bottom: 10px;">
+                        <div style="color: #888; font-size: 10px; margin-bottom: 5px;">BASE STATS</div>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 11px;">
+                            <span style="color: #ff6666;">❤️ ${baseStats.health} HP</span>
+                            <span style="color: #66ff66;">⚡ ${baseStats.speed} SPD</span>
+                            <span style="color: #ffff66;">💰 $${baseStats.reward}</span>
+                            ${baseStats.laserDamage ? `<span style="color: #ff8844;">⚔️ ${baseStats.laserDamage} DMG</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="color: #88aaff; font-size: 11px; font-style: italic;">💡 ${enemy.tips}</div>
+                `;
+                
+                content.appendChild(entry);
+            });
+            
+            document.getElementById('logbookOverlay').style.display = 'block';
+            
+            // Draw enemies on canvases after DOM is updated
+            setTimeout(() => {
+                Object.keys(enemyLogbook).forEach(type => {
+                    drawEnemyPreview(type);
+                });
+            }, 50);
+        }
+        
+        // Draw enemy preview on canvas
+        function drawEnemyPreview(type) {
+            const canvas = document.getElementById('enemyPreview_' + type);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const props = gameConfig.enemyTypes[type];
+            const centerX = 30;
+            const centerY = 30;
+            const size = Math.min(props.size * 1.5, 20); // Scale for preview
+            
+            ctx.clearRect(0, 0, 60, 60);
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            if (type === 'ringBoss') {
+                // Ring boss with aura
+                const pulse = 0.85;
+                ctx.fillStyle = props.color;
+                ctx.globalAlpha = pulse;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, size + 3, 0, Math.PI * 2);
+                ctx.stroke();
+                
+            } else if (type === 'laserGuy') {
+                // Laser guy with glow
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = props.color;
+                ctx.fillStyle = props.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                // Eyes
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(-size * 0.3, -size * 0.2, size * 0.2, 0, Math.PI * 2);
+                ctx.arc(size * 0.3, -size * 0.2, size * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (type === 'jetpack') {
+                // Jetpack enemy
+                ctx.fillStyle = props.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#444444';
+                ctx.fillRect(-size * 0.8, -size * 0.3, size * 1.6, size * 0.6);
+                // Flames
+                ctx.fillStyle = '#ff6600';
+                ctx.beginPath();
+                ctx.moveTo(-size * 0.6, size * 0.3);
+                ctx.lineTo(-size * 0.8, size * 0.3 + 8);
+                ctx.lineTo(-size * 0.4, size * 0.3);
+                ctx.fill();
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.moveTo(size * 0.6, size * 0.3);
+                ctx.lineTo(size * 0.8, size * 0.3 + 8);
+                ctx.lineTo(size * 0.4, size * 0.3);
+                ctx.fill();
+                
+            } else if (type === 'warper') {
+                // Warper with portal effect
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#dd88ff');
+                gradient.addColorStop(0.5, '#aa00ff');
+                gradient.addColorStop(1, '#6600aa');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Portal rings
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 3; i++) {
+                    const angle = (i / 3) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, size * 0.6, angle, angle + Math.PI / 2);
+                    ctx.stroke();
+                }
+                
+            } else if (type === 'spiral') {
+                // Spiral/Serpent
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#88ffdd');
+                gradient.addColorStop(0.5, '#00ffaa');
+                gradient.addColorStop(1, '#00aa77');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Spiral pattern
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for (let t = 0; t < Math.PI * 2; t += 0.2) {
+                    const r = t * size / (Math.PI * 2);
+                    const x = Math.cos(t) * r;
+                    const y = Math.sin(t) * r;
+                    if (t === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                
+            } else if (type === 'splitter') {
+                // Splitter with segments
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#ffcc88');
+                gradient.addColorStop(0.5, '#ff8800');
+                gradient.addColorStop(1, '#aa5500');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Segment lines
+                ctx.strokeStyle = '#553300';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    const angle = (i / 3) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * size, Math.sin(angle) * size);
+                    ctx.stroke();
+                }
+                // Mini circles
+                ctx.fillStyle = '#ffaa44';
+                for (let i = 0; i < 3; i++) {
+                    const angle = (i / 3) * Math.PI * 2 + Math.PI / 3;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angle) * size * 0.5, Math.sin(angle) * size * 0.5, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+            } else if (type === 'phantom') {
+                // Phantom ghost
+                ctx.globalAlpha = 0.7;
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#ddddff');
+                gradient.addColorStop(0.5, '#8888ff');
+                gradient.addColorStop(1, '#4444aa');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Wavy bottom
+                ctx.beginPath();
+                ctx.moveTo(-size, 0);
+                for (let i = 0; i <= 4; i++) {
+                    const x = -size + (i / 4) * size * 2;
+                    const y = size * 0.5 + Math.sin(i * 1.5) * 3;
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(size, 0);
+                ctx.fill();
+                // Eyes
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-size * 0.3, -size * 0.1, size * 0.25, 0, Math.PI * 2);
+                ctx.arc(size * 0.3, -size * 0.1, size * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (type === 'bomber') {
+                // Bomber with bomb
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#aa7744');
+                gradient.addColorStop(0.5, '#884400');
+                gradient.addColorStop(1, '#552200');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Bomb symbol
+                ctx.fillStyle = '#222222';
+                ctx.beginPath();
+                ctx.arc(0, size * 0.1, size * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                // Fuse
+                ctx.strokeStyle = '#888888';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, -size * 0.4);
+                ctx.lineTo(0, -size * 0.7);
+                ctx.stroke();
+                // Spark
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.arc(0, -size * 0.7, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (type === 'basic') {
+                // Basic red enemy
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#ffaaaa');
+                gradient.addColorStop(0.6, '#ff6666');
+                gradient.addColorStop(1, '#cc3333');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (type === 'fast') {
+                // Fast green enemy
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#aaffaa');
+                gradient.addColorStop(0.6, '#66ff66');
+                gradient.addColorStop(1, '#33cc33');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (type === 'heavy') {
+                // Heavy blue enemy with armor
+                const gradient = ctx.createRadialGradient(-2, -2, 0, 0, 0, size);
+                gradient.addColorStop(0, '#aaaaff');
+                gradient.addColorStop(0.5, '#6666ff');
+                gradient.addColorStop(1, '#3333cc');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Armor plates
+                ctx.fillStyle = '#444488';
+                ctx.fillRect(-size * 0.6, -size * 0.8, size * 1.2, 2);
+                ctx.fillRect(-size * 0.6, 0, size * 1.2, 2);
+                ctx.fillRect(-size * 0.6, size * 0.8 - 2, size * 1.2, 2);
+                
+            } else if (type === 'boss') {
+                // Boss with crown spikes
+                const gradient = ctx.createRadialGradient(-3, -3, 0, 0, 0, size);
+                gradient.addColorStop(0, '#ffaaff');
+                gradient.addColorStop(0.5, '#ff66ff');
+                gradient.addColorStop(1, '#cc33cc');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+                // Crown spikes
+                ctx.fillStyle = '#cccccc';
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * size * 1.2, Math.sin(angle) * size * 1.2);
+                    ctx.lineTo(Math.cos(angle + Math.PI / 8) * size, Math.sin(angle + Math.PI / 8) * size);
+                    ctx.fill();
+                }
+                // White tips
+                ctx.fillStyle = '#ffffff';
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(angle) * size * 1.1, Math.sin(angle) * size * 1.1, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+            } else {
+                // Fallback
+                ctx.fillStyle = props.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        // Initialize difficulty UI on page load
+        initDifficultyUI();
+        
+        // ============ END DIFFICULTY & LOGBOOK SYSTEM ============
+        
         // ============ MOONS MENU SYSTEM ============
         
         // Open moons menu
@@ -3613,7 +4953,7 @@
         });
         
         // Close moons menu
-        document.getElementById('moonsMenuCloseButton').addEventListener('click', () => {
+        document.getElementById('moonsMenuCloseButtonTop').addEventListener('click', () => {
             gameState.moonsMenuOpen = false;
             document.getElementById('moonsMenuOverlay').style.display = 'none';
         });
