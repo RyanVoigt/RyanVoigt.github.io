@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a1a;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: monospace;
+        }
+        #gameContainer {
+            position: relative;
+        }
+        #gameCanvas {
+            display: block;
+        }
+        #pauseOverlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #pauseOverlay.active {
+            display: flex;
+        }
+        #pauseOverlay span {
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            letter-spacing: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="pauseOverlay"><span>PAUSED</span></div>
+    </div>
+
+    <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const CONFIG = {
+        canvas: { width: 1200, height: 800 },
+        vehicle: {
+            width: 44,
+            height: 24,
+            maxSpeed: 320,
+            acceleration: 220,
+            brakeForce: 380,
+            friction: 90,
+            turnSpeed: 3.2,
+            minTurnSpeed: 0.4,
+            reverseSpeedRatio: 0.4,
+        },
+        collision: {
+            bounceDecay: 0.55,
+            launchSpeed: 400,
+            wallBounceDecay: 0.45,
+            scoreCooldown: 300,
+        },
+        world: {
+            backgroundColor: '#2a2a2a',
+            gridColor: '#313131',
+            gridSpacing: 100,
+            laneMarkingColor: '#444444',
+            boundaryColor: '#555555',
+            boundaryWidth: 4,
+            padding: 10,
+        },
+        players: {
+            1: { color: '#4488ff', accent: '#6ab0ff', body: '#3366cc', name: 'P1 [WASD]' },
+            2: { color: '#ff4444', accent: '#ff7777', body: '#cc2222', name: 'P2 [Arrows]' },
+        },
+        boost: {
+            spawnInterval: 6000,    // ms between spawn attempts
+            duration: 5000,         // ms boost lasts
+            multiplier: 1.25,       // 25% speed increase
+            pickupRadius: 20,
+        },
+        oilSlick: {
+            respawnDelay: 15000,    // ms before new pickup spawns after use
+            effectDuration: 3000,   // ms the slippery effect lasts
+            radius: 25,             // pickup/trigger radius
+            frictionMult: 0.15,     // friction reduced to 15% of normal
+            turnMult: 0.35,         // turning reduced to 35% of normal
+            driftDecay: 0.992,      // velocity barely decays (ice-like sliding)
+        },
+    };
+
+    // ============================================================
+    // GAME STATE
+    // ============================================================
+    let gameState = {
+        phase: 'playing', // 'playing' | 'paused'
+        lastTimestamp: 0,
+        vehicles: [],
+        obstacles: [],        // future: { x, y, width, height, angle }
+        collisionEvents: [],  // populated each frame by CollisionSystem
+        score: { 1: 0, 2: 0 },
+        boostPickup: null,          // { x, y } or null if none on field
+        lastBoostSpawn: 0,          // timestamp of last spawn attempt
+        oilSlicks: [],              // { x, y, owner } dropped oil slicks on the field
+        oilPickups: {},             // { playerNum: { x, y } } collectible oil pickups per player
+    };
+
+    // ============================================================
+    // INPUT MANAGER
+    // ============================================================
+    class InputManager {
+        constructor() {
+            this.keys = {};
+            this.bindings = {
+                player1: {
+                    forward:  'KeyW',
+                    backward: 'KeyS',
+                    left:     'KeyA',
+                    right:    'KeyD',
+                    ability:  'KeyE',
+                },
+                player2: {
+                    forward:  'ArrowUp',
+                    backward: 'ArrowDown',
+                    left:     'ArrowLeft',
+                    right:    'ArrowRight',
+                    ability:  'Slash',
+                },
+            };
+
+            window.addEventListener('keydown', (e) => {
+                this.keys[e.code] = true;
+                // Prevent arrow keys from scrolling
+                if (e.code.startsWith('Arrow')) e.preventDefault();
+            });
+            window.addEventListener('keyup', (e) => {
+                this.keys[e.code] = false;
+            });
+        }
+
+        isPressed(player, action) {
+            const key = this.bindings[player]?.[action];
+            return key ? !!this.keys[key] : false;
+        }
+
+        getInput(playerNum) {
+            const p = 'player' + playerNum;
+            return {
+                forward:  this.isPressed(p, 'forward'),
+                backward: this.isPressed(p, 'backward'),
+                left:     this.isPressed(p, 'left'),
+                right:    this.isPressed(p, 'right'),
+                ability:  this.isPressed(p, 'ability'),
+            };
+        }
+    }
+
+    // ============================================================
+    // ENTITY (base class)
+    // ============================================================
+    class Entity {
+        constructor(x, y, width, height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            this.angle = 0;
+            this.active = true;
+        }
+
+        getCorners() {
+            const hw = this.width / 2;
+            const hh = this.height / 2;
+            const cos = Math.cos(this.angle);
+            const sin = Math.sin(this.angle);
+            const local = [
+                { x: -hw, y: -hh },
+                { x:  hw, y: -hh },
+                { x:  hw, y:  hh },
+                { x: -hw, y:  hh },
+            ];
+            return local.map(c => ({
+                x: this.x + c.x * cos - c.y * sin,
+                y: this.y + c.x * sin + c.y * cos,
+            }));
+        }
+
+        getAxes() {
+            const cos = Math.cos(this.angle);
+            const sin = Math.sin(this.angle);
+            return [
+                { x: cos, y: sin },
+                { x: -sin, y: cos },
+            ];
+        }
+    }
+
+    // ============================================================
+    // VEHICLE
+    // ============================================================
+    class Vehicle extends Entity {
+        constructor(x, y, playerNum) {
+            super(x, y, CONFIG.vehicle.width, CONFIG.vehicle.height);
+            this.playerNum = playerNum;
+            this.color = CONFIG.players[playerNum].color;
+            this.accent = CONFIG.players[playerNum].accent;
+            this.name = CONFIG.players[playerNum].name;
+            this.speed = 0;
+            this.velocityX = 0;
+            this.velocityY = 0;
+            this.lastScoreTime = 0;
+            this.boostEndTime = 0;
+            this.steerAngle = 0; // current front wheel visual angle
+            this.hasOilSlick = false;      // whether player has collected their pickup
+            this.oilEffectEnd = 0;        // when oil slick effect wears off
+            this.oilRespawnTime = 0;      // when their next pickup will appear
+            this.abilityWasPressed = false;
+            this.driftVX = 0;
+            this.driftVY = 0;
+        }
+
+        update(dt, input) {
+            const cfg = CONFIG.vehicle;
+            const s = dt / 1000; // seconds
+            const now = performance.now();
+            const onOil = now < this.oilEffectEnd;
+            const oilCfg = CONFIG.oilSlick;
+
+            // Oil slick ability — drop on press if collected (edge-detected)
+            if (input.ability && !this.abilityWasPressed && this.hasOilSlick) {
+                this.hasOilSlick = false;
+                this.oilRespawnTime = now + oilCfg.respawnDelay;
+                // Drop slick behind the car
+                const behindX = this.x - Math.cos(this.angle) * (this.width * 0.8);
+                const behindY = this.y - Math.sin(this.angle) * (this.height * 0.8);
+                gameState.oilSlicks.push({ x: behindX, y: behindY, owner: this.playerNum });
+            }
+            this.abilityWasPressed = !!input.ability;
+
+            // Acceleration / braking / friction
+            const frictionMult = onOil ? oilCfg.frictionMult : 1;
+
+            if (input.forward) {
+                this.speed += cfg.acceleration * s;
+            } else if (input.backward) {
+                if (this.speed > 10) {
+                    this.speed -= cfg.brakeForce * frictionMult * s;
+                } else {
+                    this.speed -= cfg.acceleration * 0.5 * s;
+                }
+            } else {
+                const friction = cfg.friction * frictionMult;
+                if (Math.abs(this.speed) < friction * s) {
+                    this.speed = 0;
+                } else {
+                    this.speed -= Math.sign(this.speed) * friction * s;
+                }
+            }
+
+            // Clamp speed (boost increases max)
+            const boosted = now < this.boostEndTime;
+            const maxFwd = cfg.maxSpeed * (boosted ? CONFIG.boost.multiplier : 1);
+            const maxReverse = -cfg.maxSpeed * cfg.reverseSpeedRatio;
+            this.speed = Math.max(maxReverse, Math.min(maxFwd, this.speed));
+
+            // Steering — scales with speed, flips in reverse
+            const speedRatio = Math.abs(this.speed) / cfg.maxSpeed;
+            let effectiveTurn = cfg.minTurnSpeed +
+                (cfg.turnSpeed - cfg.minTurnSpeed) * Math.min(speedRatio * 2, 1);
+            if (boosted) effectiveTurn *= 1.2; // 20% sharper turning while boosted
+            if (onOil) effectiveTurn *= oilCfg.turnMult; // sluggish turning on oil
+            const turnDir = Math.sign(this.speed) || 1;
+
+            // Track visual steer angle for front wheels
+            const maxSteer = 0.45; // radians (~25 degrees max wheel turn)
+            if (input.left) {
+                this.angle -= effectiveTurn * s * turnDir;
+                this.steerAngle = -maxSteer;
+            } else if (input.right) {
+                this.angle += effectiveTurn * s * turnDir;
+                this.steerAngle = maxSteer;
+            } else {
+                this.steerAngle *= 0.8; // ease back to center
+            }
+
+            // Apply movement
+            if (onOil) {
+                // On oil: car drifts — velocity doesn't fully follow facing angle
+                // Add thrust in facing direction but existing drift persists
+                const thrustX = Math.cos(this.angle) * this.speed;
+                const thrustY = Math.sin(this.angle) * this.speed;
+                // Blend: mostly keep old drift, slowly pull toward intended direction
+                const grip = 0.03; // how fast drift aligns to facing (very low = very slippery)
+                this.driftVX = this.driftVX * oilCfg.driftDecay + (thrustX - this.driftVX) * grip;
+                this.driftVY = this.driftVY * oilCfg.driftDecay + (thrustY - this.driftVY) * grip;
+                this.velocityX = this.driftVX;
+                this.velocityY = this.driftVY;
+            } else {
+                // Normal: velocity tracks facing angle exactly
+                this.velocityX = Math.cos(this.angle) * this.speed;
+                this.velocityY = Math.sin(this.angle) * this.speed;
+                // Keep drift in sync so transition to oil is smooth
+                this.driftVX = this.velocityX;
+                this.driftVY = this.velocityY;
+            }
+            this.x += this.velocityX * s;
+            this.y += this.velocityY * s;
+        }
+
+        onCollision(other, pushX, pushY) {
+            this.x += pushX;
+            this.y += pushY;
+
+            // Always launch AWAY from the other car's center, not along SAT axis
+            const awayX = this.x - other.x;
+            const awayY = this.y - other.y;
+            const awayLen = Math.sqrt(awayX * awayX + awayY * awayY) || 1;
+            const nx = awayX / awayLen;
+            const ny = awayY / awayLen;
+
+            // Launch away but keep current facing angle — no spin
+            const launchSpeed = CONFIG.collision.launchSpeed;
+            this.velocityX = nx * launchSpeed;
+            this.velocityY = ny * launchSpeed;
+
+            // Set speed based on whether launch aligns with facing direction
+            const fwdX = Math.cos(this.angle);
+            const fwdY = Math.sin(this.angle);
+            const launchDot = fwdX * nx + fwdY * ny;
+            this.speed = launchSpeed * CONFIG.collision.bounceDecay * Math.sign(launchDot || -1);
+        }
+
+        clampToWorld(w, h) {
+            const margin = Math.max(this.width, this.height) / 2;
+            const pad = CONFIG.world.padding;
+            const min = margin + pad;
+            const totalSpeed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
+            if (totalSpeed < 1) return;
+
+            // Track which walls we hit
+            let hitLeft = false, hitRight = false, hitTop = false, hitBottom = false;
+
+            if (this.x <= min && this.velocityX < 0)      { this.x = min;     hitLeft = true; }
+            else if (this.x >= w - min && this.velocityX > 0) { this.x = w - min; hitRight = true; }
+            if (this.y <= min && this.velocityY < 0)       { this.y = min;     hitTop = true; }
+            else if (this.y >= h - min && this.velocityY > 0) { this.y = h - min; hitBottom = true; }
+
+            const hitVertical = hitLeft || hitRight;
+            const hitHorizontal = hitTop || hitBottom;
+
+            if (!hitVertical && !hitHorizontal) return;
+
+            // Corner hit — launch diagonally away from corner
+            if (hitVertical && hitHorizontal) {
+                const launchSpeed = CONFIG.collision.launchSpeed * 0.6;
+                const dirX = hitLeft ? 1 : -1;
+                const dirY = hitTop ? 1 : -1;
+                this.velocityX = dirX * launchSpeed * 0.707;
+                this.velocityY = dirY * launchSpeed * 0.707;
+                this.speed = launchSpeed * CONFIG.collision.bounceDecay;
+                this.angle = Math.atan2(this.velocityY, this.velocityX);
+                return;
+            }
+
+            // Figure out how steep the hit angle is.
+            // perpRatio = 0 means gliding parallel, 1 means head-on
+            let perpRatio;
+            if (hitVertical) {
+                perpRatio = Math.abs(this.velocityX) / totalSpeed;
+            } else {
+                perpRatio = Math.abs(this.velocityY) / totalSpeed;
+            }
+
+            // Threshold: below this ratio, glide along the wall.
+            // Above it, bounce back like hitting a car.
+            const glideThreshold = 0.707; // 45 degrees from wall
+
+            if (perpRatio < glideThreshold) {
+                // GLIDE — kill perpendicular component, keep parallel
+                if (hitVertical) this.velocityX = 0;
+                if (hitHorizontal) this.velocityY = 0;
+
+                const newSpeed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
+                if (newSpeed > 1) {
+                    this.angle = Math.atan2(this.velocityY, this.velocityX);
+                    if (this.speed < 0) this.angle += Math.PI;
+                    this.speed = this.speed < 0 ? -newSpeed : newSpeed;
+                } else {
+                    this.speed = 0;
+                    this.velocityX = 0;
+                    this.velocityY = 0;
+                }
+            } else {
+                // BOUNCE — launch back away from wall, keep facing direction
+                let nx = 0, ny = 0;
+                if (hitLeft) nx = 1;
+                if (hitRight) nx = -1;
+                if (hitTop) ny = 1;
+                if (hitBottom) ny = -1;
+
+                const launchSpeed = Math.max(totalSpeed * 0.5, CONFIG.collision.launchSpeed * 0.4);
+                this.velocityX = nx * launchSpeed;
+                this.velocityY = ny * launchSpeed;
+
+                // Keep facing direction, just set speed based on launch
+                const fwdX = Math.cos(this.angle);
+                const fwdY = Math.sin(this.angle);
+                const dot = fwdX * nx + fwdY * ny;
+                this.speed = launchSpeed * Math.sign(dot || -1);
+            }
+        }
+
+        draw(ctx) {
+            const boosted = performance.now() < this.boostEndTime;
+
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.angle);
+
+            const hw = this.width / 2;
+            const hh = this.height / 2;
+            const bodyColor = CONFIG.players[this.playerNum].body;
+
+            // Boost glow
+            if (boosted) {
+                const pulse = 0.4 + 0.3 * Math.sin(performance.now() * 0.015);
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 18 + 8 * Math.sin(performance.now() * 0.01);
+
+                // Exhaust flames
+                const flicker = Math.random() * 6;
+                ctx.fillStyle = '#ff6600';
+                ctx.beginPath();
+                ctx.moveTo(-hw, -3);
+                ctx.lineTo(-hw - 10 - flicker, 0);
+                ctx.lineTo(-hw, 3);
+                ctx.fill();
+                ctx.fillStyle = '#ffcc00';
+                ctx.beginPath();
+                ctx.moveTo(-hw, -2);
+                ctx.lineTo(-hw - 5 - flicker * 0.5, 0);
+                ctx.lineTo(-hw, 2);
+                ctx.fill();
+            }
+
+            // Shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(-hw + 3, -hh + 3, this.width, this.height);
+
+            // Wheels — drawn before body so they sit underneath
+            const wheelW = 10, wheelH = 6;
+            const rearX = -hw + 9;   // rear axle X position
+            const frontX = hw - 9;   // front axle X position
+            const wheelY = hh + 2;   // how far wheels stick out from body side
+
+            // Rear wheels (fixed, no steering)
+            ctx.fillStyle = '#1a1a1a';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            // Top rear
+            ctx.fillRect(rearX - wheelW / 2, -wheelY - wheelH / 2, wheelW, wheelH);
+            ctx.strokeRect(rearX - wheelW / 2, -wheelY - wheelH / 2, wheelW, wheelH);
+            // Bottom rear
+            ctx.fillRect(rearX - wheelW / 2, wheelY - wheelH / 2, wheelW, wheelH);
+            ctx.strokeRect(rearX - wheelW / 2, wheelY - wheelH / 2, wheelW, wheelH);
+
+            // Front wheels (rotate with steering input)
+            // Top front
+            ctx.save();
+            ctx.translate(frontX, -wheelY);
+            ctx.rotate(this.steerAngle);
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(-wheelW / 2, -wheelH / 2, wheelW, wheelH);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-wheelW / 2, -wheelH / 2, wheelW, wheelH);
+            ctx.restore();
+            // Bottom front
+            ctx.save();
+            ctx.translate(frontX, wheelY);
+            ctx.rotate(this.steerAngle);
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(-wheelW / 2, -wheelH / 2, wheelW, wheelH);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-wheelW / 2, -wheelH / 2, wheelW, wheelH);
+            ctx.restore();
+
+            // Main body (darker base)
+            ctx.fillStyle = bodyColor;
+            ctx.beginPath();
+            ctx.roundRect(-hw, -hh, this.width, this.height, 3);
+            ctx.fill();
+
+            // Hood gradient (lighter toward front)
+            const hoodGrad = ctx.createLinearGradient(-hw, 0, hw, 0);
+            hoodGrad.addColorStop(0, 'rgba(0,0,0,0.15)');
+            hoodGrad.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+            hoodGrad.addColorStop(1, 'rgba(255,255,255,0.15)');
+            ctx.fillStyle = hoodGrad;
+            ctx.beginPath();
+            ctx.roundRect(-hw, -hh, this.width, this.height, 3);
+            ctx.fill();
+
+            // Racing stripe (center)
+            ctx.fillStyle = this.accent;
+            ctx.globalAlpha = 0.25;
+            ctx.fillRect(-hw + 4, -1.5, this.width - 8, 3);
+            ctx.globalAlpha = 1.0;
+
+            // Windshield
+            ctx.fillStyle = 'rgba(140,200,255,0.45)';
+            ctx.beginPath();
+            ctx.roundRect(hw * 0.3, -hh + 3, hw * 0.4, this.height - 6, 2);
+            ctx.fill();
+            // Windshield glare
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.fillRect(hw * 0.35, -hh + 4, hw * 0.12, this.height - 8);
+
+            // Rear window
+            ctx.fillStyle = 'rgba(100,140,180,0.3)';
+            ctx.beginPath();
+            ctx.roundRect(-hw * 0.55, -hh + 4, hw * 0.35, this.height - 8, 2);
+            ctx.fill();
+
+            // Tail lights (wider, with glow)
+            ctx.fillStyle = '#ff2200';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 4;
+            ctx.fillRect(-hw, -hh + 1, 4, 5);
+            ctx.fillRect(-hw, hh - 6, 4, 5);
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+
+            // Headlights (with glow)
+            ctx.fillStyle = '#ffffcc';
+            ctx.shadowColor = '#ffffaa';
+            ctx.shadowBlur = 6;
+            ctx.fillRect(hw - 4, -hh + 2, 4, 5);
+            ctx.fillRect(hw - 4, hh - 7, 4, 5);
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+
+            // Side trim
+            ctx.strokeStyle = this.accent;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(-hw + 6, -hh);
+            ctx.lineTo(hw - 2, -hh);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-hw + 6, hh);
+            ctx.lineTo(hw - 2, hh);
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+
+            // Outline
+            ctx.strokeStyle = this.accent;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(-hw, -hh, this.width, this.height, 3);
+            ctx.stroke();
+
+            // Player label
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 8px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('P' + this.playerNum, -hw * 0.15, 0);
+
+            ctx.restore();
+        }
+    }
+
+    // ============================================================
+    // COLLISION SYSTEM (SAT / OBB)
+    // ============================================================
+    const CollisionSystem = {
+        projectOntoAxis(corners, axis) {
+            let min = Infinity, max = -Infinity;
+            for (const c of corners) {
+                const proj = c.x * axis.x + c.y * axis.y;
+                if (proj < min) min = proj;
+                if (proj > max) max = proj;
+            }
+            return { min, max };
+        },
+
+        testOBB(a, b) {
+            const cornersA = a.getCorners();
+            const cornersB = b.getCorners();
+            const axes = [...a.getAxes(), ...b.getAxes()];
+
+            let minOverlap = Infinity;
+            let minAxis = null;
+
+            for (const axis of axes) {
+                const projA = this.projectOntoAxis(cornersA, axis);
+                const projB = this.projectOntoAxis(cornersB, axis);
+                const overlap = Math.min(projA.max - projB.min, projB.max - projA.min);
+                if (overlap <= 0) return null;
+                if (overlap < minOverlap) {
+                    minOverlap = overlap;
+                    minAxis = axis;
+                }
+            }
+
+            // Ensure push direction is from A toward B
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            if (dx * minAxis.x + dy * minAxis.y < 0) {
+                minAxis = { x: -minAxis.x, y: -minAxis.y };
+            }
+
+            return { overlap: minOverlap, axis: minAxis };
+        },
+
+        // Check if attacker's front hit victim's back
+        checkFrontToBack(attacker, victim) {
+            // Attacker's forward vector
+            const fwdX = Math.cos(attacker.angle);
+            const fwdY = Math.sin(attacker.angle);
+            // Vector from attacker to victim
+            const toVictimX = victim.x - attacker.x;
+            const toVictimY = victim.y - attacker.y;
+            // Attacker facing toward victim? (front is toward collision)
+            const attackerFacing = fwdX * toVictimX + fwdY * toVictimY;
+
+            // Victim's forward vector
+            const vFwdX = Math.cos(victim.angle);
+            const vFwdY = Math.sin(victim.angle);
+            // Vector from victim to attacker
+            const toAttackerX = attacker.x - victim.x;
+            const toAttackerY = attacker.y - victim.y;
+            // Victim facing away from attacker? (attacker is behind victim)
+            const victimFacing = vFwdX * toAttackerX + vFwdY * toAttackerY;
+
+            return attackerFacing > 0 && victimFacing < 0;
+        },
+
+        resolveVehicleCollisions(vehicles) {
+            const events = [];
+            const now = performance.now();
+            for (let i = 0; i < vehicles.length; i++) {
+                for (let j = i + 1; j < vehicles.length; j++) {
+                    const result = this.testOBB(vehicles[i], vehicles[j]);
+                    if (result) {
+                        // Score BEFORE applying collision physics (use pre-launch angles)
+                        let scorer = null;
+                        const cooldown = CONFIG.collision.scoreCooldown;
+                        const canScoreI = (now - vehicles[i].lastScoreTime) > cooldown;
+                        const canScoreJ = (now - vehicles[j].lastScoreTime) > cooldown;
+
+                        const iHitsJ = this.checkFrontToBack(vehicles[i], vehicles[j]);
+                        const jHitsI = this.checkFrontToBack(vehicles[j], vehicles[i]);
+
+                        if (iHitsJ && !jHitsI && canScoreI) {
+                            scorer = vehicles[i].playerNum;
+                            gameState.score[scorer]++;
+                            vehicles[i].lastScoreTime = now;
+                            vehicles[j].lastScoreTime = now;
+                        } else if (jHitsI && !iHitsJ && canScoreJ) {
+                            scorer = vehicles[j].playerNum;
+                            gameState.score[scorer]++;
+                            vehicles[i].lastScoreTime = now;
+                            vehicles[j].lastScoreTime = now;
+                        }
+
+                        // Apply collision physics (launch apart)
+                        const half = result.overlap * 0.5 + 5; // extra push to guarantee separation
+                        const px = result.axis.x * half;
+                        const py = result.axis.y * half;
+
+                        vehicles[i].onCollision(vehicles[j], -px, -py);
+                        vehicles[j].onCollision(vehicles[i], px, py);
+
+                        // Spawn particles at collision midpoint
+                        const midX = (vehicles[i].x + vehicles[j].x) / 2;
+                        const midY = (vehicles[i].y + vehicles[j].y) / 2;
+                        if (scorer) {
+                            ParticleSystem.spawnRearEnd(midX, midY, CONFIG.players[scorer].color);
+                        } else {
+                            ParticleSystem.spawnCrash(midX, midY);
+                        }
+
+                        events.push({
+                            a: vehicles[i].playerNum,
+                            b: vehicles[j].playerNum,
+                            scorer: scorer,
+                            overlap: result.overlap,
+                            time: now,
+                        });
+                    }
+                }
+            }
+            return events;
+        },
+    };
+
+    // ============================================================
+    // PARTICLE SYSTEM
+    // ============================================================
+    const ParticleSystem = {
+        particles: [],
+
+        // Regular crash — white/yellow sparks, small, fast
+        spawnCrash(x, y) {
+            const count = 12;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 80 + Math.random() * 200;
+                this.particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.3 + Math.random() * 0.3,
+                    maxLife: 0.3 + Math.random() * 0.3,
+                    size: 2 + Math.random() * 3,
+                    color: Math.random() > 0.5 ? '#ffdd66' : '#ffffff',
+                });
+            }
+        },
+
+        // Rear-end score hit — big colored explosion in scorer's color
+        spawnRearEnd(x, y, scorerColor) {
+            // Large colored burst
+            const count = 25;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 100 + Math.random() * 300;
+                this.particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.5 + Math.random() * 0.5,
+                    maxLife: 0.5 + Math.random() * 0.5,
+                    size: 4 + Math.random() * 6,
+                    color: scorerColor,
+                });
+            }
+            // White core flash
+            for (let i = 0; i < 8; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 40 + Math.random() * 120;
+                this.particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.2 + Math.random() * 0.3,
+                    maxLife: 0.2 + Math.random() * 0.3,
+                    size: 3 + Math.random() * 4,
+                    color: '#ffffff',
+                });
+            }
+        },
+
+        // Oil slick hit — dark splatters
+        spawnOilHit(x, y) {
+            const count = 10;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 40 + Math.random() * 100;
+                this.particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 0.4 + Math.random() * 0.4,
+                    maxLife: 0.4 + Math.random() * 0.4,
+                    size: 3 + Math.random() * 5,
+                    color: '#2a2a3a',
+                });
+            }
+        },
+
+        update(dt) {
+            const s = dt / 1000;
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                const p = this.particles[i];
+                p.x += p.vx * s;
+                p.y += p.vy * s;
+                p.vx *= 0.96;
+                p.vy *= 0.96;
+                p.life -= s;
+                if (p.life <= 0) {
+                    this.particles.splice(i, 1);
+                }
+            }
+        },
+
+        draw(ctx) {
+            for (const p of this.particles) {
+                const alpha = Math.max(0, p.life / p.maxLife);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+        },
+    };
+
+    // ============================================================
+    // BOOST PICKUP
+    // ============================================================
+    const BoostSystem = {
+        trySpawn(now) {
+            if (gameState.boostPickup) return; // max 1 at a time
+            if (now - gameState.lastBoostSpawn < CONFIG.boost.spawnInterval) return;
+            gameState.lastBoostSpawn = now;
+
+            const pad = 80;
+            const x = pad + Math.random() * (CONFIG.canvas.width - pad * 2);
+            const y = pad + Math.random() * (CONFIG.canvas.height - pad * 2);
+            gameState.boostPickup = { x, y, spawnTime: now };
+        },
+
+        checkPickup(vehicles) {
+            if (!gameState.boostPickup) return;
+            const p = gameState.boostPickup;
+            const r = CONFIG.boost.pickupRadius;
+            for (const v of vehicles) {
+                const dx = v.x - p.x;
+                const dy = v.y - p.y;
+                if (dx * dx + dy * dy < (r + v.width / 2) * (r + v.width / 2)) {
+                    v.boostEndTime = performance.now() + CONFIG.boost.duration;
+                    // Pickup particles
+                    ParticleSystem.spawnCrash(p.x, p.y);
+                    gameState.boostPickup = null;
+                    gameState.lastBoostSpawn = performance.now();
+                    return;
+                }
+            }
+        },
+
+        draw(ctx) {
+            if (!gameState.boostPickup) return;
+            const p = gameState.boostPickup;
+            const r = CONFIG.boost.pickupRadius;
+            const t = performance.now();
+            const pulse = 1 + 0.15 * Math.sin(t * 0.006);
+            const bobY = Math.sin(t * 0.004) * 3;
+
+            // Outer glow
+            ctx.save();
+            ctx.translate(p.x, p.y + bobY);
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 15 + 5 * Math.sin(t * 0.008);
+
+            // Circle
+            ctx.fillStyle = '#ffcc00';
+            ctx.beginPath();
+            ctx.arc(0, 0, r * pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner bright core
+            ctx.fillStyle = '#fff8dd';
+            ctx.beginPath();
+            ctx.arc(0, 0, r * pulse * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lightning bolt icon
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+            ctx.fillStyle = '#cc6600';
+            ctx.font = 'bold 18px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('\u26A1', 0, 0);
+
+            ctx.restore();
+        },
+    };
+
+    // ============================================================
+    // OIL SLICK SYSTEM
+    // ============================================================
+    const OilSlickSystem = {
+        // Spawn collectible pickups for each player when ready
+        trySpawnPickups(vehicles) {
+            const now = performance.now();
+            const pad = 80;
+            for (const v of vehicles) {
+                const p = v.playerNum;
+                // Already has one on field or in hand — skip
+                if (gameState.oilPickups[p] || v.hasOilSlick) continue;
+                // Respawn timer not ready yet
+                if (now < v.oilRespawnTime) continue;
+                // Spawn a pickup for this player
+                const x = pad + Math.random() * (CONFIG.canvas.width - pad * 2);
+                const y = pad + Math.random() * (CONFIG.canvas.height - pad * 2);
+                gameState.oilPickups[p] = { x, y };
+            }
+        },
+
+        // Let players collect their own pickup
+        checkCollectPickup(vehicles) {
+            const r = CONFIG.oilSlick.radius;
+            for (const v of vehicles) {
+                const pickup = gameState.oilPickups[v.playerNum];
+                if (!pickup) continue;
+                const dx = v.x - pickup.x;
+                const dy = v.y - pickup.y;
+                if (dx * dx + dy * dy < (r + v.width / 2) * (r + v.width / 2)) {
+                    v.hasOilSlick = true;
+                    delete gameState.oilPickups[v.playerNum];
+                }
+            }
+        },
+
+        // Check if enemy cars drive over dropped slicks
+        checkSlickHit(vehicles) {
+            const r = CONFIG.oilSlick.radius;
+            for (let i = gameState.oilSlicks.length - 1; i >= 0; i--) {
+                const slick = gameState.oilSlicks[i];
+                for (const v of vehicles) {
+                    if (v.playerNum === slick.owner) continue;
+                    const dx = v.x - slick.x;
+                    const dy = v.y - slick.y;
+                    if (dx * dx + dy * dy < (r + v.width / 2) * (r + v.width / 2)) {
+                        v.oilEffectEnd = performance.now() + CONFIG.oilSlick.effectDuration;
+                        v.driftVX = v.velocityX;
+                        v.driftVY = v.velocityY;
+                        gameState.oilSlicks.splice(i, 1);
+                        ParticleSystem.spawnOilHit(slick.x, slick.y);
+                        break;
+                    }
+                }
+            }
+        },
+
+        draw(ctx) {
+            const t = performance.now();
+            const r = CONFIG.oilSlick.radius;
+
+            // Draw collectible pickups (player-colored)
+            for (const pNum of [1, 2]) {
+                const pickup = gameState.oilPickups[pNum];
+                if (!pickup) continue;
+                const playerColor = CONFIG.players[pNum].color;
+
+                ctx.save();
+                ctx.translate(pickup.x, pickup.y);
+
+                const pulse = 1 + 0.1 * Math.sin(t * 0.005);
+                const bobY = Math.sin(t * 0.003 + pNum) * 3;
+                ctx.translate(0, bobY);
+
+                // Colored glow ring
+                ctx.strokeStyle = playerColor;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.006);
+                ctx.beginPath();
+                ctx.arc(0, 0, r * pulse + 4, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+
+                // Dark oil circle with player tint
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r * pulse);
+                grad.addColorStop(0, 'rgba(30,30,40,0.8)');
+                grad.addColorStop(0.7, 'rgba(25,25,35,0.5)');
+                grad.addColorStop(1, 'rgba(20,20,30,0.0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Player color tint overlay
+                ctx.fillStyle = playerColor;
+                ctx.globalAlpha = 0.2;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * pulse * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // Label
+                ctx.fillStyle = playerColor;
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('OIL', 0, 0);
+
+                ctx.restore();
+            }
+
+            // Draw dropped slicks on the ground
+            for (const slick of gameState.oilSlicks) {
+                ctx.save();
+                ctx.translate(slick.x, slick.y);
+
+                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+                grad.addColorStop(0, 'rgba(20,20,30,0.7)');
+                grad.addColorStop(0.6, 'rgba(30,30,45,0.5)');
+                grad.addColorStop(1, 'rgba(40,40,50,0.0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Rainbow sheen
+                const sheenAngle = t * 0.001;
+                const sheenGrad = ctx.createLinearGradient(
+                    -r * Math.cos(sheenAngle), -r * Math.sin(sheenAngle),
+                    r * Math.cos(sheenAngle), r * Math.sin(sheenAngle)
+                );
+                sheenGrad.addColorStop(0, 'rgba(255,0,100,0.12)');
+                sheenGrad.addColorStop(0.3, 'rgba(100,0,255,0.12)');
+                sheenGrad.addColorStop(0.5, 'rgba(0,200,255,0.12)');
+                sheenGrad.addColorStop(0.7, 'rgba(0,255,100,0.12)');
+                sheenGrad.addColorStop(1, 'rgba(255,200,0,0.12)');
+                ctx.fillStyle = sheenGrad;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        },
+    };
+
+    // ============================================================
+    // RENDERER
+    // ============================================================
+    const Renderer = {
+        drawBackground(ctx, w, h) {
+            ctx.fillStyle = CONFIG.world.backgroundColor;
+            ctx.fillRect(0, 0, w, h);
+
+            // Grid
+            ctx.strokeStyle = CONFIG.world.gridColor;
+            ctx.lineWidth = 1;
+            const sp = CONFIG.world.gridSpacing;
+            for (let x = sp; x < w; x += sp) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            }
+            for (let y = sp; y < h; y += sp) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+
+            // Center dashed lane markings
+            ctx.strokeStyle = CONFIG.world.laneMarkingColor;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([20, 15]);
+            ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Boundary
+            ctx.strokeStyle = CONFIG.world.boundaryColor;
+            ctx.lineWidth = CONFIG.world.boundaryWidth;
+            ctx.strokeRect(2, 2, w - 4, h - 4);
+        },
+
+        lastScorerFlash: { scorer: null, time: 0 },
+
+        drawHUD(ctx, state, w, h) {
+            ctx.textBaseline = 'top';
+
+            // Player labels with scores
+            ctx.font = 'bold 16px monospace';
+            ctx.fillStyle = CONFIG.players[1].color;
+            ctx.textAlign = 'left';
+            ctx.fillText(CONFIG.players[1].name + '  ' + state.score[1], 14, 12);
+
+            ctx.fillStyle = CONFIG.players[2].color;
+            ctx.textAlign = 'right';
+            ctx.fillText(state.score[2] + '  ' + CONFIG.players[2].name, w - 14, 12);
+
+            // Speed + boost indicators
+            for (const v of state.vehicles) {
+                const label = Math.round(Math.abs(v.speed)) + '';
+                const xPos = v.playerNum === 1 ? 14 : w - 14;
+                const align = v.playerNum === 1 ? 'left' : 'right';
+
+                ctx.font = '11px monospace';
+                ctx.fillStyle = CONFIG.players[v.playerNum].accent;
+                ctx.textAlign = align;
+                ctx.fillText('SPD: ' + label, xPos, 32);
+
+                // Boost timer
+                const now = performance.now();
+                const boostRemaining = v.boostEndTime - now;
+                let yOff = 44;
+                if (boostRemaining > 0) {
+                    const secs = (boostRemaining / 1000).toFixed(1);
+                    ctx.fillStyle = '#ffcc00';
+                    ctx.fillText('\u26A1 BOOST ' + secs + 's', xPos, yOff);
+                    yOff += 12;
+                }
+
+                // Oil slick status
+                const oilRemaining = v.oilEffectEnd - now;
+                if (v.hasOilSlick) {
+                    ctx.fillStyle = '#88ff88';
+                    const key = v.playerNum === 1 ? 'E' : '/';
+                    ctx.fillText('OIL READY [' + key + ']', xPos, yOff);
+                } else if (oilRemaining > 0) {
+                    ctx.fillStyle = '#aa66ff';
+                    ctx.fillText('SLIPPING ' + (oilRemaining / 1000).toFixed(1) + 's', xPos, yOff);
+                } else if (gameState.oilPickups[v.playerNum]) {
+                    ctx.fillStyle = '#666';
+                    ctx.fillText('OIL: pick up!', xPos, yOff);
+                } else if (now < v.oilRespawnTime) {
+                    const secs = ((v.oilRespawnTime - now) / 1000).toFixed(0);
+                    ctx.fillStyle = '#555';
+                    ctx.fillText('OIL: ' + secs + 's', xPos, yOff);
+                }
+            }
+
+            // Score flash
+            for (const evt of state.collisionEvents) {
+                if (evt.scorer) {
+                    this.lastScorerFlash = { scorer: evt.scorer, time: performance.now() };
+                }
+            }
+
+            const flashAge = performance.now() - this.lastScorerFlash.time;
+            if (this.lastScorerFlash.scorer && flashAge < 1000) {
+                const alpha = 1.0 - (flashAge / 1000);
+                const scorerColor = CONFIG.players[this.lastScorerFlash.scorer].color;
+                ctx.fillStyle = scorerColor;
+                ctx.globalAlpha = alpha;
+                ctx.font = 'bold 28px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('P' + this.lastScorerFlash.scorer + ' SCORES!', w / 2, 14);
+                ctx.globalAlpha = 1.0;
+            } else if (state.collisionEvents.length > 0) {
+                ctx.fillStyle = 'rgba(255,255,100,0.7)';
+                ctx.font = 'bold 18px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('CRASH!', w / 2, 16);
+            }
+
+            // Controls hint (bottom)
+            ctx.font = '11px monospace';
+            ctx.fillStyle = '#555';
+            ctx.textAlign = 'center';
+            ctx.fillText('[P] Pause', w / 2, h - 14);
+        },
+    };
+
+    // ============================================================
+    // CANVAS SETUP
+    // ============================================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const inputManager = new InputManager();
+
+    canvas.width = CONFIG.canvas.width;
+    canvas.height = CONFIG.canvas.height;
+
+    function resizeCanvas() {
+        const aspect = CONFIG.canvas.width / CONFIG.canvas.height;
+        const winAspect = window.innerWidth / window.innerHeight;
+        let dw, dh;
+        if (winAspect > aspect) {
+            dh = window.innerHeight;
+            dw = dh * aspect;
+        } else {
+            dw = window.innerWidth;
+            dh = dw / aspect;
+        }
+        canvas.style.width = dw + 'px';
+        canvas.style.height = dh + 'px';
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // ============================================================
+    // PAUSE
+    // ============================================================
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'KeyP') {
+            if (gameState.phase === 'playing') {
+                gameState.phase = 'paused';
+                pauseOverlay.classList.add('active');
+            } else if (gameState.phase === 'paused') {
+                gameState.phase = 'playing';
+                gameState.lastTimestamp = 0; // reset delta so no jump
+                pauseOverlay.classList.remove('active');
+            }
+        }
+    });
+
+    // ============================================================
+    // GAME LOOP
+    // ============================================================
+    function gameLoop(timestamp) {
+        if (!gameState.lastTimestamp) gameState.lastTimestamp = timestamp;
+        const deltaTime = Math.min(timestamp - gameState.lastTimestamp, 50);
+        gameState.lastTimestamp = timestamp;
+
+        if (gameState.phase === 'playing') {
+            // Update vehicles
+            for (const v of gameState.vehicles) {
+                const input = inputManager.getInput(v.playerNum);
+                v.update(deltaTime, input);
+                v.clampToWorld(canvas.width, canvas.height);
+            }
+
+            // Collisions
+            gameState.collisionEvents = CollisionSystem.resolveVehicleCollisions(gameState.vehicles);
+
+            // Boost pickups
+            BoostSystem.trySpawn(performance.now());
+            BoostSystem.checkPickup(gameState.vehicles);
+
+            // Oil slick system
+            OilSlickSystem.trySpawnPickups(gameState.vehicles);
+            OilSlickSystem.checkCollectPickup(gameState.vehicles);
+            OilSlickSystem.checkSlickHit(gameState.vehicles);
+
+            // Particles
+            ParticleSystem.update(deltaTime);
+        }
+
+        // Render
+        Renderer.drawBackground(ctx, canvas.width, canvas.height);
+
+        OilSlickSystem.draw(ctx);
+        BoostSystem.draw(ctx);
+
+        for (const v of gameState.vehicles) {
+            v.draw(ctx);
+        }
+
+        ParticleSystem.draw(ctx);
+
+        Renderer.drawHUD(ctx, gameState, canvas.width, canvas.height);
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    function initGame() {
+        const v1 = new Vehicle(CONFIG.canvas.width * 0.25, CONFIG.canvas.height / 2, 1);
+        v1.angle = 0; // facing right
+
+        const v2 = new Vehicle(CONFIG.canvas.width * 0.75, CONFIG.canvas.height / 2, 2);
+        v2.angle = Math.PI; // facing left
+
+        gameState.vehicles = [v1, v2];
+        gameState.phase = 'playing';
+        gameState.lastTimestamp = 0;
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    initGame();
+    </script>
+</body>
+</html>
